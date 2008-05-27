@@ -1,9 +1,15 @@
 <module>
 
 	<!-- Inherit the core Web Toolkit stuff.                  -->
-	<inherits name='com.google.gwt.user.User'/>
+	<inherits name='com.google.gwt.user.User' />
+	<inherits name='tigase.xmpp4gwt.Xmpp4Gwt' />
+	<inherits name="com.google.gwt.i18n.I18N" />
+
+	<inherits name='com.extjs.gxt.ui.GXT' />
+	<inherits name='com.extjs.gxt.themes.Themes' />
+
 
 	<!-- Specify the app entry point class.                   -->
-	<entry-point class='tigase.messenger.client.Messenger'/>
-  
+	<entry-point class='tigase.messenger.client.Messenger' />
+
 </module>

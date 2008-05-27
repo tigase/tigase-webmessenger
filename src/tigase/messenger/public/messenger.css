@@ -1,0 +1,71 @@
+/*-- roster component --*/
+.roster-group * {
+	font-family: tahoma, arial, verdana, sans-serif;
+}
+
+.roster-group {
+	width: 100%;
+}
+
+.group-header.open {
+	background: url("opened.png") no-repeat 5px 11px orange;
+}
+
+.group-header.close {
+	background: url("closed.png") no-repeat 6px 9px orange;
+}
+
+.group-header {
+	cursor: default;
+	font-weight: bold;
+	padding: 5px;
+	padding-left: 16px;
+	background-color: orange;
+}
+
+.selected .group-header {
+	background-color: green;
+}
+
+.buddy.selected {
+	background-color: #c0f1b4;
+}
+
+.buddy {
+	padding-left: 16px;
+	padding-top: 3px;
+	padding-bottom: 4px;
+	cursor: default;
+}
+
+.buddy-online {
+	background: url("user-online.png") no-repeat left center;
+}
+
+.buddy-ask {
+	background: url('user-requested.png') no-repeat left center;
+}
+
+.buddy-offline {
+	background: url('user-offline.png') no-repeat left center;
+}
+
+.buddy-error {
+	background: url('user-error.png') no-repeat left center;
+}
+
+.buddy-away {
+	background: url('user-away.png') no-repeat left center;
+}
+
+.buddy-chat {
+	background: url('user-chat.png') no-repeat left center;
+}
+
+.buddy-dnd {
+	background: url('user-dnd.png') no-repeat left center;
+}
+
+.buddy-xa {
+	background: url('user-xa.png') no-repeat left center;
+}

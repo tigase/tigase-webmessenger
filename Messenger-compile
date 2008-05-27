@@ -1,3 +1,3 @@
 #!/bin/sh
 APPDIR=`dirname $0`;
-java  -cp "$APPDIR/src:$APPDIR/bin:/home/bmalkow/programs/gwt-linux-0.0.2030/gwt-user.jar:/home/bmalkow/programs/gwt-linux-0.0.2030/gwt-dev-linux.jar" com.google.gwt.dev.GWTCompiler -out "$APPDIR/www" "$@" tigase.messenger.Messenger;
+java  -cp "$APPDIR/src:$APPDIR/bin:/home/bmalkow/programs/gwt-linux-0.0.2415/gwt-user.jar:/home/bmalkow/programs/gwt-linux-0.0.2415/gwt-dev-linux.jar" com.google.gwt.dev.GWTCompiler -out "$APPDIR/www" "$@" tigase.messenger.Messenger;
