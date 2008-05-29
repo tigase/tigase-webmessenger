@@ -2,6 +2,8 @@ package tigase.messenger.client;
 
 import tigase.messenger.client.login.LoginDialog;
 import tigase.messenger.client.login.LoginDialogListener;
+import tigase.messenger.client.roster.component.Group;
+import tigase.messenger.client.roster.component.Item;
 import tigase.messenger.client.roster.component.Roster;
 import tigase.messenger.client.tabbed.TabbedViewport;
 import tigase.xmpp4gwt.client.BoshConnection;
@@ -15,14 +17,13 @@ import tigase.xmpp4gwt.client.xmpp.roster.RosterListener;
 import tigase.xmpp4gwt.client.xmpp.sasl.SaslAuthPluginListener;
 
 import com.extjs.gxt.ui.client.widget.Dialog;
-import com.extjs.gxt.ui.client.widget.MessageBox;
 import com.extjs.gxt.ui.client.widget.ProgressBar;
-import com.extjs.gxt.ui.client.widget.Window;
 import com.extjs.gxt.ui.client.widget.WindowManager;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.http.client.Response;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.DeferredCommand;
+import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.xml.client.Node;
@@ -37,7 +38,16 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 
 	protected final Roster rosterComponent;
 
+	private static Messenger instance;
+
+	public static Session session() {
+		return instance.session;
+	}
+
+	protected ChatManager chatManager;
+
 	public Messenger() {
+		instance = this;
 		this.user = new User();
 		this.session = new Session(user);
 
@@ -49,6 +59,29 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 		this.rosterComponent = new Roster(new PresenceCallbackImpl(this.session.getPresencePlugin(),
 				this.session.getRosterPlugin()));
 
+		rosterComponent.addListener(new tigase.messenger.client.roster.component.RosterListener() {
+
+			public void afterRosterChange() {}
+
+			public void onContactContextMenu(Event event, Item item) {
+			// TODO Auto-generated method stub
+
+			}
+
+			public void onContactDoubleClick(Item item) {
+				chatManager.openChatWith(item.getJID().getBareJID(), true);
+			}
+
+			public void onGroupContextMenu(Event event, Group group) {
+			// TODO Auto-generated method stub
+
+			}
+
+			public void onRosterItemSelect(JID jid) {
+			// TODO Auto-generated method stub
+
+			}
+		});
 	}
 
 	private final Session session;
@@ -61,13 +94,22 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 	public void onModuleLoad() {
 		rosterComponent.addAlwaysVisibleGroups("General");
 
-		TabbedViewport tvp = new TabbedViewport(rosterComponent);
+		final TabbedViewport tvp = new TabbedViewport(rosterComponent);
+		this.chatManager = tvp;
 		RootPanel.get("app").add(tvp);
-		showLoginDialog();
+		DeferredCommand.addCommand(new Command() {
+			public void execute() {
+				tvp.layout(true);
+			}
+		});
+		DeferredCommand.addCommand(new Command() {
+			public void execute() {
+				showLoginDialog();
+			}
+		});
 	}
 
-	public void onPressCancel() {
-	}
+	public void onPressCancel() {}
 
 	private MessageBox progressBox = null;
 
@@ -85,6 +127,8 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 			if (jid.getResource() != null) resource = jid.getResource();
 			user.setDomainname(domain);
 			user.setResource(resource);
+
+			this.progressBox = MessageBox.progress("Logging in", "Please wait...", "Conncting...");
 
 			Timer timer = new Timer() {
 
@@ -148,8 +192,8 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 			session.reset();
 			loginDialog = new LoginDialog();
 			loginDialog.addLoginDialogListener(this);
-		//	loginDialog.show();
-		//	loginDialog.toFront();
+			loginDialog.show();
+			loginDialog.toFront();
 		}
 	}
 
@@ -183,7 +227,10 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 
 	public void onBindResource(JID newJid) {
 		updateProgress("Resource binded...");
-		if (progressBox != null) progressBox.hide();
+		if (progressBox != null) {
+			progressBox.hide();
+			progressBox = null;
+		}
 	}
 
 	public void onAddItem(RosterItem item) {

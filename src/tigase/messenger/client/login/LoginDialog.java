@@ -23,7 +23,7 @@ public class LoginDialog extends Dialog {
 		jidInput.setText("alice@sphere");
 		passwordInput.setText("a");
 
-		setModal(true);
+		setModal(false);
 		setBodyBorder(false);
 		// setInsetBorder(false);
 		setButtons(Dialog.OKCANCEL);
