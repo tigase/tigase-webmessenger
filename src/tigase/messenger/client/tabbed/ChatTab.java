@@ -8,25 +8,20 @@ import tigase.xmpp4gwt.client.JID;
 import tigase.xmpp4gwt.client.xmpp.message.Message;
 import tigase.xmpp4gwt.client.xmpp.roster.RosterItem;
 
-import com.extjs.gxt.ui.client.Events;
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.Style.Scroll;
-import com.extjs.gxt.ui.client.event.FieldEvent;
-import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.util.Margins;
 import com.extjs.gxt.ui.client.widget.Component;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
-import com.extjs.gxt.ui.client.widget.LayoutContainer;
 import com.extjs.gxt.ui.client.widget.TabItem;
-import com.extjs.gxt.ui.client.widget.form.TextArea;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayout;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
-import com.extjs.gxt.ui.client.widget.layout.FillLayout;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.KeyboardListener;
+import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.Widget;
 
 public class ChatTab extends TabItem {
@@ -41,10 +36,15 @@ public class ChatTab extends TabItem {
 
 	private JID jid;
 
+	private String tabTitle;
+
+	private boolean unread;
+
 	public ChatTab(JID buddyJid, String threadId) {
 		this.jid = buddyJid;
 		this.threadid = threadId;
 		setClosable(true);
+		this.message.addStyleName("chatinput");
 		center.setHeaderVisible(false);
 		setIconStyle("buddy-chat");
 
@@ -54,12 +54,13 @@ public class ChatTab extends TabItem {
 		} else {
 			nickname = ri.getName();
 		}
-		setText("chat " + nickname);
+		this.tabTitle = nickname;
+		setText(tabTitle);
 	}
 
 	protected Component createInputPanel() {
-		LayoutContainer panel = new LayoutContainer();
-		panel.setLayout(new FillLayout());
+		ContentPanel panel = new ContentPanel();
+		panel.setHeaderVisible(false);
 
 		BorderLayout layout = new BorderLayout();
 		layout.setEnableState(false);
@@ -78,14 +79,18 @@ public class ChatTab extends TabItem {
 		panel.add(toolbar, northData);
 		panel.add(message, centerData);
 
-		message.addListener(Events.KeyPress, new Listener<FieldEvent>() {
+		message.addKeyboardListener(new KeyboardListener() {
 
-			public void handleEvent(FieldEvent be) {
-				// TODO Auto-generated method stub
-				if (be.getKeyCode() == KeyboardListener.KEY_ENTER) {
+			public void onKeyDown(Widget sender, char keyCode, int modifiers) {}
+
+			public void onKeyPress(Widget sender, char keyCode, int modifiers) {
+				if (keyCode == KEY_ENTER) {
+					message.cancelKey();
 					send();
 				}
 			}
+
+			public void onKeyUp(Widget sender, char keyCode, int modifiers) {}
 		});
 
 		return panel;
@@ -119,8 +124,8 @@ public class ChatTab extends TabItem {
 	protected DateTimeFormat dtf = DateTimeFormat.getFormat("HH:mm:ss");
 
 	protected void send() {
-		String msg = message.getValue().toString();
-		message.setRawValue("");
+		String msg = message.getText();
+		message.setText("");
 
 		Messenger.session().getChatPlugin().sendChatMessage(jid, msg, threadid, null);
 
@@ -153,6 +158,7 @@ public class ChatTab extends TabItem {
 	}
 
 	public void process(Message message) {
+		System.out.println(getTextStyle());
 		String nickname;
 		RosterItem ri = Messenger.session().getRosterPlugin().getRosterItem(message.getFrom());
 		if (ri != null) {
@@ -167,7 +173,21 @@ public class ChatTab extends TabItem {
 			nickname = message.getFrom().toStringBare();
 		}
 
+		boolean selected = getTabPanel().getSelectedItem() == this;
+		if (!unread && !selected) {
+			setText("* " + this.tabTitle);
+			unread = true;
+		} else if (unread && selected) {
+			setText(this.tabTitle);
+			unread = false;
+		}
 		addLine("me", dtf.format(new Date()), nickname, message.getBody());
+	}
+
+	@Override
+	public void setText(String text) {
+		System.out.println("USTAWIONO: " + text);
+		super.setText(text);
 	}
 
 	public void setPresenceIcon(RosterPresence rp) {
@@ -199,5 +219,13 @@ public class ChatTab extends TabItem {
 			default:
 				break;
 		}
+	}
+
+	void select() {
+		if (unread) {
+			setText(this.tabTitle);
+			this.unread = false;
+		}
+		message.setFocus(true);
 	}
 }

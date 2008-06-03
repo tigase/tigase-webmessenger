@@ -13,6 +13,8 @@ import tigase.xmpp4gwt.client.JID;
 import tigase.xmpp4gwt.client.Session;
 import tigase.xmpp4gwt.client.xmpp.message.Message;
 import tigase.xmpp4gwt.client.xmpp.presence.PresenceItem;
+import tigase.xmpp4gwt.client.xmpp.presence.PresenceListener;
+import tigase.xmpp4gwt.client.xmpp.presence.Show;
 
 import com.extjs.gxt.ui.client.Events;
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
@@ -26,8 +28,10 @@ import com.extjs.gxt.ui.client.widget.Viewport;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayout;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
+import com.google.gwt.user.client.Command;
+import com.google.gwt.user.client.DeferredCommand;
 
-public class TabbedViewport extends Viewport implements ChatManager {
+public class TabbedViewport extends Viewport implements ChatManager, PresenceListener {
 
 	private final Roster rosterComponent;
 
@@ -35,6 +39,7 @@ public class TabbedViewport extends Viewport implements ChatManager {
 
 	protected ContentPanel createRosterPanel() {
 		ContentPanel panel = new ContentPanel();
+		Messenger.session().getPresencePlugin().addPresenceListener(this);
 		panel.getHeader().setText("Buddies");
 		// panel.setHeaderVisible(false);
 
@@ -53,16 +58,28 @@ public class TabbedViewport extends Viewport implements ChatManager {
 		center.add(this.rosterComponent);
 
 		ToolBar toolBar = new ToolBar();
+		toolBar.add(statusButton);
+
+		statusButton.setPresence(RosterPresence.OFFLINE);
 
 		ContentPanel south = new ContentPanel();
 		south.setHeaderVisible(false);
+		// south.add(toolBar);
 
 		panel.add(center, centerData);
-		panel.add(south, southData);
+		panel.add(toolBar, southData);
 
 		return panel;
 
 	}
+
+	private final StatusToolItem statusButton = new StatusToolItem() {
+
+		@Override
+		public void setNewPresence(RosterPresence presence) {
+			sendNewPresence(presence);
+		}
+	};
 
 	public TabbedViewport(Roster rosterComponent) {
 		super();
@@ -73,6 +90,14 @@ public class TabbedViewport extends Viewport implements ChatManager {
 			public void handleEvent(TabPanelEvent be) {
 				System.out.println("zmakło " + be.container + "  " + be.item + "   " + be.component);
 				chats.removeChatData(be.item);
+			}
+		});
+		chatTabFolder.addListener(Events.Select, new Listener<TabPanelEvent>() {
+
+			public void handleEvent(TabPanelEvent be) {
+				if (be.item instanceof ChatTab) {
+					((ChatTab) be.item).select();
+				}
 			}
 		});
 
@@ -91,17 +116,20 @@ public class TabbedViewport extends Viewport implements ChatManager {
 		BorderLayoutData westData = new BorderLayoutData(LayoutRegion.WEST, 200);
 		westData.setSplit(true);
 		westData.setCollapsible(true);
-		westData.setMargins(new Margins(0, 0, 0, 0));
+		westData.setMargins(new Margins(5, 0, 5, 5));
 
 		BorderLayoutData centerData = new BorderLayoutData(LayoutRegion.CENTER);
-		centerData.setMargins(new Margins(0, 0, 0, 0));
+		centerData.setMargins(new Margins(5, 5, 5, 5));
 
 		BorderLayoutData southData = new BorderLayoutData(LayoutRegion.SOUTH, 100);
 		southData.setSplit(true);
-		southData.setMargins(new Margins(0, 0, 0, 0));
+		southData.setCollapsible(true);
+		southData.setMargins(new Margins(0, 5, 5, 5));
 
 		Viewport x = new Viewport();
 
+		chatTabFolder.add(new WelcomePanel());
+		chatTabFolder.setAutoHeight(true);
 		chatTabFolder.setWidth("100%");
 		chatTabFolder.setAutoWidth(true);
 		chatTabFolder.setTabScroll(true);
@@ -119,8 +147,41 @@ public class TabbedViewport extends Viewport implements ChatManager {
 
 	}
 
+	protected void sendNewPresence(RosterPresence presence) {
+		switch (presence) {
+			case ONLINE:
+				Messenger.session().getPresencePlugin().sendStatus(null);
+				break;
+			case AWAY:
+				Messenger.session().getPresencePlugin().sendStatus(Show.AWAY);
+				break;
+			case DND:
+				Messenger.session().getPresencePlugin().sendStatus(Show.DND);
+				break;
+			case XA:
+				Messenger.session().getPresencePlugin().sendStatus(Show.XA);
+				break;
+			case READY_FOR_CHAT:
+				Messenger.session().getPresencePlugin().sendStatus(Show.CHAT);
+				break;
+			case OFFLINE:
+				Messenger.instance().logout();
+
+				break;
+			default:
+				break;
+		}
+	}
+
 	protected MainToolBar getMainToolBar() {
-		return new MainToolBar();
+		return new MainToolBar() {
+
+			@Override
+			protected void setNewPresence(RosterPresence presence) {
+				statusButton.setPresence(presence);
+				sendNewPresence(presence);
+			}
+		};
 	}
 
 	private final ChatSet<ChatTab> chats = new ChatSet<ChatTab>();
@@ -137,7 +198,8 @@ public class TabbedViewport extends Viewport implements ChatManager {
 		if (pi != null) {
 			buddyJid = pi.getJid();
 		}
-		ChatTab chatTab = new ChatTab(buddyJid, threadId);
+		chatTabFolder.recalculate();
+		final ChatTab chatTab = new ChatTab(buddyJid, threadId);
 		chats.addChatData(buddyJid, threadId, chatTab);
 		chatTabFolder.add(chatTab);
 		RosterPresence rp = this.presenceCallback.getRosterPresence(buddyJid);
@@ -145,7 +207,13 @@ public class TabbedViewport extends Viewport implements ChatManager {
 		if (focus) {
 			chatTabFolder.setSelection(chatTab);
 		}
-		chatTabFolder.recalculate();
+		DeferredCommand.addCommand(new Command() {
+
+			public void execute() {
+				chatTab.recalculate();
+			}
+
+		});
 	}
 
 	public void process(Message message) {
@@ -156,9 +224,11 @@ public class TabbedViewport extends Viewport implements ChatManager {
 			RosterPresence rp = this.presenceCallback.getRosterPresence(message.getFrom());
 			tab.setPresenceIcon(rp);
 			chatTabFolder.add(tab);
+			tab.layout();
 			if (chatTabFolder.getSelectedItem() == null) {
 				chatTabFolder.setSelection(tab);
 			}
+			chatTabFolder.recalculate();
 		}
 		tab.process(message);
 	}
@@ -174,4 +244,18 @@ public class TabbedViewport extends Viewport implements ChatManager {
 	public void setPresenceCallback(PresenceCallback presenceCallback) {
 		this.presenceCallback = presenceCallback;
 	}
+
+	public void reset() {
+		chats.clear();
+	}
+
+	public void beforeSendInitialPresence() {
+		statusButton.setPresence(RosterPresence.ONLINE);
+	}
+
+	public void onContactAvailable(PresenceItem presenceItem) {}
+
+	public void onContactUnavailable(PresenceItem presenceItem) {}
+
+	public void onPresenceChange(PresenceItem presenceItem) {}
 }

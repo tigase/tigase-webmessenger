@@ -12,9 +12,9 @@ import tigase.xmpp4gwt.client.xmpp.roster.RosterPlugin;
 
 public class PresenceCallbackImpl implements PresenceCallback {
 
-	private final RosterPlugin rosterPlugin;
-
 	private final PresencePlugin presencePlugin;
+
+	private final RosterPlugin rosterPlugin;
 
 	public PresenceCallbackImpl(PresencePlugin presencePlugin, RosterPlugin rosterPlugin) {
 		this.rosterPlugin = rosterPlugin;

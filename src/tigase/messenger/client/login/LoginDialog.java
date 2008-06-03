@@ -6,10 +6,14 @@ import tigase.xmpp4gwt.client.JID;
 
 import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.button.Button;
+import com.extjs.gxt.ui.client.widget.form.LabelField;
 import com.extjs.gxt.ui.client.widget.layout.TableLayout;
+import com.google.gwt.user.client.ui.CheckBox;
+import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.PasswordTextBox;
 import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.Widget;
 
 public class LoginDialog extends Dialog {
 
@@ -17,11 +21,24 @@ public class LoginDialog extends Dialog {
 
 	private final PasswordTextBox passwordInput = new PasswordTextBox();
 
+	private final LabelField jidLabel;
+
+	private final LabelField passwordLabel;
+
+	public boolean isAnonymousChecked() {
+		return anonymous.isChecked();
+	}
+
+	private final CheckBox anonymous;
+
 	public LoginDialog() {
 		jidInput.setText("bob@sphere");
 		passwordInput.setText("b");
 
-		setModal(false);
+		jidLabel = new LabelField("JID:");
+		passwordLabel = new LabelField("Password:");
+
+		setModal(true);
 		setBodyBorder(false);
 		// setInsetBorder(false);
 		setButtons(Dialog.OKCANCEL);
@@ -36,10 +53,24 @@ public class LoginDialog extends Dialog {
 		layout.setCellSpacing(4);
 		setLayout(layout);
 
-		add(new Label("JID:"));
+		anonymous = new CheckBox("Anonymous login");
+		anonymous.addClickListener(new ClickListener() {
+
+			public void onClick(Widget sender) {
+				System.out.println(anonymous.isChecked());
+				jidInput.setEnabled(!anonymous.isChecked());
+				passwordInput.setEnabled(!anonymous.isChecked());
+				jidLabel.setEnabled(!anonymous.isChecked());
+				passwordLabel.setEnabled(!anonymous.isChecked());
+			}
+		});
+
+		add(new Label());
+		add(anonymous);
+		add(jidLabel);
 		add(jidInput);
 
-		add(new Label("Password:"));
+		add(passwordLabel);
 		add(passwordInput);
 
 	}

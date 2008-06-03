@@ -22,18 +22,23 @@ import tigase.xmpp4gwt.client.xmpp.presence.PresenceListener;
 import tigase.xmpp4gwt.client.xmpp.presence.PresenceType;
 import tigase.xmpp4gwt.client.xmpp.roster.RosterItem;
 import tigase.xmpp4gwt.client.xmpp.roster.RosterListener;
+import tigase.xmpp4gwt.client.xmpp.sasl.AnonymousMechanism;
+import tigase.xmpp4gwt.client.xmpp.sasl.PlainMechanism;
 import tigase.xmpp4gwt.client.xmpp.sasl.SaslAuthPluginListener;
 
 import com.extjs.gxt.themes.client.Slate;
 import com.extjs.gxt.ui.client.GXT;
+import com.extjs.gxt.ui.client.event.Listener;
+import com.extjs.gxt.ui.client.event.WindowEvent;
 import com.extjs.gxt.ui.client.util.ThemeManager;
-import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.Info;
 import com.extjs.gxt.ui.client.widget.InfoConfig;
+import com.extjs.gxt.ui.client.widget.MessageBox;
 import com.extjs.gxt.ui.client.widget.ProgressBar;
-import com.extjs.gxt.ui.client.widget.WindowManager;
 import com.google.gwt.core.client.EntryPoint;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.http.client.Response;
+import com.google.gwt.i18n.client.Dictionary;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.DeferredCommand;
 import com.google.gwt.user.client.Event;
@@ -50,6 +55,10 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 	private static Messenger instance;
 
 	protected static int PROGRESS_ELEMENTS = 4;
+
+	public static Messenger instance() {
+		return instance;
+	}
 
 	public static Session session() {
 		return instance.session;
@@ -69,14 +78,18 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 
 	protected final User user;
 
+	private final Dictionary config;
+
 	public Messenger() {
 		instance = this;
+		config = Dictionary.getDictionary("Config");
 
 		ThemeManager.register(Slate.SLATE);
-		GXT.setDefaultTheme(Slate.SLATE, true);
+		GXT.setDefaultTheme(Slate.BLUE, true);
 
 		this.user = new User();
 		this.session = new Session(user);
+		this.session.getConnector().setHttpBase(config.get("httpBase"));
 
 		this.session.getAuthPlugin().addSaslAuthListener(this);
 		this.session.getConnector().addBoshListener(this);
@@ -127,6 +140,13 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 		}
 	}
 
+	public void logout() {
+		session.logout();
+		rosterComponent.reset();
+		chatManager.reset();
+		showLoginDialog();
+	}
+
 	public void onAddItem(RosterItem item) {
 		rosterComponent.updatedRosterItem(item);
 	}
@@ -154,37 +174,46 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 
 	public void onDisconnectByServer(BoshConnection con) {
 		rosterComponent.reset();
-		MessageBox.alert("Error", "POłączenie zerwane", null);
-		showLoginDialog();
+		MessageBox.alert("Error", "Disconnected by server", new Listener<WindowEvent>() {
+
+			public void handleEvent(WindowEvent be) {
+				showLoginDialog();
+			}
+		});
 	}
 
 	public void onEndRosterUpdating() {}
 
 	public void onError(String message) {
-		showLoginDialog();
+		rosterComponent.reset();
+		MessageBox.alert("Error", message, new Listener<WindowEvent>() {
+
+			public void handleEvent(WindowEvent be) {
+				showLoginDialog();
+			}
+		});
+
 	}
 
 	public void onFail(String message) {
-		showLoginDialog();
+		rosterComponent.reset();
+		MessageBox.alert("Error", "IAuthentication error: " + message, new Listener<WindowEvent>() {
+
+			public void handleEvent(WindowEvent be) {
+				showLoginDialog();
+			}
+		});
 
 	}
 
 	public void onItemNotFoundError() {
-		System.out.println("fuck");
+		rosterComponent.reset();
+		MessageBox.alert("Error", "Item not found", new Listener<WindowEvent>() {
 
-		final Dialog d = new Dialog();
-		// d.setModal(true);
-
-		d.show();
-
-		DeferredCommand.addCommand(new Command() {
-
-			public void execute() {
-				WindowManager.get().bringToFront(d);
+			public void handleEvent(WindowEvent be) {
+				showLoginDialog();
 			}
 		});
-
-		showLoginDialog();
 	}
 
 	public void onMessageReceived(Message message) {
@@ -232,31 +261,34 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 	public void onPressCancel() {}
 
 	public void onPressLogin() {
-		JID jid = this.loginDialog.getJID();
-		if (jid != null) {
-			user.setPassword(this.loginDialog.getPassword());
-			user.setUsername(jid.getNode());
+		rosterComponent.reset();
 
-			closeLoginDialog();
+		boolean go = false;
 
-			String domain = "";
+		if (loginDialog.isAnonymousChecked()) {
+			Messenger.session().getAuthPlugin().setMechanism(new AnonymousMechanism());
 			String resource = "messenger";
-			if (jid.getDomain() != null) domain = jid.getDomain();
-			if (jid.getResource() != null) resource = jid.getResource();
-			user.setDomainname(domain);
+			user.setDomainname(config.get("defaultDomainName"));
 			user.setResource(resource);
-
+			go = true;
+		} else {
+			Messenger.session().getAuthPlugin().setMechanism(new PlainMechanism(Messenger.session().getUser()));
+			JID jid = this.loginDialog.getJID();
+			if (jid != null) {
+				user.setPassword(this.loginDialog.getPassword());
+				user.setUsername(jid.getNode());
+				String domain = "";
+				String resource = "messenger";
+				if (jid.getDomain() != null) domain = jid.getDomain();
+				if (jid.getResource() != null) resource = jid.getResource();
+				user.setDomainname(domain);
+				user.setResource(resource);
+				go = true;
+			}
+		}
+		if (go) {
+			closeLoginDialog();
 			this.progressBox = MessageBox.progress("Logging in", "Please wait...", "Conncting...");
-
-			Timer timer = new Timer() {
-
-				@Override
-				public void run() {
-
-				}
-			};
-			timer.schedule(2250);
-
 			this.session.login();
 		}
 	}

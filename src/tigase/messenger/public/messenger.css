@@ -8,6 +8,10 @@
 	TOP: -1px
 }
 
+textarea.chatinput {
+	border: none;
+}
+
 /*-- roster component --*/
 .roster-group * {
 	font-family: tahoma, arial, verdana, sans-serif;
@@ -78,4 +82,36 @@
 
 .buddy-xa {
 	background: url('user-xa.png') no-repeat left center;
+}
+
+.x-btn .buddy-online {
+	background: url("user-online.png") no-repeat left center !important;
+}
+
+.x-btn .buddy-ask {
+	background: url('user-requested.png') no-repeat left center !important;
+}
+
+.x-btn .buddy-offline {
+	background: url('user-offline.png') no-repeat left center !important;
+}
+
+.x-btn .buddy-error {
+	background: url('user-error.png') no-repeat left center !important;
+}
+
+.x-btn .buddy-away {
+	background: url('user-away.png') no-repeat left center !important;
+}
+
+.x-btn .buddy-chat {
+	background: url('user-chat.png') no-repeat left center !important;
+}
+
+.x-btn .buddy-dnd {
+	background: url('user-dnd.png') no-repeat left center !important;
+}
+
+.x-btn .buddy-xa {
+	background: url('user-xa.png') no-repeat left center !important;
 }

@@ -10,6 +10,8 @@ public interface ChatManager {
 
 	void process(Message message);
 
+	void reset();
+
 	void updatePresence(PresenceItem presenceItem);
 
 }

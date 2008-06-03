@@ -6,15 +6,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import tigase.messenger.client.tabbed.ChatTab;
 import tigase.xmpp4gwt.client.JID;
 
 public class ChatSet<T> {
 
 	private static class Envelope<T> {
+		T data;
 		JID jid;
 		String threadId;
-		T data;
 	}
 
 	private final Set<Envelope<T>> chats = new HashSet<Envelope<T>>();
@@ -47,18 +46,6 @@ public class ChatSet<T> {
 		return null;
 	}
 
-	public void removeChatData(Object data) {
-		Iterator<Envelope<T>> it = this.chats.iterator();
-		while (it.hasNext()) {
-			Envelope<T> element = it.next();
-			if (element.data == data) {
-				it.remove();
-				System.out.println("ChatData removed.");
-			}
-		}
-
-	}
-
 	public List<T> getChatList(JID jid) {
 		ArrayList<T> result = new ArrayList<T>();
 
@@ -71,5 +58,17 @@ public class ChatSet<T> {
 		}
 
 		return result;
+	}
+
+	public void removeChatData(Object data) {
+		Iterator<Envelope<T>> it = this.chats.iterator();
+		while (it.hasNext()) {
+			Envelope<T> element = it.next();
+			if (element.data == data) {
+				it.remove();
+				System.out.println("ChatData removed.");
+			}
+		}
+
 	}
 }
