@@ -1,3 +1,13 @@
+* {
+	font-family: arial, helvetica, tahoma, sans-serif;
+	font-size: 12px;
+}
+
+.ext-ie .x-form-text {
+	POSITION: relative;
+	TOP: -1px
+}
+
 /*-- roster component --*/
 .roster-group * {
 	font-family: tahoma, arial, verdana, sans-serif;

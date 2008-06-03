@@ -122,7 +122,7 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 	protected void closeLoginDialog() {
 		if (loginDialog != null) {
 			loginDialog.removeLoginDialogListener(this);
-			loginDialog.close();
+			loginDialog.hide();
 			loginDialog = null;
 		}
 	}
@@ -203,7 +203,7 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 		RootPanel.get().add(tvp);
 		DeferredCommand.addCommand(new Command() {
 			public void execute() {
-				tvp.layout(true);
+				tvp.layout();
 			}
 		});
 

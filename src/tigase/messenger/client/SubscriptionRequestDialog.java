@@ -4,9 +4,8 @@ import tigase.xmpp4gwt.client.xmpp.presence.PresenceItem;
 
 import com.extjs.gxt.ui.client.event.ComponentEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
-import com.extjs.gxt.ui.client.widget.Button;
-import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Dialog;
+import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.form.CheckBox;
 
 public class SubscriptionRequestDialog extends Dialog {
@@ -27,7 +26,7 @@ public class SubscriptionRequestDialog extends Dialog {
 
 		addButton(new Button("Cancel", new SelectionListener<ComponentEvent>() {
 			public void componentSelected(ComponentEvent ce) {
-				close();
+				hide();
 			}
 		}));
 
@@ -37,7 +36,7 @@ public class SubscriptionRequestDialog extends Dialog {
 				if (auto.getValue()) {
 					Messenger.session().getPresencePlugin().subscribe(item.getJid());
 				}
-				close();
+				hide();
 			}
 		});
 		addButton(authorizeButton);

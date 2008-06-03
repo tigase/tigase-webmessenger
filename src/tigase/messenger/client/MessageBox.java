@@ -384,7 +384,6 @@ public class MessageBox {
 		dialog.setPlain(true);
 		dialog.setFooter(true);
 		dialog.setButtons(buttons);
-		dialog.buttonPressedAction = "close";
 		if (callback != null) {
 			dialog.addListener(Events.Close, callback);
 		}

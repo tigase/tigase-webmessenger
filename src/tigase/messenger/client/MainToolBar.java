@@ -1,7 +1,7 @@
 package tigase.messenger.client;
 
 import com.extjs.gxt.ui.client.widget.menu.Menu;
-import com.extjs.gxt.ui.client.widget.menu.TextMenuItem;
+import com.extjs.gxt.ui.client.widget.menu.MenuItem;
 import com.extjs.gxt.ui.client.widget.toolbar.TextToolItem;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolItem;
@@ -22,23 +22,23 @@ public class MainToolBar extends ToolBar {
 		TextToolItem ti = new TextToolItem("Actions");
 		ti.setMenu(x);
 
-		TextMenuItem statusMenu = new TextMenuItem("Set status");
+		MenuItem statusMenu = new MenuItem("Set status");
 		x.add(statusMenu);
 		Menu statusSubmenu = new Menu();
 		statusMenu.setSubMenu(statusSubmenu);
 
-		TextMenuItem statusOnlineItem = new TextMenuItem("Online");
+		MenuItem statusOnlineItem = new MenuItem("Online");
 		statusSubmenu.add(statusOnlineItem);
-		TextMenuItem statusChatItem = new TextMenuItem("Free for chat");
+		MenuItem statusChatItem = new MenuItem("Free for chat");
 		statusSubmenu.add(statusChatItem);
-		TextMenuItem statusAwayItem = new TextMenuItem("Away");
+		MenuItem statusAwayItem = new MenuItem("Away");
 		statusSubmenu.add(statusAwayItem);
-		TextMenuItem statusXAItem = new TextMenuItem("Extended Away");
+		MenuItem statusXAItem = new MenuItem("Extended Away");
 		statusSubmenu.add(statusXAItem);
-		TextMenuItem statusDNDItem = new TextMenuItem("Do not Disturb");
+		MenuItem statusDNDItem = new MenuItem("Do not Disturb");
 		statusSubmenu.add(statusDNDItem);
 
-		TextMenuItem logoutItem = new TextMenuItem("Logout");
+		MenuItem logoutItem = new MenuItem("Logout");
 		x.add(logoutItem);
 
 		return ti;
