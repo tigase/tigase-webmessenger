@@ -1,9 +1,12 @@
 package tigase.messenger.client;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
+import tigase.messenger.client.tabbed.ChatTab;
 import tigase.xmpp4gwt.client.JID;
 
 public class ChatSet<T> {
@@ -32,6 +35,7 @@ public class ChatSet<T> {
 	public T getChatData(final JID jid, final String threadId) {
 		for (Envelope<T> env : this.chats) {
 			if (!env.jid.getBareJID().equals(jid.getBareJID())) continue;
+			if (threadId != null && !threadId.equals(env.threadId)) continue;
 			if (env.threadId != null && threadId != null && threadId.equals(env.threadId)) {
 				return env.data;
 			} else if (env.jid.equals(jid)) {
@@ -53,5 +57,19 @@ public class ChatSet<T> {
 			}
 		}
 
+	}
+
+	public List<T> getChatList(JID jid) {
+		ArrayList<T> result = new ArrayList<T>();
+
+		for (Envelope<T> env : this.chats) {
+			if (env.jid.equals(jid)) {
+				result.add(env.data);
+			} else if (jid.getResource() == null && jid.equals(env.jid.getBareJID())) {
+				result.add(env.data);
+			}
+		}
+
+		return result;
 	}
 }

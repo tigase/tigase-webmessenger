@@ -20,8 +20,8 @@ public class LoginDialog extends Dialog {
 	private final PasswordTextBox passwordInput = new PasswordTextBox();
 
 	public LoginDialog() {
-		jidInput.setText("alice@sphere");
-		passwordInput.setText("a");
+		jidInput.setText("bob@sphere");
+		passwordInput.setText("b");
 
 		setModal(false);
 		setBodyBorder(false);
