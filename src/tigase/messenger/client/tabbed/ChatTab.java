@@ -26,17 +26,21 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class ChatTab extends TabItem {
 
+	private ContentPanel center = new ContentPanel();
+
 	private final HTML conversation = new HTML();
+
+	protected DateTimeFormat dtf = DateTimeFormat.getFormat("HH:mm:ss");
+
+	private JID jid;
 
 	private final TextArea message = new TextArea();
 
 	private String nickname;
 
-	private String threadid;
-
-	private JID jid;
-
 	private String tabTitle;
+
+	private String threadid;
 
 	private boolean unread;
 
@@ -56,6 +60,31 @@ public class ChatTab extends TabItem {
 		}
 		this.tabTitle = nickname;
 		setText(tabTitle);
+	}
+
+	protected void addLine(String body) {
+		String html = this.conversation.getHTML();
+		html += body + "<br/>";
+		this.conversation.setHTML(html);
+		center.setVScrollPosition(this.conversation.getOffsetHeight());
+	}
+
+	protected void addLine(String styleName, String body) {
+		String x = "<span";
+		if (styleName != null) {
+			x += " class='" + styleName + "'";
+		}
+		x += ">" + body + "</span>";
+		addLine(x);
+	}
+
+	protected void addLine(String styleName, String date, String nickname, String body) {
+		String x = "<span";
+		if (styleName != null) {
+			x += " class='" + styleName + "'";
+		}
+		x += ">[" + date + "] " + nickname + ":</span>&nbsp;" + body;
+		addLine(x);
 	}
 
 	protected Component createInputPanel() {
@@ -96,43 +125,9 @@ public class ChatTab extends TabItem {
 		return panel;
 	}
 
-	protected void addLine(String body) {
-		String html = this.conversation.getHTML();
-		html += body + "<br/>";
-		this.conversation.setHTML(html);
-		center.setVScrollPosition(this.conversation.getOffsetHeight());
+	public boolean isUnread() {
+		return unread;
 	}
-
-	protected void addLine(String styleName, String body) {
-		String x = "<span";
-		if (styleName != null) {
-			x += " class='" + styleName + "'";
-		}
-		x += ">" + body + "</span>";
-		addLine(x);
-	}
-
-	protected void addLine(String styleName, String date, String nickname, String body) {
-		String x = "<span";
-		if (styleName != null) {
-			x += " class='" + styleName + "'";
-		}
-		x += ">[" + date + "] " + nickname + ":</span>&nbsp;" + body;
-		addLine(x);
-	}
-
-	protected DateTimeFormat dtf = DateTimeFormat.getFormat("HH:mm:ss");
-
-	protected void send() {
-		String msg = message.getText();
-		message.setText("");
-
-		Messenger.session().getChatPlugin().sendChatMessage(jid, msg, threadid, null);
-
-		addLine("me", dtf.format(new Date()), "Me", msg);
-	}
-
-	private ContentPanel center = new ContentPanel();
 
 	@Override
 	protected void onRender(Element parent, int index) {
@@ -185,10 +180,21 @@ public class ChatTab extends TabItem {
 		}
 	}
 
-	@Override
-	public void setText(String text) {
-		System.out.println("USTAWIONO: " + text);
-		super.setText(text);
+	void select() {
+		if (unread) {
+			setText(this.tabTitle);
+			this.unread = false;
+		}
+		message.setFocus(true);
+	}
+
+	protected void send() {
+		String msg = message.getText();
+		message.setText("");
+
+		Messenger.session().getChatPlugin().sendChatMessage(jid, msg, threadid, null);
+
+		addLine("me", dtf.format(new Date()), "Me", msg);
 	}
 
 	public void setPresenceIcon(RosterPresence rp) {
@@ -222,11 +228,9 @@ public class ChatTab extends TabItem {
 		}
 	}
 
-	void select() {
-		if (unread) {
-			setText(this.tabTitle);
-			this.unread = false;
-		}
-		message.setFocus(true);
+	@Override
+	public void setText(String text) {
+		System.out.println("USTAWIONO: " + text);
+		super.setText(text);
 	}
 }

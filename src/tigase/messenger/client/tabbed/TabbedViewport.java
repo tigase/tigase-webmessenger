@@ -30,6 +30,7 @@ import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.DeferredCommand;
+import com.google.gwt.user.client.Window;
 
 public class TabbedViewport extends Viewport implements ChatManager, PresenceListener {
 
@@ -98,6 +99,12 @@ public class TabbedViewport extends Viewport implements ChatManager, PresenceLis
 				if (be.item instanceof ChatTab) {
 					((ChatTab) be.item).select();
 				}
+				int unreadCount = 0;
+				for (ChatTab ct : chats.getAll()) {
+					unreadCount += ct.isUnread() ? 1 : 0;
+				}
+				unreadTabsCount = unreadCount;
+				updateWindowTitle();
 			}
 		});
 
@@ -144,7 +151,7 @@ public class TabbedViewport extends Viewport implements ChatManager, PresenceLis
 		add(chatTabFolder, centerData);
 		add(createRosterPanel(), westData);
 		add(south, southData);
-
+		updateWindowTitle();
 	}
 
 	protected void sendNewPresence(RosterPresence presence) {
@@ -222,6 +229,17 @@ public class TabbedViewport extends Viewport implements ChatManager, PresenceLis
 		});
 	}
 
+	protected void updateWindowTitle() {
+		System.out.println("UNREAD TABS: " + unreadTabsCount);
+		String msg = "Tigase Messenger";
+		if (unreadTabsCount != 0) {
+			msg = "* [" + unreadTabsCount + "] " + msg;
+		}
+		Window.setTitle(msg);
+	}
+
+	protected int unreadTabsCount = 0;
+
 	public void process(Message message) {
 		ChatTab tab = chats.getChatData(message.getFrom(), message.getThread());
 		if (tab == null) {
@@ -236,7 +254,14 @@ public class TabbedViewport extends Viewport implements ChatManager, PresenceLis
 			}
 			chatTabFolder.recalculate();
 		}
+		boolean old = tab.isUnread();
 		tab.process(message);
+		boolean nw = tab.isUnread();
+		if (old != nw) {
+			unreadTabsCount++;
+			updateWindowTitle();
+		}
+
 	}
 
 	public void updatePresence(PresenceItem presenceItem) {

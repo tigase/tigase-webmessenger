@@ -30,6 +30,26 @@
 		</pathelement>
 	</path>
 
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: init                      
+         - - - - - - - - - - - - - - - - - -->
+	<target name="init">
+		<exec executable="svnversion">
+			<redirector outputproperty="build-no" errorproperty="error-property">
+				<outputfilterchain>
+					<!--
+					<tokenfilter>
+						<containsregex pattern="[^0-9]*([0-9]+).*" replace="\1" />
+					</tokenfilter>
+					-->
+				</outputfilterchain>
+			</redirector>
+		</exec>
+		<echo>${build-no}</echo>
+		<property name="appVersion" value="${ver}-b${build-no}" />
+	</target>
+
+
 	<!-- ================================= 
           target: clean              
          ================================= -->
@@ -41,8 +61,11 @@
 	</target>
 
 
-	<target name="gwt-compile">
+	<target name="gwt-compile" depends="init">
 		<description>Compile source using GWTCompiler</description>
+		<propertyfile file="${src.dir}/tigase/messenger/client/VersionInfo.properties">
+			<entry key="versionNumber" value="${appVersion}" />
+		</propertyfile>
 
 		<java failonerror="true" maxmemory="256m" classname="com.google.gwt.dev.GWTCompiler" fork="true" dir="./">
 			<arg value="-out" />

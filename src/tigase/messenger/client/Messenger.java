@@ -41,6 +41,7 @@ import com.extjs.gxt.ui.client.widget.form.LabelField;
 import com.extjs.gxt.ui.client.widget.layout.RowData;
 import com.extjs.gxt.ui.client.widget.layout.RowLayout;
 import com.google.gwt.core.client.EntryPoint;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.http.client.Response;
 import com.google.gwt.i18n.client.Dictionary;
 import com.google.gwt.user.client.Command;
@@ -61,6 +62,8 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 	private static enum ErrorStage {
 		HIDDEN, NONE, SHOW
 	}
+
+	private final VersionInfo versionInfo;
 
 	private static Messenger instance;
 
@@ -98,6 +101,8 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 
 		ThemeManager.register(Slate.SLATE);
 		GXT.setDefaultTheme(Slate.BLUE, true);
+
+		this.versionInfo = GWT.create(VersionInfo.class);
 
 		this.user = new User();
 		this.session = new Session(user);
@@ -331,7 +336,7 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 		LabelField name = new LabelField("Tigase Messenger");
 		name.addStyleName("center");
 		name.addStyleName("name");
-		LabelField version = new LabelField("ver. ");
+		LabelField version = new LabelField("ver. " + this.versionInfo.versionNumber());
 		version.addStyleName("center");
 
 		aboutDialog.add(s, new RowData());

@@ -31,6 +31,14 @@ public class ChatSet<T> {
 		this.chats.clear();
 	}
 
+	public List<T> getAll() {
+		ArrayList<T> result = new ArrayList<T>();
+		for (Envelope<T> env : chats) {
+			result.add(env.data);
+		}
+		return result;
+	}
+
 	public T getChatData(final JID jid, final String threadId) {
 		for (Envelope<T> env : this.chats) {
 			if (!env.jid.getBareJID().equals(jid.getBareJID())) continue;
