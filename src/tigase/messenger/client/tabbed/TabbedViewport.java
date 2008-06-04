@@ -19,8 +19,10 @@ import tigase.xmpp4gwt.client.xmpp.presence.Show;
 import com.extjs.gxt.ui.client.Events;
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.Style.Scroll;
+import com.extjs.gxt.ui.client.event.BaseEvent;
 import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.TabPanelEvent;
+import com.extjs.gxt.ui.client.event.WidgetListener;
 import com.extjs.gxt.ui.client.util.Margins;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.TabPanel;
@@ -32,7 +34,7 @@ import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.DeferredCommand;
 import com.google.gwt.user.client.Window;
 
-public class TabbedViewport extends Viewport implements ChatManager, PresenceListener {
+public class TabbedViewport extends Viewport implements ChatManager, PresenceListener, ChatTabListener {
 
 	private final Roster rosterComponent;
 
@@ -90,6 +92,9 @@ public class TabbedViewport extends Viewport implements ChatManager, PresenceLis
 
 			public void handleEvent(TabPanelEvent be) {
 				System.out.println("zmakło " + be.container + "  " + be.item + "   " + be.component);
+				if (be.item instanceof ChatTab) {
+					((ChatTab) be.item).removeChatTabListener(TabbedViewport.this);
+				}
 				chats.removeChatData(be.item);
 			}
 		});
@@ -104,7 +109,7 @@ public class TabbedViewport extends Viewport implements ChatManager, PresenceLis
 					unreadCount += ct.isUnread() ? 1 : 0;
 				}
 				unreadTabsCount = unreadCount;
-				updateWindowTitle();
+				updateWindowTitle(false);
 			}
 		});
 
@@ -151,7 +156,14 @@ public class TabbedViewport extends Viewport implements ChatManager, PresenceLis
 		add(chatTabFolder, centerData);
 		add(createRosterPanel(), westData);
 		add(south, southData);
-		updateWindowTitle();
+		updateWindowTitle(false);
+
+		addListener(Events.Focus, new Listener<BaseEvent>() {
+
+			public void handleEvent(BaseEvent be) {
+				System.out.println("handle");
+			}
+		});
 	}
 
 	protected void sendNewPresence(RosterPresence presence) {
@@ -213,12 +225,14 @@ public class TabbedViewport extends Viewport implements ChatManager, PresenceLis
 		}
 		chatTabFolder.recalculate();
 		final ChatTab chatTab = new ChatTab(buddyJid, threadId);
+		chatTab.addChatTabListener(this);
 		chats.addChatData(buddyJid, threadId, chatTab);
 		chatTabFolder.add(chatTab);
 		RosterPresence rp = this.presenceCallback.getRosterPresence(buddyJid);
 		chatTab.setPresenceIcon(rp);
 		if (focus) {
 			chatTabFolder.setSelection(chatTab);
+			chatTab.select();
 		}
 		DeferredCommand.addCommand(new Command() {
 
@@ -229,9 +243,10 @@ public class TabbedViewport extends Viewport implements ChatManager, PresenceLis
 		});
 	}
 
-	protected void updateWindowTitle() {
+	protected void updateWindowTitle(boolean newMessage) {
 		System.out.println("UNREAD TABS: " + unreadTabsCount);
 		String msg = "Tigase Messenger";
+
 		if (unreadTabsCount != 0) {
 			msg = "* [" + unreadTabsCount + "] " + msg;
 		}
@@ -244,6 +259,7 @@ public class TabbedViewport extends Viewport implements ChatManager, PresenceLis
 		ChatTab tab = chats.getChatData(message.getFrom(), message.getThread());
 		if (tab == null) {
 			tab = new ChatTab(message.getFrom(), message.getThread());
+			tab.addChatTabListener(this);
 			chats.addChatData(message.getFrom(), message.getThread(), tab);
 			RosterPresence rp = this.presenceCallback.getRosterPresence(message.getFrom());
 			tab.setPresenceIcon(rp);
@@ -259,7 +275,7 @@ public class TabbedViewport extends Viewport implements ChatManager, PresenceLis
 		boolean nw = tab.isUnread();
 		if (old != nw) {
 			unreadTabsCount++;
-			updateWindowTitle();
+			updateWindowTitle(message.getBody() != null);
 		}
 
 	}
@@ -289,4 +305,14 @@ public class TabbedViewport extends Viewport implements ChatManager, PresenceLis
 	public void onContactUnavailable(PresenceItem presenceItem) {}
 
 	public void onPresenceChange(PresenceItem presenceItem) {}
+
+	public void onFocus(ChatTab chatTab) {
+		chatTab.select();
+		int unreadCount = 0;
+		for (ChatTab ct : chats.getAll()) {
+			unreadCount += ct.isUnread() ? 1 : 0;
+		}
+		unreadTabsCount = unreadCount;
+		updateWindowTitle(false);
+	}
 }

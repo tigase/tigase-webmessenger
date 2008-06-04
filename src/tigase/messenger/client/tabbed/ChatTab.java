@@ -1,5 +1,6 @@
 package tigase.messenger.client.tabbed;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 import tigase.messenger.client.Messenger;
@@ -19,6 +20,7 @@ import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Element;
+import com.google.gwt.user.client.ui.FocusListener;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.KeyboardListener;
 import com.google.gwt.user.client.ui.TextArea;
@@ -41,6 +43,8 @@ public class ChatTab extends TabItem {
 	private String tabTitle;
 
 	private String threadid;
+
+	private boolean focused = true;
 
 	private boolean unread;
 
@@ -79,6 +83,16 @@ public class ChatTab extends TabItem {
 		addLine(x);
 	}
 
+	private final ArrayList<ChatTabListener> listeners = new ArrayList<ChatTabListener>();
+
+	public void addChatTabListener(ChatTabListener listener) {
+		this.listeners.add(listener);
+	}
+
+	public void removeChatTabListener(ChatTabListener listener) {
+		this.listeners.remove(listener);
+	}
+
 	protected void addLine(String styleName, String date, String nickname, String body) {
 		String x = "<span";
 		if (styleName != null) {
@@ -110,6 +124,19 @@ public class ChatTab extends TabItem {
 		panel.add(toolbar, northData);
 		panel.add(message, centerData);
 
+		message.addFocusListener(new FocusListener() {
+
+			public void onFocus(Widget sender) {
+				focused = true;
+				for (ChatTabListener listener : listeners) {
+					listener.onFocus(ChatTab.this);
+				}
+			}
+
+			public void onLostFocus(Widget sender) {
+				focused = false;
+			}
+		});
 		message.addKeyboardListener(new KeyboardListener() {
 
 			public void onKeyDown(Widget sender, char keyCode, int modifiers) {}
@@ -170,7 +197,8 @@ public class ChatTab extends TabItem {
 				nickname = message.getFrom().toStringBare();
 			}
 
-			boolean selected = getTabPanel().getSelectedItem() == this;
+			boolean selected = getTabPanel().getSelectedItem() == this && Messenger.instance().isFocused() && focused;
+
 			if (!unread && !selected) {
 				setText("* " + this.tabTitle);
 				unread = true;

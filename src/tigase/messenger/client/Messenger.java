@@ -63,8 +63,6 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 		HIDDEN, NONE, SHOW
 	}
 
-	private final VersionInfo versionInfo;
-
 	private static Messenger instance;
 
 	protected static int PROGRESS_ELEMENTS = 4;
@@ -94,6 +92,8 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 	private final Session session;
 
 	protected final User user;
+
+	private final VersionInfo versionInfo;
 
 	public Messenger() {
 		instance = this;
@@ -157,6 +157,10 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 		}
 	}
 
+	public boolean isFocused() {
+		return subIsFocused().equals("true");
+	}
+
 	public void logout() {
 		session.logout();
 		rosterComponent.reset();
@@ -215,6 +219,7 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 	 * This is the entry point method.
 	 */
 	public void onModuleLoad() {
+
 		rosterComponent.addAlwaysVisibleGroups("General");
 
 		final TabbedViewport tvp = new TabbedViewport(rosterComponent);
@@ -383,6 +388,10 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 		}
 	}
 
+	private native String subIsFocused() /*-{
+	    return $wnd.focused;
+	}-*/;
+
 	protected void updateProgress(String message) {
 		System.out.println(">" + message);
 		if (progressBox != null) {
@@ -391,5 +400,4 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 			bar.updateProgress(x / PROGRESS_ELEMENTS, message);
 		}
 	}
-
 }

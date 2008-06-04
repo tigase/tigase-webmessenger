@@ -57,5 +57,17 @@
 </div>
 
 <script type="text/javascript" language="javascript" src="tigase.messenger.Messenger.nocache.js"></script>
+<script type="text/javascript">
+window.onfocus = function(){
+	window.focused = 'true';
+	call();
+}
+window.ononblur = function(){
+	window.focused = 'false';
+	call();
+}
+window.focused = 'true';
+</script>
+
 </body>
 </html>
