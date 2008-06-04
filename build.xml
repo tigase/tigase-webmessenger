@@ -44,6 +44,7 @@
 			</redirector>
 		</exec>
 		<property name="appVersion" value="${ver}-b${build-no}" />
+		<echo>Version ${appVersion}</echo>
 	</target>
 
 

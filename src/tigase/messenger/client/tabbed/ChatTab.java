@@ -74,7 +74,8 @@ public class ChatTab extends TabItem {
 		if (styleName != null) {
 			x += " class='" + styleName + "'";
 		}
-		x += ">" + body + "</span>";
+		String msg = body.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+		x += ">" + msg + "</span>";
 		addLine(x);
 	}
 
@@ -83,7 +84,8 @@ public class ChatTab extends TabItem {
 		if (styleName != null) {
 			x += " class='" + styleName + "'";
 		}
-		x += ">[" + date + "] " + nickname + ":</span>&nbsp;" + body;
+		String msg = body.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+		x += ">[" + date + "] " + nickname + ":</span>&nbsp;" + msg;
 		addLine(x);
 	}
 
