@@ -285,4 +285,10 @@ public class Roster extends Composite {
 		fireAfterRosterChange();
 	}
 
+	public void setShowOffline(boolean newValue) {
+		for (Group group : this.groups.values()) {
+			group.setShowOffline(newValue);
+		}
+	}
+
 }

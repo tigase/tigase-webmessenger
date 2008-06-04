@@ -1,3 +1,12 @@
+.center {
+	text-align: center;
+}
+
+.about .name {
+	font-size: 18px;
+	font-weight: bold;
+}
+
 * {
 	font-family: arial, helvetica, tahoma, sans-serif;
 	font-size: 12px;
@@ -22,11 +31,19 @@ textarea.chatinput {
 }
 
 .group-header.open {
-	background: url("opened.png") no-repeat 5px 11px orange;
+	background: url("opened.png") no-repeat 5px 11px #ebeced;
 }
 
 .group-header.close {
-	background: url("closed.png") no-repeat 6px 9px orange;
+	background: url("closed.png") no-repeat 6px 9px #ebeced;
+}
+
+.me {
+	color: #385e79;
+}
+
+.peer {
+	color: #d58248;
 }
 
 .group-header {
@@ -34,15 +51,15 @@ textarea.chatinput {
 	font-weight: bold;
 	padding: 5px;
 	padding-left: 16px;
-	background-color: orange;
+	background-color: #ebeced;
 }
 
 .selected .group-header {
-	background-color: green;
+	background-color: #5093d5;
 }
 
 .buddy.selected {
-	background-color: #c0f1b4;
+	background-color: #5093d5;
 }
 
 .buddy {

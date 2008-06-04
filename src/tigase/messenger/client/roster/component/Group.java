@@ -41,7 +41,7 @@ public class Group extends Composite {
 
 	private int visibleContacts;
 
-	private boolean visibleIfEmpty = true;
+	private boolean visibleIfEmpty = false;
 
 	Group(Roster roster, String groupName) {
 		this.roster = roster;

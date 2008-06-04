@@ -181,6 +181,12 @@ public class TabbedViewport extends Viewport implements ChatManager, PresenceLis
 				statusButton.setPresence(presence);
 				sendNewPresence(presence);
 			}
+
+			@Override
+			protected void showOfflineChanged(boolean newValue) {
+				rosterComponent.setShowOffline(newValue);
+			}
+
 		};
 	}
 

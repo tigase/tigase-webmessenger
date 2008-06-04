@@ -2,8 +2,12 @@ package tigase.messenger.client;
 
 import tigase.messenger.client.roster.component.RosterPresence;
 
+import com.extjs.gxt.ui.client.Events;
 import com.extjs.gxt.ui.client.event.ComponentEvent;
+import com.extjs.gxt.ui.client.event.Listener;
+import com.extjs.gxt.ui.client.event.MenuEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
+import com.extjs.gxt.ui.client.widget.menu.CheckMenuItem;
 import com.extjs.gxt.ui.client.widget.menu.Menu;
 import com.extjs.gxt.ui.client.widget.menu.MenuItem;
 import com.extjs.gxt.ui.client.widget.toolbar.TextToolItem;
@@ -12,12 +16,15 @@ import com.extjs.gxt.ui.client.widget.toolbar.ToolItem;
 
 public abstract class MainToolBar extends ToolBar {
 
+	protected CheckMenuItem showOfflineMenu;
+
 	public MainToolBar() {
 		createAllMenu();
 	}
 
 	protected void createAllMenu() {
 		add(getActionMenu());
+		add(getViewMenu());
 		add(getHelpMenu());
 	}
 
@@ -89,8 +96,43 @@ public abstract class MainToolBar extends ToolBar {
 		Menu actionsMenu = new Menu();
 		helpToolItem.setMenu(actionsMenu);
 
+		MenuItem statusOnlineItem = new MenuItem("About");
+		statusOnlineItem.addSelectionListener(new SelectionListener<ComponentEvent>() {
+			public void componentSelected(ComponentEvent ce) {
+				Messenger.instance().showAbout();
+			}
+		});
+		actionsMenu.add(statusOnlineItem);
+
+		return helpToolItem;
+	}
+
+	protected ToolItem getViewMenu() {
+		TextToolItem helpToolItem = new TextToolItem("View");
+		Menu actionsMenu = new Menu();
+		helpToolItem.setMenu(actionsMenu);
+
+		showOfflineMenu = new CheckMenuItem("Show offline contacts");
+		showOfflineMenu.setChecked(true);
+		actionsMenu.add(showOfflineMenu);
+		showOfflineMenu.addSelectionListener(new SelectionListener<ComponentEvent>() {});
+		showOfflineMenu.addListener(Events.CheckChange, new Listener<MenuEvent>() {
+
+			public void handleEvent(MenuEvent be) {
+				showOfflineChanged(showOfflineMenu.isChecked());
+			}
+		});
+
 		return helpToolItem;
 	}
 
 	protected abstract void setNewPresence(RosterPresence presence);
+
+	public void setShowOffline(boolean value) {
+		if (showOfflineMenu != null) {
+			showOfflineMenu.setChecked(value);
+		}
+	}
+
+	protected abstract void showOfflineChanged(boolean newValue);
 }

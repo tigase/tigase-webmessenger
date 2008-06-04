@@ -31,19 +31,25 @@ import com.extjs.gxt.ui.client.GXT;
 import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.WindowEvent;
 import com.extjs.gxt.ui.client.util.ThemeManager;
+import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.Info;
 import com.extjs.gxt.ui.client.widget.InfoConfig;
 import com.extjs.gxt.ui.client.widget.MessageBox;
 import com.extjs.gxt.ui.client.widget.ProgressBar;
+import com.extjs.gxt.ui.client.widget.button.Button;
+import com.extjs.gxt.ui.client.widget.form.LabelField;
+import com.extjs.gxt.ui.client.widget.layout.RowData;
+import com.extjs.gxt.ui.client.widget.layout.RowLayout;
 import com.google.gwt.core.client.EntryPoint;
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.http.client.Response;
 import com.google.gwt.i18n.client.Dictionary;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.DeferredCommand;
 import com.google.gwt.user.client.Event;
-import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.xml.client.Node;
 
 /**
@@ -51,6 +57,10 @@ import com.google.gwt.xml.client.Node;
  */
 public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPluginListener, BoshConnectionListener,
 		ResourceBindListener, RosterListener, MessageListener, PresenceListener {
+
+	private static enum ErrorStage {
+		HIDDEN, NONE, SHOW
+	}
 
 	private static Messenger instance;
 
@@ -66,6 +76,10 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 
 	protected ChatManager chatManager;
 
+	private final Dictionary config;
+
+	private ErrorStage error = ErrorStage.NONE;
+
 	private LoginDialog loginDialog = null;
 
 	protected PresenceCallback presenceCallback;
@@ -77,8 +91,6 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 	private final Session session;
 
 	protected final User user;
-
-	private final Dictionary config;
 
 	public Messenger() {
 		instance = this;
@@ -173,47 +185,21 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 	public void onContactUnavailable(PresenceItem presenceItem) {}
 
 	public void onDisconnectByServer(BoshConnection con) {
-		rosterComponent.reset();
-		MessageBox.alert("Error", "Disconnected by server", new Listener<WindowEvent>() {
-
-			public void handleEvent(WindowEvent be) {
-				showLoginDialog();
-			}
-		});
+		showErrorThenLogin("Error", "Disconnected by server");
 	}
 
 	public void onEndRosterUpdating() {}
 
 	public void onError(String message) {
-		rosterComponent.reset();
-		MessageBox.alert("Error", message, new Listener<WindowEvent>() {
-
-			public void handleEvent(WindowEvent be) {
-				showLoginDialog();
-			}
-		});
-
+		showErrorThenLogin("Error", message);
 	}
 
 	public void onFail(String message) {
-		rosterComponent.reset();
-		MessageBox.alert("Error", "IAuthentication error: " + message, new Listener<WindowEvent>() {
-
-			public void handleEvent(WindowEvent be) {
-				showLoginDialog();
-			}
-		});
-
+		showErrorThenLogin("Error", "Authentication error: " + message);
 	}
 
 	public void onItemNotFoundError() {
-		rosterComponent.reset();
-		MessageBox.alert("Error", "Item not found", new Listener<WindowEvent>() {
-
-			public void handleEvent(WindowEvent be) {
-				showLoginDialog();
-			}
-		});
+		showErrorThenLogin("Error", "Item not found");
 	}
 
 	public void onMessageReceived(Message message) {
@@ -262,6 +248,7 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 
 	public void onPressLogin() {
 		rosterComponent.reset();
+		error = ErrorStage.NONE;
 
 		boolean go = false;
 
@@ -283,12 +270,13 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 				if (jid.getResource() != null) resource = jid.getResource();
 				user.setDomainname(domain);
 				user.setResource(resource);
+				user.setPriority(-5);
 				go = true;
 			}
 		}
 		if (go) {
 			closeLoginDialog();
-			this.progressBox = MessageBox.progress("Logging in", "Please wait...", "Conncting...");
+			this.progressBox = MessageBox.progress("Logging in", "Please wait...", "Connecting...");
 			this.session.login();
 		}
 	}
@@ -312,6 +300,72 @@ public class Messenger implements EntryPoint, LoginDialogListener, SaslAuthPlugi
 
 	public void onUpdateItem(RosterItem item) {
 		rosterComponent.updatedRosterItem(item);
+	}
+
+	public void showAbout() {
+		Dialog aboutDialog = new Dialog() {
+			@Override
+			protected void onButtonPressed(Button button) {
+				super.onButtonPressed(button);
+				hide();
+			}
+		};
+		aboutDialog.setHeading("About...");
+		aboutDialog.addStyleName("about");
+
+		RowLayout l = new RowLayout();
+		l.setMargin(5);
+		aboutDialog.setLayout(l);
+
+		Image logo = new Image("tigase-logo.png");
+		SimplePanel s = new SimplePanel();
+		s.addStyleName("center");
+		s.add(logo);
+		logo.setHeight("133px");
+		logo.addStyleName("center");
+
+		LabelField copyright = new LabelField("Copyright © 2008 by Tigase Team");
+		copyright.addStyleName("center");
+		HTML link = new HTML("<a target=\"_blank\" href=\"http://www.tigase.org\">www.tigase.org</a>");
+		link.addStyleName("center");
+		LabelField name = new LabelField("Tigase Messenger");
+		name.addStyleName("center");
+		name.addStyleName("name");
+		LabelField version = new LabelField("ver. ");
+		version.addStyleName("center");
+
+		aboutDialog.add(s, new RowData());
+		aboutDialog.add(name, new RowData());
+		aboutDialog.add(version, new RowData());
+		aboutDialog.add(new LabelField(""), new RowData());
+		aboutDialog.add(copyright, new RowData());
+		aboutDialog.add(link, new RowData());
+
+		aboutDialog.setButtons(Dialog.OK);
+		aboutDialog.show();
+	}
+
+	protected void showErrorThenLogin(String title, String msg) {
+		System.out.println("ERROR!!! " + msg);
+		if (progressBox != null) {
+			progressBox.hide();
+			progressBox = null;
+		}
+		rosterComponent.reset();
+		if (error == ErrorStage.HIDDEN) {
+			System.out.println("POKQAZUJEMY login po: " + msg);
+			showLoginDialog();
+		} else if (error == ErrorStage.NONE) {
+			System.out.println("POKQAZUJEMY messagebox po: " + msg);
+			error = ErrorStage.SHOW;
+			MessageBox.alert(title, msg, new Listener<WindowEvent>() {
+				public void handleEvent(WindowEvent be) {
+					error = ErrorStage.HIDDEN;
+					showLoginDialog();
+				}
+			});
+		}
+
 	}
 
 	protected void showLoginDialog() {

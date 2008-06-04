@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ====================================================================== 
+     2007-11-26 08:26:57                                                        
+
+     Tigase Messenger    
+     Jabber/XMPP Client
+                   
+     bmalkow                                                                
+     ====================================================================== -->
+<project name="Tigase Messenger" default="dist">
+	<description>
+            Jabber/XMPP Client
+    </description>
+
+	<property file="build.properties" />
+
+	<path id="classpath">
+		<!--
+		<fileset dir="${GWT_HOME}">
+			<include name="**/*.jar" />
+		</fileset>
+-->
+		<fileset dir="./lib">
+			<include name="**/*.jar" />
+		</fileset>
+
+		<pathelement location="${src.dir}">
+		</pathelement>
+		<pathelement location="${classes.build.dir}">
+		</pathelement>
+	</path>
+
+	<!-- ================================= 
+          target: clean              
+         ================================= -->
+	<target name="clean" description="--> clean">
+		<delete dir="${classes.build.dir}" />
+		<delete dir="${gwt.build.dir}" />
+		<delete dir=".gwt-cache" />
+		<delete dir="${dist.dir}" />
+	</target>
+
+
+	<target name="gwt-compile">
+		<description>Compile source using GWTCompiler</description>
+
+		<java failonerror="true" maxmemory="256m" classname="com.google.gwt.dev.GWTCompiler" fork="true" dir="./">
+			<arg value="-out" />
+			<arg value="${gwt.build.dir}" />
+
+			<arg value="-style" />
+			<arg value="${gwt.style}" />
+
+			<arg value="tigase.messenger.Messenger" />
+
+			<classpath>
+				<path refid="classpath" />
+			</classpath>
+		</java>
+
+	</target>
+
+	<!-- ================================= 
+          target: dist              
+         ================================= -->
+	<target name="dist" depends="gwt-compile" description="--> Jabber/XMPP Client">
+		<mkdir dir="${dist.dir}" />
+		<zip duplicate="preserve" destfile="${dist.dir}/messenger-${ver}.zip">
+			<zipfileset dir="${gwt.build.dir}/tigase.messenger.Messenger">
+				<include name="**/*.*" />
+			</zipfileset>
+		</zip>
+	</target>
+
+
+</project>

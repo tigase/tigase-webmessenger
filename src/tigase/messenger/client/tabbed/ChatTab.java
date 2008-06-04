@@ -158,30 +158,31 @@ public class ChatTab extends TabItem {
 	}
 
 	public void process(Message message) {
-		System.out.println(getTextStyle());
-		String nickname;
-		RosterItem ri = Messenger.session().getRosterPlugin().getRosterItem(message.getFrom());
-		if (ri != null) {
-			nickname = ri.getName();
-		} else if (message.getExtNick() != null) {
-			nickname = message.getExtNick();
-		} else {
-			nickname = null;
-		}
+		if (message.getBody() != null) {
+			String nickname;
+			RosterItem ri = Messenger.session().getRosterPlugin().getRosterItem(message.getFrom());
+			if (ri != null) {
+				nickname = ri.getName();
+			} else if (message.getExtNick() != null) {
+				nickname = message.getExtNick();
+			} else {
+				nickname = null;
+			}
 
-		if (nickname == null || nickname.trim().length() < 1) {
-			nickname = message.getFrom().toStringBare();
-		}
+			if (nickname == null || nickname.trim().length() < 1) {
+				nickname = message.getFrom().toStringBare();
+			}
 
-		boolean selected = getTabPanel().getSelectedItem() == this;
-		if (!unread && !selected) {
-			setText("* " + this.tabTitle);
-			unread = true;
-		} else if (unread && selected) {
-			setText(this.tabTitle);
-			unread = false;
+			boolean selected = getTabPanel().getSelectedItem() == this;
+			if (!unread && !selected) {
+				setText("* " + this.tabTitle);
+				unread = true;
+			} else if (unread && selected) {
+				setText(this.tabTitle);
+				unread = false;
+			}
+			addLine("peer", dtf.format(new Date()), nickname, message.getBody());
 		}
-		addLine("me", dtf.format(new Date()), nickname, message.getBody());
 	}
 
 	@Override
