@@ -33,11 +33,10 @@ import javax.servlet.http.HttpServletResponse;
  * Not Modified answer does not go thru the servelet in the backward direction.
  * It could be that the HttpServletResponse does hava some sideeffects which are
  * not helpfull in this special situation. This type of request is currently
- * avoided by removing all "If-" requests. <br />
- * <b>Note:</b> This servlet is actually buggy. It is buggy since it does not
- * solve all problems, it only solves the problems I needed to solve. Many
- * thanks to Thorsten Gast the creator of dirjack for pointing at least some
- * bugs.
+ * avoided by removing all "If-" requests. <br /> <b>Note:</b> This servlet is
+ * actually buggy. It is buggy since it does not solve all problems, it only
+ * solves the problems I needed to solve. Many thanks to Thorsten Gast the
+ * creator of dirjack for pointing at least some bugs.
  * 
  * @author <a href="mailto:frank -at- spieleck.de">Frank Nestel</a>.
  */
@@ -105,18 +104,26 @@ public class ProxyServlet extends HttpServlet {
 	 */
 	public void init(ServletConfig config) throws ServletException {
 		super.init(config);
-		/*
-		 * remotePath = getInitParameter("remotePath"); remoteServer =
-		 * getInitParameter("remoteServer"); String remotePortStr =
-		 * getInitParameter("remotePort"); if (remotePath == null ||
-		 * remoteServer == null) throw new ServletException("Servlet needs
-		 * remotePath & remoteServer."); if (remotePortStr != null) { try {
-		 * remotePort = Integer.parseInt(remotePortStr); } catch (Exception e) {
-		 * throw new ServletException("Port must be a number!"); } } else
-		 * remotePort = 80; if ("".equals(remotePath)) remotePath = ""; // XXX
-		 * ??? "/" else if (remotePath.charAt(0) != '/') remotePath = "/" +
-		 * remotePath; debugFlag = "true".equals(getInitParameter("debug"));
-		 */
+
+		remotePath = getInitParameter("remotePath");
+		remoteServer = getInitParameter("remoteServer");
+		String remotePortStr = getInitParameter("remotePort");
+		if (remotePath == null || remoteServer == null)
+			throw new ServletException("Servlet needs remotePath & remoteServer.");
+		if (remotePortStr != null) {
+			try {
+				remotePort = Integer.parseInt(remotePortStr);
+			} catch (Exception e) {
+				throw new ServletException("Port must be a number!");
+			}
+		} else
+			remotePort = 80;
+		if ("".equals(remotePath))
+			remotePath = ""; // XXX??? "/"
+		else if (remotePath.charAt(0) != '/')
+			remotePath = "/" + remotePath;
+		debugFlag = "true".equals(getInitParameter("debug"));
+
 		//
 		log("remote=" + remoteServer + " " + remotePort + " " + remotePath);
 	}
@@ -132,7 +139,8 @@ public class ProxyServlet extends HttpServlet {
 	 * Capture awaay the standard servlet log ..
 	 */
 	public void log(String msg) {
-		if (debugFlag) System.err.println("## " + msg);
+		if (debugFlag)
+			System.err.println("## " + msg);
 	}
 
 	/**
@@ -143,11 +151,14 @@ public class ProxyServlet extends HttpServlet {
 		while (off2 < b.length) {
 			int r = in.read();
 			if (r == -1) {
-				if (off2 == 0) return -1;
+				if (off2 == 0)
+					return -1;
 				break;
 			}
-			if (r == 13) continue;
-			if (r == 10) break;
+			if (r == 13)
+				continue;
+			if (r == 10)
+				break;
 			b[off2] = (byte) r;
 			++off2;
 		}
@@ -171,8 +182,7 @@ public class ProxyServlet extends HttpServlet {
 			out = new BufferedOutputStream(sock.getOutputStream());
 			in = new BufferedInputStream(sock.getInputStream());
 		} catch (IOException e) {
-			res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Socket opening: " + remoteServer + " "
-					+ remotePort);
+			res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Socket opening: " + remoteServer + " " + remotePort);
 			return;
 		}
 		try {
@@ -214,8 +224,7 @@ public class ProxyServlet extends HttpServlet {
 				//
 				// Throw away persistant connections between servers
 				// Throw away request potentially causing a 304 response.
-				else if (!"Connection".equalsIgnoreCase(k) && !"If-Modified-Since".equalsIgnoreCase(k)
-						&& !"If-None-Match".equalsIgnoreCase(k)) {
+				else if (!"Connection".equalsIgnoreCase(k) && !"If-Modified-Since".equalsIgnoreCase(k) && !"If-None-Match".equalsIgnoreCase(k)) {
 					sb.setLength(0);
 					sb.append(k);
 					sb.append(": ");
@@ -264,8 +273,7 @@ public class ProxyServlet extends HttpServlet {
 	/**
 	 * Forward and filter header from backend Request.
 	 */
-	private boolean treatHeader(InputStream in, HttpServletRequest req, HttpServletResponse res)
-			throws ServletException {
+	private boolean treatHeader(InputStream in, HttpServletRequest req, HttpServletResponse res) throws ServletException {
 		boolean retval = true;
 		byte[] lineBytes = new byte[4096];
 		int len;
@@ -274,7 +282,8 @@ public class ProxyServlet extends HttpServlet {
 		try {
 			// Read the first line of the request.
 			len = readLine(in, lineBytes);
-			if (len == -1 || len == 0) throw new ServletException("No Request found in Data.");
+			if (len == -1 || len == 0)
+				throw new ServletException("No Request found in Data.");
 			{
 				String line2 = new String(lineBytes, 0, len);
 				log("head: " + line2 + " " + len);
@@ -311,7 +320,8 @@ public class ProxyServlet extends HttpServlet {
 					String value = line.substring(i);
 					log("<" + head + ">=<" + value + ">");
 					if (head.equalsIgnoreCase("Location")) {
-						// res.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
+						//res.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY
+						// );
 						// res.setHeader(head, value );
 						log("Location cutted: " + value);
 					} else if (head.equalsIgnoreCase("Content-type"))
@@ -321,7 +331,8 @@ public class ProxyServlet extends HttpServlet {
 							int cLen = Integer.parseInt(value);
 							retval = (cLen > 0);
 							res.setContentLength(cLen);
-						} catch (NumberFormatException ignore) {}
+						} catch (NumberFormatException ignore) {
+						}
 					}
 					// Generically treat unknown headers
 					else {
