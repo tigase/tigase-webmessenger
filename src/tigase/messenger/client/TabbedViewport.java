@@ -1,8 +1,20 @@
 package tigase.messenger.client;
 
+import tigase.messenger.client.roster.component.Group;
+import tigase.messenger.client.roster.component.Item;
 import tigase.messenger.client.roster.component.Roster;
+import tigase.messenger.client.roster.component.RosterListener;
+import tigase.xmpp4gwt.client.JID;
+import tigase.xmpp4gwt.client.stanzas.Message;
+import tigase.xmpp4gwt.client.xmpp.message.Chat;
+import tigase.xmpp4gwt.client.xmpp.message.ChatListener;
+import tigase.xmpp4gwt.client.xmpp.message.ChatManager;
 
+import com.extjs.gxt.ui.client.Events;
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
+import com.extjs.gxt.ui.client.Style.Scroll;
+import com.extjs.gxt.ui.client.event.Listener;
+import com.extjs.gxt.ui.client.event.TabPanelEvent;
 import com.extjs.gxt.ui.client.util.Margins;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.TabItem;
@@ -13,15 +25,20 @@ import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
 import com.extjs.gxt.ui.client.widget.toolbar.TextToolItem;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.user.client.Element;
+import com.google.gwt.user.client.Event;
 
-public class TabbedViewport extends Viewport {
+public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, RosterListener {
 
 	private final Roster rosterComponent;
 
 	private final ToolBar toolBar = new ToolBar();
 
-	public TabbedViewport(Roster rosterComponent) {
+	private ChatManager<ChatTab> chatManager;
+
+	public TabbedViewport(Roster rosterComponent, ChatManager<ChatTab> chatManager) {
 		this.rosterComponent = rosterComponent;
+		this.chatManager = chatManager;
+		this.chatManager.addListener(this);
 	}
 
 	private final TabPanel tabPanel = new TabPanel();
@@ -40,12 +57,13 @@ public class TabbedViewport extends Viewport {
 		toolBar.add(item1);
 
 		ContentPanel west = new ContentPanel();
+		west.setScrollMode(Scroll.AUTO);
 		west.add(this.rosterComponent);
 
 		ContentPanel east = new ContentPanel();
 		ContentPanel south = new ContentPanel();
 
-		BorderLayoutData northData = new BorderLayoutData(LayoutRegion.NORTH,10,0,0);
+		BorderLayoutData northData = new BorderLayoutData(LayoutRegion.NORTH, 26, 26, 26);
 		northData.setCollapsible(false);
 		northData.setFloatable(false);
 		northData.setSplit(false);
@@ -71,15 +89,79 @@ public class TabbedViewport extends Viewport {
 		southData.setMargins(new Margins(0, 5, 5, 5));
 
 		TabItem item = new TabItem();
-		item.setText("GWT");
+		item.setText("Tigase Messenger");
 		item.setIconStyle("icon-tabs");
 		tabPanel.add(item);
 		tabPanel.setSelection(item);
+
+		if (Messenger.config().isDebugEnabled()) {
+			DebugTab dt = new DebugTab();
+			tabPanel.add(dt);
+			tabPanel.setSelection(dt);
+			Messenger.session().getConnector().addBoshListener(dt);
+		}
 
 		add(north, northData);
 		add(west, westData);
 		add(tabPanel, centerData);
 		add(east, eastData);
 		add(south, southData);
+
+		this.rosterComponent.addListener(this);
+	}
+
+	public void afterRosterChange() {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onContactContextMenu(Event event, Item item) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onContactDoubleClick(Item item) {
+		Chat chat = this.chatManager.startChat(item.getJID());
+	}
+
+	public void onGroupContextMenu(Event event, Group group) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onRosterItemSelect(JID jid) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onMessageReceived(Chat<ChatTab> chat, Message message) {
+		// TODO Auto-generated method stub
+		System.out.println("mamy");
+		ChatTab ct = chat.getUserData();
+		if (ct != null) {
+			ct.process(message);
+			if (this.tabPanel.getSelectedItem() != ct) {
+				ct.setUnread();
+			}
+		}
+	}
+
+	private final Listener<TabPanelEvent> chatTabCloseListener = new Listener<TabPanelEvent>() {
+
+		public void handleEvent(TabPanelEvent be) {
+			if (be.item instanceof ChatTab) {
+				((ChatTab) be.item).getChatItem().remove();
+			}
+		}
+	};
+
+	public void onStartNewChat(Chat<ChatTab> chat) {
+		if (chat.getUserData() == null) {
+			ChatTab ct = new ChatTab(chat, Messenger.session().getRosterPlugin());
+			ct.addListener(Events.Close, this.chatTabCloseListener);
+			chat.setUserData(ct);
+			this.tabPanel.add(ct);
+			this.tabPanel.setSelection(ct);
+		}
 	}
 }

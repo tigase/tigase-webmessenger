@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import tigase.xmpp4gwt.client.JID;
-import tigase.xmpp4gwt.client.xmpp.presence.PresenceItem;
+import tigase.xmpp4gwt.client.stanzas.Presence;
 import tigase.xmpp4gwt.client.xmpp.roster.RosterItem;
 
 import com.google.gwt.user.client.Event;
@@ -196,7 +196,8 @@ public class Roster extends Composite {
 		this.selectedJID = null;
 		this.selectedGroup = group;
 		this.selectedPanel = panel;
-		if (this.selectedPanel != null) this.selectedPanel.addStyleName("selected");
+		if (this.selectedPanel != null)
+			this.selectedPanel.addStyleName("selected");
 	}
 
 	void select(Widget panel, JID jid, Group group) {
@@ -206,7 +207,8 @@ public class Roster extends Composite {
 		this.selectedPanel = panel;
 		this.selectedJID = jid;
 		this.selectedGroup = group;
-		if (this.selectedPanel != null) this.selectedPanel.addStyleName("selected");
+		if (this.selectedPanel != null)
+			this.selectedPanel.addStyleName("selected");
 		fireOnRosterItemSelect(jid);
 	}
 
@@ -271,14 +273,16 @@ public class Roster extends Composite {
 		fireAfterRosterChange();
 	}
 
-	public void updatePresence(PresenceItem presenceItem) {
-		if (presenceItem == null) return;
-		if (!showTransportAsContacts && presenceItem.getJid() != null && presenceItem.getJid().getNode() == null)
+	public void updatePresence(Presence presenceItem) {
+		if (presenceItem == null)
 			return;
-		RosterPresence p = presenceCallback.getRosterPresence(presenceItem.getJid());
-		JID jid = presenceItem.getJid().getBareJID();
+		if (!showTransportAsContacts && presenceItem.getFrom() != null && presenceItem.getFrom().getNode() == null)
+			return;
+		RosterPresence p = presenceCallback.getRosterPresence(presenceItem.getFrom());
+		JID jid = presenceItem.getFrom().getBareJID();
 		Set<Group> buddyGruops = this.buddies.get(jid);
-		if (buddyGruops == null) return;
+		if (buddyGruops == null)
+			return;
 		for (Group group : buddyGruops) {
 			group.updatePresence(jid, p);
 		}
