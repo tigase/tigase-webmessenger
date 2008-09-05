@@ -6,8 +6,8 @@ import tigase.messenger.client.login.LoginDialog;
 import tigase.messenger.client.login.LoginDialogListener;
 import tigase.messenger.client.roster.component.PresenceCallback;
 import tigase.messenger.client.roster.component.Roster;
-import tigase.xmpp4gwt.client.BoshConnection;
-import tigase.xmpp4gwt.client.BoshConnectionListener;
+import tigase.xmpp4gwt.client.Connector;
+import tigase.xmpp4gwt.client.ConnectorListener;
 import tigase.xmpp4gwt.client.JID;
 import tigase.xmpp4gwt.client.Session;
 import tigase.xmpp4gwt.client.User;
@@ -30,12 +30,11 @@ import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.DeferredCommand;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.xml.client.Node;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
-public class Messenger implements RosterListener, ImSessionListener, PresenceListener, BoshConnectionListener, EntryPoint,
+public class Messenger implements RosterListener, ImSessionListener, PresenceListener, ConnectorListener, EntryPoint,
 		LoginDialogListener, SaslAuthPluginListener, ResourceBindListener {
 
 	private final VersionInfo versionInfo;
@@ -63,7 +62,7 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 		this.rosterComponent = new Roster(this.presenceCallback);
 
 		this.session.getAuthPlugin().addSaslAuthListener(this);
-		this.session.getConnector().addBoshListener(this);
+		this.session.getConnector().addListener(this);
 		this.session.getBindPlugin().addResourceBindListener(this);
 		this.session.getImSessionEstablishPlugin().addListener(this);
 		this.session.getPresencePlugin().addPresenceListener(this);
@@ -147,11 +146,11 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 	public void onBodySend(String body) {
 	}
 
-	public void onConnect(BoshConnection con) {
+	public void onConnect(Connector con) {
 		updateWaitDialog("Connecting...");
 	}
 
-	public void onDisconnectByServer(BoshConnection con) {
+	public void onDisconnectByServer(Connector con) {
 		hideWaitDialog();
 	}
 
@@ -168,6 +167,12 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 
 	public void onItemNotFoundError() {
 		hideWaitDialog();
+		DeferredCommand.addCommand(new Command() {
+
+			public void execute() {
+				MessageBox.alert("Connection failed", "Item not found error", null).show();
+			}
+		});
 	}
 
 	public void onStanzaReceived(List<? extends Packet> nodes) {

@@ -98,7 +98,7 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 			DebugTab dt = new DebugTab();
 			tabPanel.add(dt);
 			tabPanel.setSelection(dt);
-			Messenger.session().getConnector().addBoshListener(dt);
+			Messenger.session().getConnector().addListener(dt);
 		}
 
 		add(north, northData);

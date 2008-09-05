@@ -1,9 +1,10 @@
 package tigase.messenger.client;
 
+import java.util.Date;
 import java.util.List;
 
-import tigase.xmpp4gwt.client.BoshConnection;
-import tigase.xmpp4gwt.client.BoshConnectionListener;
+import tigase.xmpp4gwt.client.Connector;
+import tigase.xmpp4gwt.client.ConnectorListener;
 import tigase.xmpp4gwt.client.TextUtils;
 import tigase.xmpp4gwt.client.packet.Packet;
 
@@ -16,8 +17,9 @@ import com.extjs.gxt.ui.client.widget.TabItem;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayout;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
 import com.google.gwt.http.client.Response;
+import com.google.gwt.i18n.client.DateTimeFormat;
 
-public class DebugTab extends TabItem implements BoshConnectionListener {
+public class DebugTab extends TabItem implements ConnectorListener {
 
 	private ContentPanel center = new ContentPanel();
 
@@ -48,10 +50,10 @@ public class DebugTab extends TabItem implements BoshConnectionListener {
 		add(Type.out, body);
 	}
 
-	public void onConnect(BoshConnection con) {
+	public void onConnect(Connector con) {
 	}
 
-	public void onDisconnectByServer(BoshConnection con) {
+	public void onDisconnectByServer(Connector con) {
 	}
 
 	public void onError(String message) {
@@ -84,9 +86,11 @@ public class DebugTab extends TabItem implements BoshConnectionListener {
 			style = "me";
 			n = "OUT:";
 		}
-		String x = n + "&nbsp;<span class='" + style + "'>" + TextUtils.escape(message) + "</span><br/>";
-		System.out.println(x);
+		String x = "[" + dtf.format(new Date()) + "]&nbsp;" + n + "&nbsp;<span class='" + style + "'>" + TextUtils.escape(message)
+				+ "</span><br/>";
 		add(x);
 	}
+
+	private DateTimeFormat dtf = DateTimeFormat.getFormat("HH:mm:ss");
 
 }

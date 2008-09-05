@@ -25,7 +25,7 @@ public class Roster extends Composite {
 	private ContactComparator contactComparator = new ContactComparator() {
 
 		public int compare(Item o1, Item o2) {
-			return o1.getName().compareTo(o2.getName());
+			return o1.getName().compareToIgnoreCase(o2.getName());
 		}
 
 	};
@@ -69,6 +69,7 @@ public class Roster extends Composite {
 			Group group = this.groups.get(groupName);
 			if (group == null) {
 				group = new Group(this, string);
+				group.setShowOffline(showingOffline);
 				this.groups.put(string, group);
 				int index = 0;
 				for (int i = 0; i < this.panel.getWidgetCount(); i++) {
@@ -240,6 +241,7 @@ public class Roster extends Composite {
 			Group group = this.groups.get(groupName);
 			if (group == null) {
 				group = new Group(this, groupName);
+				group.setShowOffline(showingOffline);
 				this.groups.put(groupName, group);
 				int index = 0;
 				for (int i = 0; i < this.panel.getWidgetCount(); i++) {
@@ -289,9 +291,12 @@ public class Roster extends Composite {
 		fireAfterRosterChange();
 	}
 
+	private boolean showingOffline;
+
 	public void setShowOffline(boolean newValue) {
+		this.showingOffline = newValue;
 		for (Group group : this.groups.values()) {
-			group.setShowOffline(newValue);
+			group.setShowOffline(showingOffline);
 		}
 	}
 
