@@ -23,15 +23,15 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class ChatTab extends TabItem {
 
-	private final TextArea message = new TextArea();
+	private ContentPanel center = new ContentPanel();
 
 	private final HTML chat = new HTML();
 
+	private DateTimeFormat dtf = DateTimeFormat.getFormat("HH:mm:ss");
+
 	private Chat<ChatTab> item;
 
-	public Chat<ChatTab> getChatItem() {
-		return item;
-	}
+	private final TextArea message = new TextArea();
 
 	private String nick;
 
@@ -85,10 +85,6 @@ public class ChatTab extends TabItem {
 		});
 	}
 
-	private DateTimeFormat dtf = DateTimeFormat.getFormat("HH:mm:ss");
-
-	private ContentPanel center = new ContentPanel();
-
 	private void add(String x) {
 		String m = this.chat.getHTML();
 		m = m + x + "<br/>";
@@ -103,11 +99,8 @@ public class ChatTab extends TabItem {
 		add(x);
 	}
 
-	private void send() {
-		final String message = this.message.getText();
-		this.message.setText("");
-		add("me", new Date(), "Me", message);
-		this.item.send(message);
+	public Chat<ChatTab> getChatItem() {
+		return item;
 	}
 
 	public void process(Message message) {
@@ -122,6 +115,13 @@ public class ChatTab extends TabItem {
 			add("peer", new Date(), nick, body);
 		}
 
+	}
+
+	private void send() {
+		final String message = this.message.getText();
+		this.message.setText("");
+		add("me", new Date(), "Me", message);
+		this.item.send(message);
 	}
 
 	public void setUnread() {

@@ -37,19 +37,31 @@ import com.google.gwt.user.client.ui.RootPanel;
 public class Messenger implements RosterListener, ImSessionListener, PresenceListener, ConnectorListener, EntryPoint,
 		LoginDialogListener, SaslAuthPluginListener, ResourceBindListener {
 
-	private final VersionInfo versionInfo;
+	private static Messenger instance;
 
-	private final Config config = new Config();
+	private final static float MAX_ELEMENTS = 7f;
 
-	private final Roster rosterComponent;
+	public static Config config() {
+		return instance.config;
+	}
 
-	public final PresenceCallback presenceCallback;
+	public static Session session() {
+		return instance.session;
+	}
 
 	private final ChatManager<ChatTab> chatManager;
 
+	private final Config config = new Config();
+
+	public final PresenceCallback presenceCallback;
+
+	private final Roster rosterComponent;
+
 	public final Session session;
 
-	private static Messenger instance;
+	private final VersionInfo versionInfo;
+
+	private MessageBox waitDialog;
 
 	public Messenger() {
 		instance = this;
@@ -57,6 +69,9 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 
 		User user = new User();
 		this.session = new Session(user);
+
+		String http = config.getHTTPBase();
+		this.session.getConnector().setHttpBase(http == null ? "/bosh" : http);
 
 		this.presenceCallback = new PresenceCallbackImpl(session.getPresencePlugin(), session.getRosterPlugin());
 		this.rosterComponent = new Roster(this.presenceCallback);
@@ -71,15 +86,77 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 		this.chatManager = new ChatManager<ChatTab>(this.session.getChatPlugin());
 	}
 
-	public void onModuleLoad() {
+	public void beforeAddItem(JID jid, String name, List<String> groupsNames) {
 
-		final TabbedViewport tvp = new TabbedViewport(this.rosterComponent, this.chatManager);
-		RootPanel.get().add(tvp);
+	}
 
-		LoginDialog d = new LoginDialog();
-		d.addListener(this);
-		d.show();
+	public void beforeSendInitialPresence() {
+		updateWaitDialog("Sending presence...");
+	}
 
+	private void hideWaitDialog() {
+		if (this.waitDialog != null) {
+			waitDialog.hide();
+			waitDialog = null;
+		}
+	}
+
+	public void onAddItem(RosterItem item) {
+		rosterComponent.updatedRosterItem(item);
+	}
+
+	public void onBindResource(JID newJid) {
+		updateWaitDialog("Resource binded.");
+	}
+
+	public void onBodyReceive(Response code, String body) {
+	}
+
+	public void onBodySend(String body) {
+	}
+
+	public void onConnect(Connector con) {
+		updateWaitDialog("Connecting...");
+	}
+
+	public void onContactAvailable(Presence presenceItem) {
+	}
+
+	public void onContactUnavailable(Presence presenceItem) {
+	}
+
+	public void onDisconnectByServer(Connector con) {
+		hideWaitDialog();
+	}
+
+	public void onEndRosterUpdating() {
+
+	}
+
+	public void onError(final String message) {
+		hideWaitDialog();
+
+		DeferredCommand.addCommand(new Command() {
+
+			public void execute() {
+				MessageBox.alert("Connection failed", message, null).show();
+			}
+		});
+	}
+
+	public void onFail(String message) {
+		hideWaitDialog();
+		MessageBox.alert("Login failed", message, null).show();
+	}
+
+	public void onItemNotFoundError() {
+		hideWaitDialog();
+		DeferredCommand.addCommand(new Command() {
+
+			public void execute() {
+				MessageBox.alert("Connection failed", "Item not found error", null).show();
+			}
+		});
 	}
 
 	public void onLogin(LoginDialog loginDialog) {
@@ -102,100 +179,30 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 		this.rosterComponent.reset();
 	}
 
-	private MessageBox waitDialog;
+	public void onModuleLoad() {
 
-	private void hideWaitDialog() {
-		if (this.waitDialog != null) {
-			waitDialog.hide();
-			waitDialog = null;
-		}
-	}
+		final TabbedViewport tvp = new TabbedViewport(this.rosterComponent, this.chatManager);
+		RootPanel.get().add(tvp);
 
-	public void onFail(String message) {
-		hideWaitDialog();
-		MessageBox.alert("Login failed", message, null).show();
-	}
+		LoginDialog d = new LoginDialog();
+		d.addListener(this);
+		d.show();
 
-	private final static float MAX_ELEMENTS = 7f;
-
-	public void onStartAuth() {
-		updateWaitDialog("Authentication...");
-	}
-
-	private void updateWaitDialog(final String message) {
-		if (this.waitDialog != null) {
-			final ProgressBar bar = this.waitDialog.getProgressBar();
-			double x = bar.getValue() + 1.0 / MAX_ELEMENTS;
-			System.out.println(x);
-			System.out.println("=== " + message + "   (" + x + ")");
-			bar.updateProgress(x, message);
-		}
-	}
-
-	public void onSuccess() {
-		updateWaitDialog("Authenticated.");
-	}
-
-	public void onBindResource(JID newJid) {
-		updateWaitDialog("Resource binded.");
-	}
-
-	public void onBodyReceive(Response code, String body) {
-	}
-
-	public void onBodySend(String body) {
-	}
-
-	public void onConnect(Connector con) {
-		updateWaitDialog("Connecting...");
-	}
-
-	public void onDisconnectByServer(Connector con) {
-		hideWaitDialog();
-	}
-
-	public void onError(final String message) {
-		hideWaitDialog();
-
-		DeferredCommand.addCommand(new Command() {
-
-			public void execute() {
-				MessageBox.alert("Connection failed", message, null).show();
-			}
-		});
-	}
-
-	public void onItemNotFoundError() {
-		hideWaitDialog();
-		DeferredCommand.addCommand(new Command() {
-
-			public void execute() {
-				MessageBox.alert("Connection failed", "Item not found error", null).show();
-			}
-		});
-	}
-
-	public void onStanzaReceived(List<? extends Packet> nodes) {
-	}
-
-	public void beforeSendInitialPresence() {
-		updateWaitDialog("Sending presence...");
-	}
-
-	public void onContactAvailable(Presence presenceItem) {
-	}
-
-	public void onContactUnavailable(Presence presenceItem) {
 	}
 
 	public void onPresenceChange(Presence presenceItem) {
 		rosterComponent.updatePresence(presenceItem);
 	}
 
+	public void onRemoveItem(RosterItem item) {
+		rosterComponent.removedFromRoster(item);
+	}
+
 	public void onSessionEstablished() {
 		updateWaitDialog("Session established.");
 		Timer x = new Timer() {
 
+			@Override
 			public void run() {
 				hideWaitDialog();
 			}
@@ -206,39 +213,36 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 	public void onSessionEstablishingError() {
 	}
 
-	public void onStartSessionEstablishing() {
-		updateWaitDialog("Session establishing...");
+	public void onStanzaReceived(List<? extends Packet> nodes) {
 	}
 
-	public void beforeAddItem(JID jid, String name, List<String> groupsNames) {
-
-	}
-
-	public void onAddItem(RosterItem item) {
-		rosterComponent.updatedRosterItem(item);
-	}
-
-	public void onEndRosterUpdating() {
-
-	}
-
-	public void onRemoveItem(RosterItem item) {
-		rosterComponent.removedFromRoster(item);
+	public void onStartAuth() {
+		updateWaitDialog("Authentication...");
 	}
 
 	public void onStartRosterUpdating() {
 
 	}
 
+	public void onStartSessionEstablishing() {
+		updateWaitDialog("Session establishing...");
+	}
+
+	public void onSuccess() {
+		updateWaitDialog("Authenticated.");
+	}
+
 	public void onUpdateItem(RosterItem item) {
 		rosterComponent.updatedRosterItem(item);
 	}
 
-	public static Session session() {
-		return instance.session;
-	}
-
-	public static Config config() {
-		return instance.config;
+	private void updateWaitDialog(final String message) {
+		if (this.waitDialog != null) {
+			final ProgressBar bar = this.waitDialog.getProgressBar();
+			double x = bar.getValue() + 1.0 / MAX_ELEMENTS;
+			System.out.println(x);
+			System.out.println("=== " + message + "   (" + x + ")");
+			bar.updateProgress(x, message);
+		}
 	}
 }

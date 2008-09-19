@@ -136,7 +136,8 @@ public class Group extends Composite {
 	}
 
 	public void setOpen(boolean open) {
-		if (open == this.open) return;
+		if (open == this.open)
+			return;
 		this.open = open;
 		elements.setVisible(open);
 		if (open) {
@@ -179,8 +180,10 @@ public class Group extends Composite {
 	public void updatePresence(final JID jid, final RosterPresence p) {
 		Item it = this.buddies.get(jid);
 		if (it != null) {
-			if (it.isVisible()) this.visibleContacts--;
-			if (it.update(p)) this.visibleContacts++;
+			if (it.isVisible())
+				this.visibleContacts--;
+			if (it.update(p))
+				this.visibleContacts++;
 		}
 		setVisible(this.visibleIfEmpty || this.visibleContacts > 0);
 	}
@@ -190,7 +193,8 @@ public class Group extends Composite {
 
 		if (ri == null) {
 			ri = new Item(this, jid, item);
-			if (ri.update(roster.getPresenceCallback().getRosterPresence(jid))) this.visibleContacts++;
+			if (ri.update(roster.getPresenceCallback().getRosterPresence(jid)))
+				this.visibleContacts++;
 			int index = 0;
 			for (int i = 0; i < this.elements.getWidgetCount(); i++) {
 				Widget w = this.elements.getWidget(i);

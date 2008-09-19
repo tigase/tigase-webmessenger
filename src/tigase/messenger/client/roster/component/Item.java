@@ -78,33 +78,33 @@ public class Item extends SimplePanel {
 		setVisible(visible);
 		setStyleName("buddy");
 		switch (p) {
-			case ONLINE:
-				addStyleName("buddy-online");
-				break;
-			case READY_FOR_CHAT:
-				addStyleName("buddy-chat");
-				break;
-			case AWAY:
-				addStyleName("buddy-away");
-				break;
-			case XA:
-				addStyleName("buddy-xa");
-				break;
-			case DND:
-				addStyleName("buddy-dnd");
-				break;
-			case OFFLINE:
-				addStyleName("buddy-offline");
-				break;
-			case ASK:
-				addStyleName("buddy-ask");
-				break;
-			case ERROR:
-				addStyleName("buddy-error");
-				break;
+		case ONLINE:
+			addStyleName("buddy-online");
+			break;
+		case READY_FOR_CHAT:
+			addStyleName("buddy-chat");
+			break;
+		case AWAY:
+			addStyleName("buddy-away");
+			break;
+		case XA:
+			addStyleName("buddy-xa");
+			break;
+		case DND:
+			addStyleName("buddy-dnd");
+			break;
+		case OFFLINE:
+			addStyleName("buddy-offline");
+			break;
+		case ASK:
+			addStyleName("buddy-ask");
+			break;
+		case ERROR:
+			addStyleName("buddy-error");
+			break;
 
-			default:
-				break;
+		default:
+			break;
 		}
 		return visible;
 	}

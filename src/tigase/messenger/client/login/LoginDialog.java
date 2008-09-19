@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.extjs.gxt.ui.client.Events;
 import com.extjs.gxt.ui.client.Style.HorizontalAlignment;
-import com.extjs.gxt.ui.client.event.ButtonEvent;
 import com.extjs.gxt.ui.client.event.ComponentEvent;
 import com.extjs.gxt.ui.client.event.FieldEvent;
 import com.extjs.gxt.ui.client.event.Listener;
@@ -19,34 +18,13 @@ import com.extjs.gxt.ui.client.widget.form.TextField;
 
 public class LoginDialog extends Dialog {
 
-	private final TextField<String> jid;
-
-	public String getJID() {
-		return this.jid.getRawValue();
-	}
-
-	public String getPassword() {
-		return this.password.getRawValue();
-	}
-
-	public boolean isAnonymous() {
-		Boolean x = this.anonumousLogin.getValue();
-		return x == null ? false : x.booleanValue();
-	}
-
-	private final TextField<String> password;
-
 	private final CheckBox anonumousLogin;
+
+	private final TextField<String> jid;
 
 	private final List<LoginDialogListener> listeners = new ArrayList<LoginDialogListener>();
 
-	public void addListener(LoginDialogListener listener) {
-		this.listeners.add(listener);
-	}
-
-	public void removeListener(LoginDialogListener listener) {
-		this.listeners.remove(listener);
-	}
+	private final TextField<String> password;
 
 	public LoginDialog() {
 		super();
@@ -89,11 +67,13 @@ public class LoginDialog extends Dialog {
 		setButtonBar(new ButtonBar());
 		getButtonBar().removeAll();
 		getButtonBar().add(new Button("Login", new SelectionListener<ComponentEvent>() {
+			@Override
 			public void componentSelected(ComponentEvent ce) {
 				fireLogin();
 			}
 		}));
 		getButtonBar().add(new Button("Cancel", new SelectionListener<ComponentEvent>() {
+			@Override
 			public void componentSelected(ComponentEvent ce) {
 			}
 		}));
@@ -104,13 +84,34 @@ public class LoginDialog extends Dialog {
 
 		this.jid.setValue("alice@sphere/www");
 		this.password.setValue("a");
-		
+
 		add(panel);
+	}
+
+	public void addListener(LoginDialogListener listener) {
+		this.listeners.add(listener);
 	}
 
 	protected void fireLogin() {
 		for (LoginDialogListener listener : this.listeners) {
 			listener.onLogin(this);
 		}
+	}
+
+	public String getJID() {
+		return this.jid.getRawValue();
+	}
+
+	public String getPassword() {
+		return this.password.getRawValue();
+	}
+
+	public boolean isAnonymous() {
+		Boolean x = this.anonumousLogin.getValue();
+		return x == null ? false : x.booleanValue();
+	}
+
+	public void removeListener(LoginDialogListener listener) {
+		this.listeners.remove(listener);
 	}
 }

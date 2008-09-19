@@ -4,6 +4,7 @@ import tigase.messenger.client.roster.component.Group;
 import tigase.messenger.client.roster.component.Item;
 import tigase.messenger.client.roster.component.Roster;
 import tigase.messenger.client.roster.component.RosterListener;
+import tigase.xmpp4gwt.client.Bosh2Connector;
 import tigase.xmpp4gwt.client.JID;
 import tigase.xmpp4gwt.client.stanzas.Message;
 import tigase.xmpp4gwt.client.xmpp.message.Chat;
@@ -29,11 +30,22 @@ import com.google.gwt.user.client.Event;
 
 public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, RosterListener {
 
+	private ChatManager<ChatTab> chatManager;
+
+	private final Listener<TabPanelEvent> chatTabCloseListener = new Listener<TabPanelEvent>() {
+
+		public void handleEvent(TabPanelEvent be) {
+			if (be.item instanceof ChatTab) {
+				((ChatTab) be.item).getChatItem().remove();
+			}
+		}
+	};
+
 	private final Roster rosterComponent;
 
-	private final ToolBar toolBar = new ToolBar();
+	private final TabPanel tabPanel = new TabPanel();
 
-	private ChatManager<ChatTab> chatManager;
+	private final ToolBar toolBar = new ToolBar();
 
 	public TabbedViewport(Roster rosterComponent, ChatManager<ChatTab> chatManager) {
 		this.rosterComponent = rosterComponent;
@@ -41,7 +53,36 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		this.chatManager.addListener(this);
 	}
 
-	private final TabPanel tabPanel = new TabPanel();
+	public void afterRosterChange() {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onContactContextMenu(Event event, Item item) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onContactDoubleClick(Item item) {
+		Chat chat = this.chatManager.startChat(item.getJID());
+	}
+
+	public void onGroupContextMenu(Event event, Group group) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onMessageReceived(Chat<ChatTab> chat, Message message) {
+		// TODO Auto-generated method stub
+		System.out.println("mamy");
+		ChatTab ct = chat.getUserData();
+		if (ct != null) {
+			ct.process(message);
+			if (this.tabPanel.getSelectedItem() != ct) {
+				ct.setUnread();
+			}
+		}
+	}
 
 	@Override
 	protected void onRender(Element parent, int pos) {
@@ -95,7 +136,7 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		tabPanel.setSelection(item);
 
 		if (Messenger.config().isDebugEnabled()) {
-			DebugTab dt = new DebugTab();
+			DebugTab dt = new DebugTab((Bosh2Connector) Messenger.session().getConnector());
 			tabPanel.add(dt);
 			tabPanel.setSelection(dt);
 			Messenger.session().getConnector().addListener(dt);
@@ -110,50 +151,10 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		this.rosterComponent.addListener(this);
 	}
 
-	public void afterRosterChange() {
-		// TODO Auto-generated method stub
-
-	}
-
-	public void onContactContextMenu(Event event, Item item) {
-		// TODO Auto-generated method stub
-
-	}
-
-	public void onContactDoubleClick(Item item) {
-		Chat chat = this.chatManager.startChat(item.getJID());
-	}
-
-	public void onGroupContextMenu(Event event, Group group) {
-		// TODO Auto-generated method stub
-
-	}
-
 	public void onRosterItemSelect(JID jid) {
 		// TODO Auto-generated method stub
 
 	}
-
-	public void onMessageReceived(Chat<ChatTab> chat, Message message) {
-		// TODO Auto-generated method stub
-		System.out.println("mamy");
-		ChatTab ct = chat.getUserData();
-		if (ct != null) {
-			ct.process(message);
-			if (this.tabPanel.getSelectedItem() != ct) {
-				ct.setUnread();
-			}
-		}
-	}
-
-	private final Listener<TabPanelEvent> chatTabCloseListener = new Listener<TabPanelEvent>() {
-
-		public void handleEvent(TabPanelEvent be) {
-			if (be.item instanceof ChatTab) {
-				((ChatTab) be.item).getChatItem().remove();
-			}
-		}
-	};
 
 	public void onStartNewChat(Chat<ChatTab> chat) {
 		if (chat.getUserData() == null) {

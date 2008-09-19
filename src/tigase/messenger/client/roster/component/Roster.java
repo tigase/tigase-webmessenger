@@ -56,6 +56,8 @@ public class Roster extends Composite {
 
 	private Widget selectedPanel;
 
+	private boolean showingOffline;
+
 	private boolean showTransportAsContacts = false;
 
 	public Roster(PresenceCallback presenceCallback) {
@@ -221,6 +223,13 @@ public class Roster extends Composite {
 		this.groupComparator = groupComparator;
 	}
 
+	public void setShowOffline(boolean newValue) {
+		this.showingOffline = newValue;
+		for (Group group : this.groups.values()) {
+			group.setShowOffline(showingOffline);
+		}
+	}
+
 	public void updatedRosterItem(RosterItem item) {
 		// String[] groups = item.getGroups();
 		if (!showTransportAsContacts && item.getJid() != null && JID.fromString(item.getJid()).getNode() == null)
@@ -289,15 +298,6 @@ public class Roster extends Composite {
 			group.updatePresence(jid, p);
 		}
 		fireAfterRosterChange();
-	}
-
-	private boolean showingOffline;
-
-	public void setShowOffline(boolean newValue) {
-		this.showingOffline = newValue;
-		for (Group group : this.groups.values()) {
-			group.setShowOffline(showingOffline);
-		}
 	}
 
 }

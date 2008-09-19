@@ -95,6 +95,7 @@ public class ProxyServlet extends HttpServlet {
 
 	// / Returns a string containing information about the author, version, and
 	// copyright of the servlet.
+	@Override
 	public String getServletInfo() {
 		return "Online redirecting content.";
 	}
@@ -102,6 +103,7 @@ public class ProxyServlet extends HttpServlet {
 	/**
 	 * Init
 	 */
+	@Override
 	public void init(ServletConfig config) throws ServletException {
 		super.init(config);
 
@@ -138,6 +140,7 @@ public class ProxyServlet extends HttpServlet {
 	/**
 	 * Capture awaay the standard servlet log ..
 	 */
+	@Override
 	public void log(String msg) {
 		if (debugFlag)
 			System.err.println("## " + msg);
@@ -169,6 +172,7 @@ public class ProxyServlet extends HttpServlet {
 	// @param req the servlet request
 	// @param req the servlet response
 	// @exception ServletException when an exception has occurred
+	@Override
 	@SuppressWarnings("unchecked")
 	public void service(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
 		//
@@ -224,7 +228,8 @@ public class ProxyServlet extends HttpServlet {
 				//
 				// Throw away persistant connections between servers
 				// Throw away request potentially causing a 304 response.
-				else if (!"Connection".equalsIgnoreCase(k) && !"If-Modified-Since".equalsIgnoreCase(k) && !"If-None-Match".equalsIgnoreCase(k)) {
+				else if (!"Connection".equalsIgnoreCase(k) && !"If-Modified-Since".equalsIgnoreCase(k)
+						&& !"If-None-Match".equalsIgnoreCase(k)) {
 					sb.setLength(0);
 					sb.append(k);
 					sb.append(": ");
