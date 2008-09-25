@@ -41,7 +41,7 @@ public class Group extends Composite {
 
 	private int visibleContacts;
 
-	private boolean visibleIfEmpty = false;
+	private boolean visibleIfEmpty = true;
 
 	Group(Roster roster, String groupName) {
 		this.roster = roster;
@@ -128,7 +128,8 @@ public class Group extends Composite {
 
 	public void remove(JID jid) {
 		Item it = this.buddies.remove(jid);
-		elements.remove(it);
+		if (it != null)
+			elements.remove(it);
 	}
 
 	void select(final JID jid, final Item panel) {
@@ -193,6 +194,7 @@ public class Group extends Composite {
 
 		if (ri == null) {
 			ri = new Item(this, jid, item);
+			ri.setVisible(showOffline);
 			if (ri.update(roster.getPresenceCallback().getRosterPresence(jid)))
 				this.visibleContacts++;
 			int index = 0;

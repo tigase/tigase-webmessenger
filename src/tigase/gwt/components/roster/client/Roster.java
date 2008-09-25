@@ -20,12 +20,18 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class Roster extends Composite {
 
+	public static interface GroupShowOfflineCallback {
+
+		boolean isGroupShowsOffline(String groupName);
+
+	}
+
 	private final Map<JID, Set<Group>> buddies = new HashMap<JID, Set<Group>>();
 
 	private ContactComparator contactComparator = new ContactComparator() {
 
 		public int compare(Item o1, Item o2) {
-			return o1.getName().compareToIgnoreCase(o2.getName());
+			return o1.getName().compareTo(o2.getName());
 		}
 
 	};
@@ -39,6 +45,8 @@ public class Roster extends Composite {
 	};
 
 	private final Map<String, Group> groups = new HashMap<String, Group>();
+
+	private GroupShowOfflineCallback groupShowOfflineCallback;
 
 	private final List<RosterListener> listeners = new ArrayList<RosterListener>();
 
@@ -56,23 +64,26 @@ public class Roster extends Composite {
 
 	private Widget selectedPanel;
 
-	private boolean showingOffline;
-
 	private boolean showTransportAsContacts = false;
 
 	public Roster(PresenceCallback presenceCallback) {
 		initWidget(panel);
 		setWidth("100%");
+		this.groupShowOfflineCallback = new GroupShowOfflineCallback() {
+
+			public boolean isGroupShowsOffline(String groupName) {
+				return true;
+			}
+		};
 		this.presenceCallback = presenceCallback;
 	}
 
-	public void addAlwaysVisibleGroups(String... groupName) {
-		for (String string : groupName) {
+	public void addAlwaysVisibleGroups(String... groupNames) {
+		for (String groupName : groupNames) {
 			Group group = this.groups.get(groupName);
 			if (group == null) {
-				group = new Group(this, string);
-				group.setShowOffline(showingOffline);
-				this.groups.put(string, group);
+				group = new Group(this, groupName);
+				this.groups.put(groupName, group);
 				int index = 0;
 				for (int i = 0; i < this.panel.getWidgetCount(); i++) {
 					Widget w = this.panel.getWidget(i);
@@ -141,6 +152,10 @@ public class Roster extends Composite {
 
 	public GroupComparator getGroupComparator() {
 		return groupComparator;
+	}
+
+	public GroupShowOfflineCallback getGroupShowOfflineCallback() {
+		return groupShowOfflineCallback;
 	}
 
 	PresenceCallback getPresenceCallback() {
@@ -223,17 +238,16 @@ public class Roster extends Composite {
 		this.groupComparator = groupComparator;
 	}
 
-	public void setShowOffline(boolean newValue) {
-		this.showingOffline = newValue;
-		for (Group group : this.groups.values()) {
-			group.setShowOffline(showingOffline);
-		}
+	public void setGroupShowOfflineCallback(GroupShowOfflineCallback groupShowOfflineCallback) {
+		this.groupShowOfflineCallback = groupShowOfflineCallback;
 	}
 
 	public void updatedRosterItem(RosterItem item) {
 		// String[] groups = item.getGroups();
 		if (!showTransportAsContacts && item.getJid() != null && JID.fromString(item.getJid()).getNode() == null)
 			return;
+
+		final RosterPresence rp = presenceCallback.getRosterPresence(JID.fromString(item.getJid()));
 
 		List<String> groups = Arrays.asList(item.getGroups());
 		if (groups.size() == 0) {
@@ -250,7 +264,7 @@ public class Roster extends Composite {
 			Group group = this.groups.get(groupName);
 			if (group == null) {
 				group = new Group(this, groupName);
-				group.setShowOffline(showingOffline);
+				group.setShowOffline(this.groupShowOfflineCallback.isGroupShowsOffline(groupName));
 				this.groups.put(groupName, group);
 				int index = 0;
 				for (int i = 0; i < this.panel.getWidgetCount(); i++) {
@@ -265,6 +279,7 @@ public class Roster extends Composite {
 			}
 			buddyGruops.add(group);
 			group.updateRosterItem(jid, item);
+			group.updatePresence(jid, rp);
 		}
 		Iterator<Group> git = buddyGruops.iterator();
 		while (git.hasNext()) {
@@ -281,6 +296,7 @@ public class Roster extends Composite {
 				}
 			}
 		}
+
 		fireAfterRosterChange();
 	}
 

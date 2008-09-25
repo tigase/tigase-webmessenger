@@ -102,6 +102,9 @@ public class Item extends SimplePanel {
 		case ERROR:
 			addStyleName("buddy-error");
 			break;
+		case NOAUTH:
+			addStyleName("buddy-noauth");
+			break;
 
 		default:
 			break;
