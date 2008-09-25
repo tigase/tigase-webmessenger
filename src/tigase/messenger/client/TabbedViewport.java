@@ -1,9 +1,9 @@
 package tigase.messenger.client;
 
-import tigase.messenger.client.roster.component.Group;
-import tigase.messenger.client.roster.component.Item;
-import tigase.messenger.client.roster.component.Roster;
-import tigase.messenger.client.roster.component.RosterListener;
+import tigase.gwt.components.roster.client.Group;
+import tigase.gwt.components.roster.client.Item;
+import tigase.gwt.components.roster.client.Roster;
+import tigase.gwt.components.roster.client.RosterListener;
 import tigase.xmpp4gwt.client.Bosh2Connector;
 import tigase.xmpp4gwt.client.JID;
 import tigase.xmpp4gwt.client.stanzas.Message;

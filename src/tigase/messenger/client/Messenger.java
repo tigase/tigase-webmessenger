@@ -2,10 +2,10 @@ package tigase.messenger.client;
 
 import java.util.List;
 
+import tigase.gwt.components.roster.client.PresenceCallback;
+import tigase.gwt.components.roster.client.Roster;
 import tigase.messenger.client.login.LoginDialog;
 import tigase.messenger.client.login.LoginDialogListener;
-import tigase.messenger.client.roster.component.PresenceCallback;
-import tigase.messenger.client.roster.component.Roster;
 import tigase.xmpp4gwt.client.Connector;
 import tigase.xmpp4gwt.client.ConnectorListener;
 import tigase.xmpp4gwt.client.JID;

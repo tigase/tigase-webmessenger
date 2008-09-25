@@ -1,4 +1,4 @@
-package tigase.messenger.client.roster.component;
+package tigase.gwt.components.roster.client;
 
 import tigase.xmpp4gwt.client.JID;
 import tigase.xmpp4gwt.client.xmpp.roster.RosterItem;

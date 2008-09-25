@@ -1,4 +1,4 @@
-package tigase.messenger.client.roster.component;
+package tigase.gwt.components.roster.client;
 
 import java.util.HashMap;
 import java.util.Map;

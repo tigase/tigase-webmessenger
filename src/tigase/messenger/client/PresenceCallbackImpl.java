@@ -1,7 +1,7 @@
 package tigase.messenger.client;
 
-import tigase.messenger.client.roster.component.PresenceCallback;
-import tigase.messenger.client.roster.component.RosterPresence;
+import tigase.gwt.components.roster.client.PresenceCallback;
+import tigase.gwt.components.roster.client.RosterPresence;
 import tigase.xmpp4gwt.client.JID;
 import tigase.xmpp4gwt.client.stanzas.Presence;
 import tigase.xmpp4gwt.client.xmpp.presence.PresencePlugin;

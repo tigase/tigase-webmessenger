@@ -1,0 +1,11 @@
+<module>
+
+	<!-- Inherit the core Web Toolkit stuff.                  -->
+	<inherits name='com.google.gwt.user.User' />
+	<inherits name='tigase.xmpp4gwt.Xmpp4Gwt' />
+	<inherits name="com.google.gwt.i18n.I18N" />
+
+
+
+
+</module>
