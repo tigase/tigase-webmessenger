@@ -4,11 +4,12 @@ import java.util.Date;
 import java.util.List;
 
 import tigase.xmpp4gwt.client.Bosh2Connector;
-import tigase.xmpp4gwt.client.BoshConnection;
 import tigase.xmpp4gwt.client.Connector;
 import tigase.xmpp4gwt.client.ConnectorListener;
 import tigase.xmpp4gwt.client.TextUtils;
+import tigase.xmpp4gwt.client.Connector.BoshErrorCondition;
 import tigase.xmpp4gwt.client.packet.Packet;
+import tigase.xmpp4gwt.client.xmpp.ErrorCondition;
 
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.Style.Scroll;
@@ -125,14 +126,12 @@ public class DebugTab extends TabItem implements ConnectorListener {
 	public void onConnect(Connector con) {
 	}
 
-	public void onDisconnectByServer(Connector con) {
+	public void onBoshTerminate(Connector con, BoshErrorCondition boshErrorCondition) {
 	}
 
-	public void onError(String message) {
+	public void onBoshError(ErrorCondition errorCondition, BoshErrorCondition boshErrorCondition, String message) {
 	}
 
-	public void onItemNotFoundError() {
-	}
 
 	public void onStanzaReceived(List<? extends Packet> nodes) {
 	}

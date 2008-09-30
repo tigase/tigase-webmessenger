@@ -11,8 +11,10 @@ import tigase.xmpp4gwt.client.ConnectorListener;
 import tigase.xmpp4gwt.client.JID;
 import tigase.xmpp4gwt.client.Session;
 import tigase.xmpp4gwt.client.User;
+import tigase.xmpp4gwt.client.Connector.BoshErrorCondition;
 import tigase.xmpp4gwt.client.packet.Packet;
 import tigase.xmpp4gwt.client.stanzas.Presence;
+import tigase.xmpp4gwt.client.xmpp.ErrorCondition;
 import tigase.xmpp4gwt.client.xmpp.ImSessionListener;
 import tigase.xmpp4gwt.client.xmpp.ResourceBindListener;
 import tigase.xmpp4gwt.client.xmpp.message.ChatManager;
@@ -125,7 +127,7 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 	public void onContactUnavailable(Presence presenceItem) {
 	}
 
-	public void onDisconnectByServer(Connector con) {
+	public void onBoshTerminate(Connector con, BoshErrorCondition boshErrorCondition) {
 		hideWaitDialog();
 	}
 
@@ -133,30 +135,30 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 
 	}
 
-	public void onError(final String message) {
-		hideWaitDialog();
+	public void onBoshError(ErrorCondition errorCondition, BoshErrorCondition boshErrorCondition, final String message) {
+		if (errorCondition == ErrorCondition.item_not_found) {
+			hideWaitDialog();
+			DeferredCommand.addCommand(new Command() {
 
-		DeferredCommand.addCommand(new Command() {
+				public void execute() {
+					MessageBox.alert("Connection failed", "Item not found error", null).show();
+				}
+			});
+		} else {
+			hideWaitDialog();
 
-			public void execute() {
-				MessageBox.alert("Connection failed", message, null).show();
-			}
-		});
+			DeferredCommand.addCommand(new Command() {
+
+				public void execute() {
+					MessageBox.alert("Connection failed", message, null).show();
+				}
+			});
+		}
 	}
 
 	public void onFail(String message) {
 		hideWaitDialog();
 		MessageBox.alert("Login failed", message, null).show();
-	}
-
-	public void onItemNotFoundError() {
-		hideWaitDialog();
-		DeferredCommand.addCommand(new Command() {
-
-			public void execute() {
-				MessageBox.alert("Connection failed", "Item not found error", null).show();
-			}
-		});
 	}
 
 	public void onLogin(LoginDialog loginDialog) {
