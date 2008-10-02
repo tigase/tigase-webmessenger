@@ -13,17 +13,18 @@ import tigase.xmpp4gwt.client.JID;
 import tigase.xmpp4gwt.client.Session;
 import tigase.xmpp4gwt.client.User;
 import tigase.xmpp4gwt.client.Connector.BoshErrorCondition;
+import tigase.xmpp4gwt.client.events.Listener;
 import tigase.xmpp4gwt.client.packet.Packet;
-import tigase.xmpp4gwt.client.stanzas.Presence;
 import tigase.xmpp4gwt.client.stanzas.Presence.Show;
-import tigase.xmpp4gwt.client.stanzas.Presence.Type;
 import tigase.xmpp4gwt.client.xmpp.ErrorCondition;
 import tigase.xmpp4gwt.client.xmpp.ImSessionListener;
 import tigase.xmpp4gwt.client.xmpp.ResourceBindListener;
 import tigase.xmpp4gwt.client.xmpp.message.ChatManager;
-import tigase.xmpp4gwt.client.xmpp.presence.PresenceListener;
+import tigase.xmpp4gwt.client.xmpp.presence.PresenceEvent;
+import tigase.xmpp4gwt.client.xmpp.presence.PresencePlugin;
+import tigase.xmpp4gwt.client.xmpp.roster.RosterEvent;
 import tigase.xmpp4gwt.client.xmpp.roster.RosterItem;
-import tigase.xmpp4gwt.client.xmpp.roster.RosterListener;
+import tigase.xmpp4gwt.client.xmpp.roster.RosterPlugin;
 import tigase.xmpp4gwt.client.xmpp.sasl.SaslAuthPluginListener;
 
 import com.extjs.gxt.ui.client.widget.Info;
@@ -40,8 +41,8 @@ import com.google.gwt.user.client.ui.RootPanel;
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
-public class Messenger implements RosterListener, ImSessionListener, PresenceListener, ConnectorListener, EntryPoint,
-		LoginDialogListener, SaslAuthPluginListener, ResourceBindListener {
+public class Messenger implements ImSessionListener, ConnectorListener, EntryPoint, LoginDialogListener, SaslAuthPluginListener,
+		ResourceBindListener {
 
 	private static Messenger instance;
 
@@ -73,13 +74,10 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 
 	private TabbedViewport tabbedViewport;
 
-	private final VersionInfo versionInfo;
-
 	private MessageBox waitDialog;
 
 	public Messenger() {
 		instance = this;
-		this.versionInfo = GWT.create(VersionInfo.class);
 
 		User user = new User();
 		this.session = new Session(user);
@@ -94,20 +92,97 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 		this.session.getConnector().addListener(this);
 		this.session.getBindPlugin().addResourceBindListener(this);
 		this.session.getImSessionEstablishPlugin().addListener(this);
-		this.session.getPresencePlugin().addPresenceListener(this);
-		this.session.getRosterPlugin().addRosterListener(this);
 
 		this.chatManager = new ChatManager<ChatTab>(this.session.getChatPlugin());
-	}
 
-	public void beforeAddItem(JID jid, String name, List<String> groupsNames) {
+		Messenger.session().getEventsManager().addListener(PresencePlugin.Events.subscribe, new Listener<PresenceEvent>() {
+			public void handleEvent(PresenceEvent event) {
+				(new SubscriptionRequestDialog(event.getPresence().getFrom().getBareJID())).show();
+			}
+		});
+		Messenger.session().getEventsManager().addListener(PresencePlugin.Events.beforeSendInitialPresence,
+				new Listener<PresenceEvent>() {
+					public void handleEvent(PresenceEvent event) {
+						event.getPresence().setShow(defaultPresenceShow);
+						System.out.println("!!!!! " + defaultPresenceShow);
+						updateWaitDialog("Sending presence...");
+					}
+				});
 
-	}
+		Messenger.session().getEventsManager().addListener(PresencePlugin.Events.presenceChange, new Listener<PresenceEvent>() {
+			public void handleEvent(PresenceEvent event) {
+				rosterComponent.updatePresence(event.getPresence());
+			}
+		});
+		Messenger.session().getEventsManager().addListener(PresencePlugin.Events.presenceChange, new Listener<PresenceEvent>() {
+			public void handleEvent(PresenceEvent event) {
+				rosterComponent.updatePresence(event.getPresence());
+			}
+		});
+		Messenger.session().getEventsManager().addListener(PresencePlugin.Events.contactAvailable, new Listener<PresenceEvent>() {
+			public void handleEvent(PresenceEvent event) {
+				String name = event.getPresence().getFrom().toStringBare();
+				RosterItem ri = session.getRosterPlugin().getRosterItem(event.getPresence().getFrom());
 
-	public void beforeSendInitialPresence(Presence presence) {
-		presence.setShow(defaultPresenceShow);
-		System.out.println("!!!!! " + defaultPresenceShow);
-		updateWaitDialog("Sending presence...");
+				if (ri != null && ri.getName() != null && ri.getName().length() > 0) {
+					name = ri.getName();
+				}
+
+				Info.display("Contact connected", "{0} is now available.", name);
+			}
+		});
+		Messenger.session().getEventsManager().addListener(PresencePlugin.Events.contactUnavailable, new Listener<PresenceEvent>() {
+			public void handleEvent(PresenceEvent event) {
+				String name = event.getPresence().getFrom().toStringBare();
+				RosterItem ri = session.getRosterPlugin().getRosterItem(event.getPresence().getFrom());
+
+				if (ri != null && ri.getName() != null && ri.getName().length() > 0) {
+					name = ri.getName();
+				}
+
+				Info.display("Contact disconnected", "{0} is now unavailable.", name);
+			}
+		});
+		Messenger.session().getEventsManager().addListener(RosterPlugin.Events.rosterItemRemoved, new Listener<RosterEvent>() {
+			public void handleEvent(RosterEvent event) {
+				rosterComponent.removedFromRoster(event.getRosterItem());
+
+			}
+		});
+		Messenger.session().getEventsManager().addListener(RosterPlugin.Events.subscribed, new Listener<RosterEvent>() {
+			public void handleEvent(RosterEvent event) {
+				JID jid = JID.fromString(event.getRosterItem().getJid());
+				MessageBox box = new MessageBox();
+				box.setModal(false);
+				box.setTitle("Authorization granted");
+				box.setMessage("The contact '" + jid.toStringBare() + "' has authorized you to see his or her status");
+				box.setButtons(MessageBox.OK);
+				box.setIcon(MessageBox.INFO);
+				box.show();
+			}
+		});
+		Messenger.session().getEventsManager().addListener(RosterPlugin.Events.rosterItemUpdated, new Listener<RosterEvent>() {
+			public void handleEvent(RosterEvent event) {
+				rosterComponent.updatedRosterItem(event.getRosterItem());
+			}
+		});
+		Messenger.session().getEventsManager().addListener(RosterPlugin.Events.rosterItemAdded, new Listener<RosterEvent>() {
+			public void handleEvent(RosterEvent event) {
+				rosterComponent.updatedRosterItem(event.getRosterItem());
+			}
+		});
+		Messenger.session().getEventsManager().addListener(RosterPlugin.Events.unsubscribed, new Listener<RosterEvent>() {
+			public void handleEvent(RosterEvent event) {
+				JID jid = JID.fromString(event.getRosterItem().getJid());
+				MessageBox box = new MessageBox();
+				box.setModal(false);
+				box.setTitle("Authorization has been removed");
+				box.setMessage("The contact '" + jid.toStringBare() + "' withdrew their permission for you to see their status.");
+				box.setButtons(MessageBox.OK);
+				box.setIcon(MessageBox.INFO);
+				box.show();
+			}
+		});
 	}
 
 	private void hideWaitDialog() {
@@ -115,10 +190,6 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 			waitDialog.hide();
 			waitDialog = null;
 		}
-	}
-
-	public void onAddItem(RosterItem item) {
-		rosterComponent.updatedRosterItem(item);
 	}
 
 	public void onBindResource(JID newJid) {
@@ -185,32 +256,6 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 		updateWaitDialog("Connecting...");
 	}
 
-	public void onContactAvailable(Presence presenceItem) {
-		String name = presenceItem.getFrom().toStringBare();
-		RosterItem ri = session.getRosterPlugin().getRosterItem(presenceItem.getFrom());
-
-		if (ri != null && ri.getName() != null && ri.getName().length() > 0) {
-			name = ri.getName();
-		}
-
-		Info.display("Contact connected", "{0} is now available.", name);
-	}
-
-	public void onContactUnavailable(Presence presenceItem) {
-		String name = presenceItem.getFrom().toStringBare();
-		RosterItem ri = session.getRosterPlugin().getRosterItem(presenceItem.getFrom());
-
-		if (ri != null && ri.getName() != null && ri.getName().length() > 0) {
-			name = ri.getName();
-		}
-
-		Info.display("Contact disconnected", "{0} is now unavailable.", name);
-	}
-
-	public void onEndRosterUpdating() {
-
-	}
-
 	public void onFail(String message) {
 		hideWaitDialog();
 		tabbedViewport.getStatusToolItem().setNewStatus(RosterPresence.OFFLINE);
@@ -243,35 +288,6 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 		openLoginDialog();
 	}
 
-	public void onPresenceChange(Presence presenceItem) {
-		rosterComponent.updatePresence(presenceItem);
-		if (presenceItem.getType() == Type.subscribe) {
-			(new SubscriptionRequestDialog(presenceItem.getFrom().getBareJID())).show();
-		} else if (presenceItem.getType() == Type.subscribed) {
-			JID jid = presenceItem.getFrom();
-			MessageBox box = new MessageBox();
-			box.setModal(false);
-			box.setTitle("Authorization granted");
-			box.setMessage("The contact '" + jid.toStringBare() + "' has authorized you to see his or her status");
-			box.setButtons(MessageBox.OK);
-			box.setIcon(MessageBox.INFO);
-			box.show();
-		} else if (presenceItem.getType() == Type.unsubscribed) {
-			JID jid = presenceItem.getFrom();
-			MessageBox box = new MessageBox();
-			box.setModal(false);
-			box.setTitle("Authorization has been removed");
-			box.setMessage("The contact '" + jid.toStringBare() + "' withdrew their permission for you to see their status.");
-			box.setButtons(MessageBox.OK);
-			box.setIcon(MessageBox.INFO);
-			box.show();
-		}
-	}
-
-	public void onRemoveItem(RosterItem item) {
-		rosterComponent.removedFromRoster(item);
-	}
-
 	public void onSessionEstablished() {
 		updateWaitDialog("Session established.");
 		Timer x = new Timer() {
@@ -294,20 +310,12 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 		updateWaitDialog("Authentication...");
 	}
 
-	public void onStartRosterUpdating() {
-
-	}
-
 	public void onStartSessionEstablishing() {
 		updateWaitDialog("Session establishing...");
 	}
 
 	public void onSuccess() {
 		updateWaitDialog("Authenticated.");
-	}
-
-	public void onUpdateItem(RosterItem item) {
-		rosterComponent.updatedRosterItem(item);
 	}
 
 	public void openLoginDialog() {
