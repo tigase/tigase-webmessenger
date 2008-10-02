@@ -66,13 +66,28 @@ public class Roster extends Composite {
 
 	private boolean showTransportAsContacts = false;
 
+	private boolean defaultShowOfflineContacts = false;
+
+	public boolean getGlobalShowOfflineContacts() {
+		return defaultShowOfflineContacts;
+	}
+
+	public void setGlobalShowOfflineContacts(boolean value) {
+		if (value != defaultShowOfflineContacts) {
+			defaultShowOfflineContacts = value;
+			for (Group group : this.groups.values()) {
+				group.setShowOffline(value);
+			}
+		}
+	}
+
 	public Roster(PresenceCallback presenceCallback) {
 		initWidget(panel);
 		setWidth("100%");
 		this.groupShowOfflineCallback = new GroupShowOfflineCallback() {
 
 			public boolean isGroupShowsOffline(String groupName) {
-				return true;
+				return defaultShowOfflineContacts;
 			}
 		};
 		this.presenceCallback = presenceCallback;
@@ -314,6 +329,10 @@ public class Roster extends Composite {
 			group.updatePresence(jid, p);
 		}
 		fireAfterRosterChange();
+	}
+
+	public String[] getGroupsNames() {
+		return this.groups.keySet().toArray(new String[] {});
 	}
 
 }

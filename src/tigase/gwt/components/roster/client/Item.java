@@ -27,7 +27,7 @@ public class Item extends SimplePanel {
 		sinkEvents(Event.ONDBLCLICK);
 
 		String name = item.getName();
-		if (name == null) {
+		if (name == null || name.trim().length() == 0) {
 			name = item.getJid();
 		}
 
