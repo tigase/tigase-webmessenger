@@ -174,7 +174,8 @@ public class Group extends Composite {
 		if (showOffline) {
 			return true;
 		} else {
-			return p != null && p != RosterPresence.ERROR && p != RosterPresence.ASK && p != RosterPresence.OFFLINE;
+			return p != null && p != RosterPresence.ERROR && p != RosterPresence.NOAUTH && p != RosterPresence.ASK
+					&& p != RosterPresence.OFFLINE;
 		}
 	}
 

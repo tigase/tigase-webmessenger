@@ -38,6 +38,8 @@ public class Roster extends Composite {
 
 	private String defaultGroupName = "General";
 
+	private boolean defaultShowOfflineContacts = false;
+
 	private GroupComparator groupComparator = new GroupComparator() {
 		public int compare(Group o1, Group o2) {
 			return o1.getName().compareTo(o2.getName());
@@ -65,21 +67,6 @@ public class Roster extends Composite {
 	private Widget selectedPanel;
 
 	private boolean showTransportAsContacts = false;
-
-	private boolean defaultShowOfflineContacts = false;
-
-	public boolean getGlobalShowOfflineContacts() {
-		return defaultShowOfflineContacts;
-	}
-
-	public void setGlobalShowOfflineContacts(boolean value) {
-		if (value != defaultShowOfflineContacts) {
-			defaultShowOfflineContacts = value;
-			for (Group group : this.groups.values()) {
-				group.setShowOffline(value);
-			}
-		}
-	}
 
 	public Roster(PresenceCallback presenceCallback) {
 		initWidget(panel);
@@ -165,12 +152,20 @@ public class Roster extends Composite {
 		return contactComparator;
 	}
 
+	public boolean getGlobalShowOfflineContacts() {
+		return defaultShowOfflineContacts;
+	}
+
 	public GroupComparator getGroupComparator() {
 		return groupComparator;
 	}
 
 	public GroupShowOfflineCallback getGroupShowOfflineCallback() {
 		return groupShowOfflineCallback;
+	}
+
+	public String[] getGroupsNames() {
+		return this.groups.keySet().toArray(new String[] {});
 	}
 
 	PresenceCallback getPresenceCallback() {
@@ -247,6 +242,15 @@ public class Roster extends Composite {
 
 	public void setContactComparator(ContactComparator contactComparator) {
 		this.contactComparator = contactComparator;
+	}
+
+	public void setGlobalShowOfflineContacts(boolean value) {
+		if (value != defaultShowOfflineContacts) {
+			defaultShowOfflineContacts = value;
+			for (Group group : this.groups.values()) {
+				group.setShowOffline(value);
+			}
+		}
 	}
 
 	public void setGroupComparator(GroupComparator groupComparator) {
@@ -329,10 +333,6 @@ public class Roster extends Composite {
 			group.updatePresence(jid, p);
 		}
 		fireAfterRosterChange();
-	}
-
-	public String[] getGroupsNames() {
-		return this.groups.keySet().toArray(new String[] {});
 	}
 
 }
