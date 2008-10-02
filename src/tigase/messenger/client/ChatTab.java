@@ -23,6 +23,13 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class ChatTab extends TabItem {
 
+	private static String linkhtml(String body) {
+		body = body == null ? body : body.replaceAll("([^>/\";]|^)(www\\.[^ ]+)",
+				"$1<a href=\"http://$2\" target=\"_blank\">$2</a>");
+		body = body == null ? body : body.replaceAll("([^\">;]|^)(http://[^ ]+)", "$1<a href=\"$2\" target=\"_blank\">$2</a>");
+		return body;
+	}
+
 	private ContentPanel center = new ContentPanel();
 
 	private final Html chat = new Html();
@@ -100,8 +107,8 @@ public class ChatTab extends TabItem {
 	}
 
 	private void add(String style, Date date, String nick, String message) {
-		String x = "[" + dtf.format(date) + "]&nbsp; <span class='" + style + "'>" + nick + ": " + TextUtils.escape(message)
-				+ "</span>";
+		String x = "[" + dtf.format(date) + "]&nbsp; <span class='" + style + "'>" + nick + ": "
+				+ linkhtml(TextUtils.escape(message)) + "</span>";
 		System.out.println(x);
 		add(x);
 	}
