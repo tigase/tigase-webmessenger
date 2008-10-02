@@ -4,6 +4,7 @@ import java.util.List;
 
 import tigase.gwt.components.roster.client.PresenceCallback;
 import tigase.gwt.components.roster.client.Roster;
+import tigase.gwt.components.roster.client.RosterPresence;
 import tigase.messenger.client.login.LoginDialog;
 import tigase.messenger.client.login.LoginDialogListener;
 import tigase.xmpp4gwt.client.Connector;
@@ -14,6 +15,8 @@ import tigase.xmpp4gwt.client.User;
 import tigase.xmpp4gwt.client.Connector.BoshErrorCondition;
 import tigase.xmpp4gwt.client.packet.Packet;
 import tigase.xmpp4gwt.client.stanzas.Presence;
+import tigase.xmpp4gwt.client.stanzas.Presence.Show;
+import tigase.xmpp4gwt.client.stanzas.Presence.Type;
 import tigase.xmpp4gwt.client.xmpp.ErrorCondition;
 import tigase.xmpp4gwt.client.xmpp.ImSessionListener;
 import tigase.xmpp4gwt.client.xmpp.ResourceBindListener;
@@ -23,6 +26,7 @@ import tigase.xmpp4gwt.client.xmpp.roster.RosterItem;
 import tigase.xmpp4gwt.client.xmpp.roster.RosterListener;
 import tigase.xmpp4gwt.client.xmpp.sasl.SaslAuthPluginListener;
 
+import com.extjs.gxt.ui.client.widget.Info;
 import com.extjs.gxt.ui.client.widget.MessageBox;
 import com.extjs.gxt.ui.client.widget.ProgressBar;
 import com.google.gwt.core.client.EntryPoint;
@@ -47,6 +51,10 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 		return instance.config;
 	}
 
+	public static Messenger instance() {
+		return instance;
+	}
+
 	public static Session session() {
 		return instance.session;
 	}
@@ -55,11 +63,15 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 
 	private final Config config = new Config();
 
+	private Show defaultPresenceShow = Show.notSpecified;
+
 	public final PresenceCallback presenceCallback;
 
 	private final Roster rosterComponent;
 
 	public final Session session;
+
+	private TabbedViewport tabbedViewport;
 
 	private final VersionInfo versionInfo;
 
@@ -92,7 +104,9 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 
 	}
 
-	public void beforeSendInitialPresence() {
+	public void beforeSendInitialPresence(Presence presence) {
+		presence.setShow(defaultPresenceShow);
+		System.out.println("!!!!! " + defaultPresenceShow);
 		updateWaitDialog("Sending presence...");
 	}
 
@@ -109,6 +123,27 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 
 	public void onBindResource(JID newJid) {
 		updateWaitDialog("Resource binded.");
+
+		RosterPresence rp;
+		switch (this.defaultPresenceShow) {
+		case away:
+			rp = RosterPresence.AWAY;
+			break;
+		case chat:
+			rp = RosterPresence.READY_FOR_CHAT;
+			break;
+		case dnd:
+			rp = RosterPresence.DND;
+			break;
+		case notSpecified:
+			rp = RosterPresence.ONLINE;
+			break;
+		default:
+			rp = RosterPresence.ONLINE;
+			break;
+		}
+
+		this.tabbedViewport.getStatusToolItem().setNewStatus(rp);
 	}
 
 	public void onBodyReceive(Response code, String body) {
@@ -117,27 +152,11 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 	public void onBodySend(String body) {
 	}
 
-	public void onConnect(Connector con) {
-		updateWaitDialog("Connecting...");
-	}
-
-	public void onContactAvailable(Presence presenceItem) {
-	}
-
-	public void onContactUnavailable(Presence presenceItem) {
-	}
-
-	public void onBoshTerminate(Connector con, BoshErrorCondition boshErrorCondition) {
-		hideWaitDialog();
-	}
-
-	public void onEndRosterUpdating() {
-
-	}
-
 	public void onBoshError(ErrorCondition errorCondition, BoshErrorCondition boshErrorCondition, final String message) {
+		rosterComponent.reset();
 		if (errorCondition == ErrorCondition.item_not_found) {
 			hideWaitDialog();
+			tabbedViewport.getStatusToolItem().setNewStatus(RosterPresence.OFFLINE);
 			DeferredCommand.addCommand(new Command() {
 
 				public void execute() {
@@ -146,7 +165,7 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 			});
 		} else {
 			hideWaitDialog();
-
+			tabbedViewport.getStatusToolItem().setNewStatus(RosterPresence.OFFLINE);
 			DeferredCommand.addCommand(new Command() {
 
 				public void execute() {
@@ -156,8 +175,45 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 		}
 	}
 
+	public void onBoshTerminate(Connector con, BoshErrorCondition boshErrorCondition) {
+		rosterComponent.reset();
+		hideWaitDialog();
+		tabbedViewport.getStatusToolItem().setNewStatus(RosterPresence.OFFLINE);
+	}
+
+	public void onConnect(Connector con) {
+		updateWaitDialog("Connecting...");
+	}
+
+	public void onContactAvailable(Presence presenceItem) {
+		String name = presenceItem.getFrom().toStringBare();
+		RosterItem ri = session.getRosterPlugin().getRosterItem(presenceItem.getFrom());
+
+		if (ri != null && ri.getName() != null && ri.getName().length() > 0) {
+			name = ri.getName();
+		}
+
+		Info.display("Contact connected", "{0} is now available.", name);
+	}
+
+	public void onContactUnavailable(Presence presenceItem) {
+		String name = presenceItem.getFrom().toStringBare();
+		RosterItem ri = session.getRosterPlugin().getRosterItem(presenceItem.getFrom());
+
+		if (ri != null && ri.getName() != null && ri.getName().length() > 0) {
+			name = ri.getName();
+		}
+
+		Info.display("Contact disconnected", "{0} is now unavailable.", name);
+	}
+
+	public void onEndRosterUpdating() {
+
+	}
+
 	public void onFail(String message) {
 		hideWaitDialog();
+		tabbedViewport.getStatusToolItem().setNewStatus(RosterPresence.OFFLINE);
 		MessageBox.alert("Login failed", message, null).show();
 	}
 
@@ -168,7 +224,7 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 		session.getUser().setPassword(loginDialog.getPassword());
 		session.getUser().setDomainname(jid.getDomain());
 		session.getUser().setUsername(jid.getNode());
-		String resource = "messenger";
+		String resource = config.getDefaultResource();
 		if (jid.getResource() != null) {
 			resource = jid.getResource();
 		}
@@ -182,18 +238,34 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 	}
 
 	public void onModuleLoad() {
-
-		final TabbedViewport tvp = new TabbedViewport(this.rosterComponent, this.chatManager);
-		RootPanel.get().add(tvp);
-
-		LoginDialog d = new LoginDialog();
-		d.addListener(this);
-		d.show();
-
+		tabbedViewport = new TabbedViewport(this.rosterComponent, this.chatManager);
+		RootPanel.get().add(tabbedViewport);
+		openLoginDialog();
 	}
 
 	public void onPresenceChange(Presence presenceItem) {
 		rosterComponent.updatePresence(presenceItem);
+		if (presenceItem.getType() == Type.subscribe) {
+			(new SubscriptionRequestDialog(presenceItem.getFrom().getBareJID())).show();
+		} else if (presenceItem.getType() == Type.subscribed) {
+			JID jid = presenceItem.getFrom();
+			MessageBox box = new MessageBox();
+			box.setModal(false);
+			box.setTitle("Authorization granted");
+			box.setMessage("The contact '" + jid.toStringBare() + "' has authorized you to see his or her status");
+			box.setButtons(MessageBox.OK);
+			box.setIcon(MessageBox.INFO);
+			box.show();
+		} else if (presenceItem.getType() == Type.unsubscribed) {
+			JID jid = presenceItem.getFrom();
+			MessageBox box = new MessageBox();
+			box.setModal(false);
+			box.setTitle("Authorization has been removed");
+			box.setMessage("The contact '" + jid.toStringBare() + "' withdrew their permission for you to see their status.");
+			box.setButtons(MessageBox.OK);
+			box.setIcon(MessageBox.INFO);
+			box.show();
+		}
 	}
 
 	public void onRemoveItem(RosterItem item) {
@@ -236,6 +308,17 @@ public class Messenger implements RosterListener, ImSessionListener, PresenceLis
 
 	public void onUpdateItem(RosterItem item) {
 		rosterComponent.updatedRosterItem(item);
+	}
+
+	public void openLoginDialog() {
+		openLoginDialog(Show.notSpecified);
+	}
+
+	public void openLoginDialog(Show defaultPresenceShow) {
+		this.defaultPresenceShow = defaultPresenceShow == null ? Show.notSpecified : defaultPresenceShow;
+		LoginDialog d = new LoginDialog();
+		d.addListener(this);
+		d.show();
 	}
 
 	private void updateWaitDialog(final String message) {

@@ -27,9 +27,15 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class DebugTab extends TabItem implements ConnectorListener {
 
+	enum Type {
+		in, out
+	}
+
 	private ContentPanel center = new ContentPanel();
 
 	private final Html chat = new Html();
+
+	private final Bosh2Connector connector;
 
 	private DateTimeFormat dtf = DateTimeFormat.getFormat("HH:mm:ss");
 
@@ -39,7 +45,7 @@ public class DebugTab extends TabItem implements ConnectorListener {
 		this.connector = connector;
 		setText("Debug window");
 		setIconStyle("icon-tabs");
-		setClosable(false);
+		setClosable(true);
 
 		setLayout(new BorderLayout());
 
@@ -81,23 +87,11 @@ public class DebugTab extends TabItem implements ConnectorListener {
 		});
 	}
 
-	private final Bosh2Connector connector;
-
-	private void send() {
-		final String message = this.message.getText();
-		this.message.setText("");
-		connector.sendStanza(message);
-	}
-
-	enum Type {
-		in, out
-	}
-
 	private void add(String x) {
 		String m = this.chat.getHtml();
 		m = m + x + "<br/>";
 		this.chat.setHtml(m);
-		center.setVScrollPosition(this.chat.getBounds(true).width);
+		center.setVScrollPosition(this.chat.getHeight());
 	}
 
 	private void add(Type type, String message) {
@@ -123,17 +117,22 @@ public class DebugTab extends TabItem implements ConnectorListener {
 		add(Type.out, body);
 	}
 
-	public void onConnect(Connector con) {
+	public void onBoshError(ErrorCondition errorCondition, BoshErrorCondition boshErrorCondition, String message) {
 	}
 
 	public void onBoshTerminate(Connector con, BoshErrorCondition boshErrorCondition) {
 	}
 
-	public void onBoshError(ErrorCondition errorCondition, BoshErrorCondition boshErrorCondition, String message) {
+	public void onConnect(Connector con) {
 	}
 
-
 	public void onStanzaReceived(List<? extends Packet> nodes) {
+	}
+
+	private void send() {
+		final String message = this.message.getText();
+		this.message.setText("");
+		connector.sendStanza(message);
 	}
 
 }

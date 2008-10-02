@@ -3,6 +3,9 @@ package tigase.messenger.client.login;
 import java.util.ArrayList;
 import java.util.List;
 
+import tigase.messenger.client.Messenger;
+import tigase.xmpp4gwt.client.JID;
+
 import com.extjs.gxt.ui.client.Events;
 import com.extjs.gxt.ui.client.Style.HorizontalAlignment;
 import com.extjs.gxt.ui.client.event.ComponentEvent;
@@ -55,6 +58,7 @@ public class LoginDialog extends Dialog {
 		this.password.setFieldLabel("Password");
 
 		this.anonumousLogin = new CheckBox();
+		this.anonumousLogin.setEnabled(false);
 		this.anonumousLogin.setFieldLabel("Anonumous");
 		this.anonumousLogin.addListener(Events.Change, new Listener<FieldEvent>() {
 
@@ -82,8 +86,11 @@ public class LoginDialog extends Dialog {
 		panel.add(this.jid);
 		panel.add(this.password);
 
-		this.jid.setValue("alice@sphere/www");
-		this.password.setValue("a");
+		JID defaultJID = Messenger.config().getJid();
+		if (defaultJID != null)
+			this.jid.setValue(defaultJID.toString());
+		if (Messenger.config().getPassword() != null)
+			this.password.setValue(Messenger.config().getPassword());
 
 		add(panel);
 	}

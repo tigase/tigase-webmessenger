@@ -4,6 +4,7 @@ import tigase.gwt.components.roster.client.PresenceCallback;
 import tigase.gwt.components.roster.client.RosterPresence;
 import tigase.xmpp4gwt.client.JID;
 import tigase.xmpp4gwt.client.stanzas.Presence;
+import tigase.xmpp4gwt.client.stanzas.Presence.Show;
 import tigase.xmpp4gwt.client.xmpp.presence.PresencePlugin;
 import tigase.xmpp4gwt.client.xmpp.roster.RosterItem;
 import tigase.xmpp4gwt.client.xmpp.roster.RosterPlugin;
@@ -25,22 +26,26 @@ public class PresenceCallbackImpl implements PresenceCallback {
 
 		if (ri != null && ri.isAsk()) {
 			return RosterPresence.ASK;
+		} else if (ri != null && ri.getSubscription() != null
+				&& (RosterItem.Subscription.none == ri.getSubscription() || RosterItem.Subscription.from == ri.getSubscription())) {
+			return RosterPresence.NOAUTH;
 		} else if (pi != null) {
 			System.out.println(jid + " :: " + pi.getType() + " | " + pi.getShow());
 			if (pi.getType() == Presence.Type.error) {
 				return RosterPresence.ERROR;
-			} else if (pi.getType() == Presence.Type.unavailable || pi.getType() == Presence.Type.subscribe
-					|| pi.getType() == Presence.Type.unsubscribed || pi.getType() == Presence.Type.unsubscribe) {
+			} else if (pi.getType() == Presence.Type.unavailable || pi.getType() == Presence.Type.subscribe) {
 				return RosterPresence.OFFLINE;
-			} else if (pi.getShow() == Presence.Show.notSpecified) {
+			} else if (pi.getType() == Presence.Type.unsubscribed || pi.getType() == Presence.Type.unsubscribe) {
+				return RosterPresence.NOAUTH;
+			} else if (pi.getShow() == Show.notSpecified) {
 				return RosterPresence.ONLINE;
-			} else if (pi.getShow() == Presence.Show.away) {
+			} else if (pi.getShow() == Show.away) {
 				return RosterPresence.AWAY;
-			} else if (pi.getShow() == Presence.Show.chat) {
+			} else if (pi.getShow() == Show.chat) {
 				return RosterPresence.READY_FOR_CHAT;
-			} else if (pi.getShow() == Presence.Show.dnd) {
+			} else if (pi.getShow() == Show.dnd) {
 				return RosterPresence.DND;
-			} else if (pi.getShow() == Presence.Show.xa) {
+			} else if (pi.getShow() == Show.xa) {
 				return RosterPresence.XA;
 			}
 		}

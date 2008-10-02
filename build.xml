@@ -88,6 +88,7 @@
 		<mkdir dir="${dist.dir}" />
 		<zip duplicate="preserve" destfile="${dist.dir}/messenger-${ver}.zip">
 			<zipfileset dir="${gwt.build.dir}/tigase.messenger.Messenger">
+				<exclude name="**/Messenger.html" />
 				<include name="**/*.*" />
 			</zipfileset>
 		</zip>

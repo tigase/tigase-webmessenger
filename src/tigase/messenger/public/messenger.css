@@ -30,6 +30,10 @@ textarea.chatinput {
 	width: 100%;
 }
 
+.chat-icon {
+	background: url("chat.png");
+}
+
 .group-header.open {
 	background: url("opened.png") no-repeat 5px 11px #ebeced;
 }
@@ -67,6 +71,10 @@ textarea.chatinput {
 	padding-top: 3px;
 	padding-bottom: 4px;
 	cursor: default;
+}
+
+.buddy-noauth {
+	background: url("user-offline-nonauth.png") no-repeat left center;
 }
 
 .buddy-online {

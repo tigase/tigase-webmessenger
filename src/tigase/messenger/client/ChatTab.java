@@ -12,11 +12,11 @@ import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.Style.Scroll;
 import com.extjs.gxt.ui.client.util.Margins;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
+import com.extjs.gxt.ui.client.widget.Html;
 import com.extjs.gxt.ui.client.widget.TabItem;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayout;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
 import com.google.gwt.i18n.client.DateTimeFormat;
-import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.KeyboardListener;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.Widget;
@@ -25,7 +25,7 @@ public class ChatTab extends TabItem {
 
 	private ContentPanel center = new ContentPanel();
 
-	private final HTML chat = new HTML();
+	private final Html chat = new Html();
 
 	private DateTimeFormat dtf = DateTimeFormat.getFormat("HH:mm:ss");
 
@@ -37,12 +37,19 @@ public class ChatTab extends TabItem {
 
 	private final RosterPlugin rosterPlugin;
 
+	private boolean unread = false;
+
 	public ChatTab(Chat<ChatTab> chat, RosterPlugin rosterPlugin) {
 		this.item = chat;
 		this.rosterPlugin = rosterPlugin;
 		this.nick = chat.getJid().toString();
-		setText("chat");
-		setIconStyle("icon-tabs");
+
+		RosterItem ri = rosterPlugin.getRosterItem(chat.getJid());
+		if (ri.getName() != null)
+			this.nick = ri.getName();
+
+		setText("Chat with " + this.nick);
+		setIconStyle("chat-icon");
 		setClosable(true);
 
 		setLayout(new BorderLayout());
@@ -86,10 +93,10 @@ public class ChatTab extends TabItem {
 	}
 
 	private void add(String x) {
-		String m = this.chat.getHTML();
-		m = m + x + "<br/>";
-		this.chat.setHTML(m);
-		center.setVScrollPosition(this.center.getWidth());
+		String m = this.chat.getHtml();
+		m = (m == null ? "" : m) + x + "<br/>";
+		this.chat.setHtml(m);
+		center.setVScrollPosition(this.chat.getHeight());
 	}
 
 	private void add(String style, Date date, String nick, String message) {
@@ -124,7 +131,18 @@ public class ChatTab extends TabItem {
 		this.item.send(message);
 	}
 
+	public void setReaded() {
+		center.setVScrollPosition(this.chat.getHeight());
+		if (unread) {
+			unread = false;
+			setText("Chat with " + this.nick);
+		}
+	}
+
 	public void setUnread() {
-		setText("* chat");
+		if (!unread) {
+			setText("* Chat with " + this.nick);
+			unread = true;
+		}
 	}
 }
