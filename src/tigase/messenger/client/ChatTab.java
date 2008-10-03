@@ -82,6 +82,7 @@ public class ChatTab extends TabItem {
 		add(center, centerData);
 		add(south, southData);
 
+		
 		this.message.addKeyboardListener(new KeyboardListener() {
 
 			public void onKeyDown(Widget sender, char keyCode, int modifiers) {
@@ -142,12 +143,14 @@ public class ChatTab extends TabItem {
 		center.setVScrollPosition(this.chat.getHeight());
 		if (unread) {
 			unread = false;
+			getHeader().removeStyleName("unread");
 			setText("Chat with " + this.nick);
 		}
 	}
 
 	public void setUnread() {
 		if (!unread) {
+			getHeader().addStyleName("unread");
 			setText("* Chat with " + this.nick);
 			unread = true;
 		}

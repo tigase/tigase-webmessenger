@@ -82,6 +82,7 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 	private final ToolBar toolBar = new ToolBar();
 
 	public TabbedViewport(Roster rosterComponent, ChatManager<ChatTab> chatManager) {
+		tabPanel.setTabScroll(true);
 		this.rosterComponent = rosterComponent;
 		this.chatManager = chatManager;
 		this.chatManager.addListener(this);
@@ -180,7 +181,7 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		ChatTab ct = chat.getUserData();
 		if (ct != null) {
 			ct.process(message);
-			if (this.tabPanel.getSelectedItem() != ct) {
+			if (this.tabPanel.getSelectedItem() != ct && message.getBody() != null) {
 				ct.setUnread();
 			}
 		}
@@ -242,6 +243,8 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		TabItem item = new TabItem();
 		item.setText("Tigase Messenger");
 		item.setIconStyle("icon-tabs");
+		item.getHeader().addStyleName("unread");
+
 		tabPanel.add(item);
 		tabPanel.setSelection(item);
 
@@ -327,7 +330,14 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 	private Menu prepareContactMenu() {
 		Menu menu = new Menu();
 
-		final MenuItem addContactMenuItem = new MenuItem("Add contact");
+		final MenuItem addContactMenuItem = new MenuItem("Add contact", new SelectionListener<MenuEvent>() {
+
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				AddContactDialog acd = new AddContactDialog();
+				acd.show();
+			}
+		});
 
 		final Menu subscriptionMenu = new Menu();
 
