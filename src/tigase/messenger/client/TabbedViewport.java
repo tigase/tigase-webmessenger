@@ -227,7 +227,7 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		westData.setMargins(new Margins(5));
 
 		BorderLayoutData centerData = new BorderLayoutData(LayoutRegion.CENTER);
-		centerData.setMargins(new Margins(5, 0, 5, 0));
+		centerData.setMargins(new Margins(5, 5, 5, 0));
 
 		BorderLayoutData eastData = new BorderLayoutData(LayoutRegion.EAST, 200);
 		eastData.setSplit(true);
