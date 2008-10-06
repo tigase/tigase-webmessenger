@@ -69,6 +69,8 @@ public class Roster extends Composite {
 
 	private boolean showTransportAsContacts = false;
 
+	private JID ownJid;
+
 	public Roster(PresenceCallback presenceCallback) {
 		initWidget(panel);
 		setWidth("100%");
@@ -371,6 +373,8 @@ public class Roster extends Composite {
 		JID jid = presenceItem.getFrom().getBareJID();
 		Set<Group> buddyGruops = this.buddies.get(jid);
 		if (buddyGruops == null && presenceItem.getFrom() != null) {
+			if ((jid == null || ownJid == null || jid.equals(ownJid.getBareJID())))
+				return;
 			String displayedName = presenceItem.getFrom().toString();
 			String nickname = presenceItem.getExtNick();
 			if (nickname != null && nickname.trim().length() > 0) {
@@ -390,8 +394,17 @@ public class Roster extends Composite {
 	void callGropToolTip(Event event, Group group) {
 		fireOnGroupToolTip(event, group);
 	}
+
 	void callItemToolTip(Event event, Item item) {
 		fireOnItemToolTip(event, item);
+	}
+
+	public JID getOwnJid() {
+		return ownJid;
+	}
+
+	public void setOwnJid(JID ownJid) {
+		this.ownJid = ownJid;
 	}
 
 }
