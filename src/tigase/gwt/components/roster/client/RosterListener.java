@@ -16,4 +16,9 @@ public interface RosterListener {
 
 	void onRosterItemSelect(final JID jid);
 
+	void onGroupToolTip(final Event event, final Group group);
+	
+	void onItemToolTip(final Event event, final Item group);
+
+	
 }

@@ -11,6 +11,7 @@ import java.util.Set;
 
 import tigase.xmpp4gwt.client.JID;
 import tigase.xmpp4gwt.client.stanzas.Presence;
+import tigase.xmpp4gwt.client.stanzas.Presence.Show;
 import tigase.xmpp4gwt.client.xmpp.roster.RosterItem;
 
 import com.google.gwt.user.client.Event;
@@ -148,6 +149,18 @@ public class Roster extends Composite {
 		}
 	}
 
+	private void fireOnGroupToolTip(Event event, Group group) {
+		for (RosterListener listener : this.listeners) {
+			listener.onGroupToolTip(event, group);
+		}
+	}
+
+	private void fireOnItemToolTip(Event event, Item group) {
+		for (RosterListener listener : this.listeners) {
+			listener.onItemToolTip(event, group);
+		}
+	}
+
 	public ContactComparator getContactComparator() {
 		return contactComparator;
 	}
@@ -262,18 +275,26 @@ public class Roster extends Composite {
 	}
 
 	public void updatedRosterItem(RosterItem item) {
-		// String[] groups = item.getGroups();
 		if (!showTransportAsContacts && item.getJid() != null && JID.fromString(item.getJid()).getNode() == null)
 			return;
-
-		final RosterPresence rp = presenceCallback.getRosterPresence(JID.fromString(item.getJid()));
-
 		List<String> groups = Arrays.asList(item.getGroups());
 		if (groups.size() == 0) {
 			groups = new ArrayList<String>();
 			groups.add(this.defaultGroupName);
 		}
-		JID jid = JID.fromString(item.getJid());
+
+		final RosterPresence rp = presenceCallback.getRosterPresence(JID.fromString(item.getJid()));
+
+		String displayedName = item.getName();
+		if (displayedName == null || displayedName.trim().length() == 0) {
+			displayedName = item.getJid();
+		}
+
+		update(JID.fromString(item.getJid()), rp, displayedName, groups, false);
+	}
+
+	private void update(final JID jid, final RosterPresence rp, final String displayedName, final List<String> groups,
+			final boolean virtualContact) {
 		Set<Group> buddyGruops = this.buddies.get(jid);
 		if (buddyGruops == null) {
 			buddyGruops = new HashSet<Group>();
@@ -296,8 +317,9 @@ public class Roster extends Composite {
 				}
 				panel.insert(group, index);
 			}
+
 			buddyGruops.add(group);
-			group.updateRosterItem(jid, item);
+			group.updateRosterItem(jid, displayedName);
 			group.updatePresence(jid, rp);
 		}
 		Iterator<Group> git = buddyGruops.iterator();
@@ -319,6 +341,27 @@ public class Roster extends Composite {
 		fireAfterRosterChange();
 	}
 
+	private RosterPresence rosterPresenceFromPresence(Presence pi) {
+		if (pi.getType() == Presence.Type.error) {
+			return RosterPresence.ERROR;
+		} else if (pi.getType() == Presence.Type.unavailable || pi.getType() == Presence.Type.subscribe) {
+			return RosterPresence.OFFLINE;
+		} else if (pi.getType() == Presence.Type.unsubscribed || pi.getType() == Presence.Type.unsubscribe) {
+			return RosterPresence.NOAUTH;
+		} else if (pi.getShow() == Show.notSpecified) {
+			return RosterPresence.ONLINE;
+		} else if (pi.getShow() == Show.away) {
+			return RosterPresence.AWAY;
+		} else if (pi.getShow() == Show.chat) {
+			return RosterPresence.READY_FOR_CHAT;
+		} else if (pi.getShow() == Show.dnd) {
+			return RosterPresence.DND;
+		} else if (pi.getShow() == Show.xa) {
+			return RosterPresence.XA;
+		}
+		return RosterPresence.ERROR;
+	}
+
 	public void updatePresence(Presence presenceItem) {
 		if (presenceItem == null)
 			return;
@@ -327,12 +370,28 @@ public class Roster extends Composite {
 		RosterPresence p = presenceCallback.getRosterPresence(presenceItem.getFrom());
 		JID jid = presenceItem.getFrom().getBareJID();
 		Set<Group> buddyGruops = this.buddies.get(jid);
-		if (buddyGruops == null)
-			return;
-		for (Group group : buddyGruops) {
-			group.updatePresence(jid, p);
-		}
+		if (buddyGruops == null && presenceItem.getFrom() != null) {
+			String displayedName = presenceItem.getFrom().toString();
+			String nickname = presenceItem.getExtNick();
+			if (nickname != null && nickname.trim().length() > 0) {
+				displayedName = nickname;
+			}
+			List<String> groups = new ArrayList<String>();
+			groups.add("Not in roster");
+			update(presenceItem.getFrom(), rosterPresenceFromPresence(presenceItem), displayedName, groups, true);
+
+		} else
+			for (Group group : buddyGruops) {
+				group.updatePresence(jid, p);
+			}
 		fireAfterRosterChange();
+	}
+
+	void callGropToolTip(Event event, Group group) {
+		fireOnGroupToolTip(event, group);
+	}
+	void callItemToolTip(Event event, Item item) {
+		fireOnItemToolTip(event, item);
 	}
 
 }

@@ -1,10 +1,11 @@
 package tigase.gwt.components.roster.client;
 
 import tigase.xmpp4gwt.client.JID;
-import tigase.xmpp4gwt.client.xmpp.roster.RosterItem;
 
 import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.SimplePanel;
 
@@ -16,22 +17,24 @@ public class Item extends SimplePanel {
 
 	private final Label label;
 
-	private RosterItem rosterItem;
+	private Object data;
 
-	Item(Group group, final JID jid, final RosterItem item) {
+	public <T extends Object> void setData(T data) {
+		this.data = data;
+	}
+
+	public <T extends Object> T getData() {
+		return (T) data;
+	}
+
+	Item(Group group, final JID jid, final String displayedName) {
 		super();
-		this.rosterItem = item;
 		this.group = group;
 		this.jid = jid;
 		sinkEvents(Event.ONMOUSEDOWN);
 		sinkEvents(Event.ONDBLCLICK);
 
-		String name = item.getName();
-		if (name == null || name.trim().length() == 0) {
-			name = item.getJid();
-		}
-
-		label = new Label(name);
+		label = new Label(displayedName);
 		add(label);
 		setStyleName("buddy");
 		Group.disableContextMenu(this.getElement());
@@ -45,12 +48,10 @@ public class Item extends SimplePanel {
 		return this.label.getText();
 	}
 
-	public RosterItem getRosterItem() {
-		return this.rosterItem;
-	}
+	private Timer timer;
 
 	@Override
-	public void onBrowserEvent(Event event) {
+	public void onBrowserEvent(final Event event) {
 		DOM.eventCancelBubble(event, true);
 		DOM.eventPreventDefault(event);
 		if (DOM.eventGetType(event) == Event.ONMOUSEDOWN) {
@@ -63,13 +64,26 @@ public class Item extends SimplePanel {
 			}
 		} else if (DOM.eventGetType(event) == Event.ONDBLCLICK) {
 			group.getRoster().callContactDoubleClick(event, this);
+		} else if (DOM.eventGetType(event) == Event.ONMOUSEOVER) {
+			if (timer == null) {
+				timer = new Timer() {
+					public void run() {
+						group.getRoster().callItemToolTip(event, Item.this);
+					}
+				};
+				timer.schedule(1000);
+			}
+		} else if (DOM.eventGetType(event) == Event.ONMOUSEOUT) {
+			if (timer != null) {
+				timer.cancel();
+				timer = null;
+			}
 		}
 	}
 
-	public boolean update(RosterItem item) {
-		this.rosterItem = item;
-		boolean changed = !item.getName().equals(this.label.getText());
-		this.label.setText(item.getName());
+	public boolean update(String displayedName) {
+		boolean changed = !displayedName.equals(this.label.getText());
+		this.label.setText(displayedName);
 		return changed;
 	}
 

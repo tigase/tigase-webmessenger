@@ -4,11 +4,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import tigase.xmpp4gwt.client.JID;
-import tigase.xmpp4gwt.client.xmpp.roster.RosterItem;
 
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.SimplePanel;
@@ -43,12 +43,12 @@ public class Group extends Composite {
 
 	private boolean visibleIfEmpty = true;
 
-	Group(Roster roster, String groupName) {
+	Group(final Roster roster, String groupName) {
 		this.roster = roster;
 		this.name = groupName;
 		header = new SimplePanel() {
 			@Override
-			public void onBrowserEvent(Event event) {
+			public void onBrowserEvent(final Event event) {
 				DOM.eventCancelBubble(event, true);
 				DOM.eventPreventDefault(event);
 				if (DOM.eventGetType(event) == Event.ONMOUSEDOWN) {
@@ -74,13 +74,28 @@ public class Group extends Composite {
 						}
 					}
 				} else if (DOM.eventGetType(event) == Event.ONDBLCLICK) {
-
 					setOpen(!open);
+				} else if (DOM.eventGetType(event) == Event.ONMOUSEOVER) {
+					if (timer == null) {
+						timer = new Timer() {
+							public void run() {
+								roster.callGropToolTip(event, Group.this);
+							}
+						};
+						timer.schedule(1000);
+					}
+				} else if (DOM.eventGetType(event) == Event.ONMOUSEOUT) {
+					if (timer != null) {
+						timer.cancel();
+						timer = null;
+					}
 				}
 			}
 		};
 		header.sinkEvents(Event.ONMOUSEDOWN);
 		header.sinkEvents(Event.ONDBLCLICK);
+		header.sinkEvents(Event.ONMOUSEOVER);
+		header.sinkEvents(Event.ONMOUSEOUT);
 
 		elements = new VerticalPanel();
 
@@ -101,6 +116,8 @@ public class Group extends Composite {
 		else
 			header.addStyleName("close");
 	}
+
+	private Timer timer;
 
 	public int getBuddiesCount() {
 		return this.buddies.size();
@@ -190,11 +207,11 @@ public class Group extends Composite {
 		setVisible(this.visibleIfEmpty || this.visibleContacts > 0);
 	}
 
-	public void updateRosterItem(final JID jid, final RosterItem item) {
+	public void updateRosterItem(final JID jid, final String displayedName) {
 		Item ri = this.buddies.get(jid);
 
 		if (ri == null) {
-			ri = new Item(this, jid, item);
+			ri = new Item(this, jid, displayedName);
 			ri.setVisible(showOffline);
 			if (ri.update(roster.getPresenceCallback().getRosterPresence(jid)))
 				this.visibleContacts++;
@@ -210,7 +227,7 @@ public class Group extends Composite {
 			elements.insert(ri, index);
 			this.buddies.put(jid, ri);
 		} else {
-			boolean changed = ri.update(item);
+			boolean changed = ri.update(displayedName);
 			if (changed) {
 				elements.remove(ri);
 				int index = 0;
