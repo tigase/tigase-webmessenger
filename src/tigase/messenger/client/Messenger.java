@@ -2,6 +2,8 @@ package tigase.messenger.client;
 
 import java.util.List;
 
+import tigase.gwt.components.roster.client.ContactComparator;
+import tigase.gwt.components.roster.client.Item;
 import tigase.gwt.components.roster.client.PresenceCallback;
 import tigase.gwt.components.roster.client.Roster;
 import tigase.gwt.components.roster.client.RosterPresence;
@@ -23,9 +25,10 @@ import tigase.xmpp4gwt.client.xmpp.message.ChatManager;
 import tigase.xmpp4gwt.client.xmpp.presence.PresenceEvent;
 import tigase.xmpp4gwt.client.xmpp.roster.RosterEvent;
 import tigase.xmpp4gwt.client.xmpp.roster.RosterItem;
+import tigase.xmpp4gwt.client.xmpp.sasl.AnonymousMechanism;
+import tigase.xmpp4gwt.client.xmpp.sasl.PlainMechanism;
 import tigase.xmpp4gwt.client.xmpp.sasl.SaslEvent;
 
-import com.extjs.gxt.themes.client.Slate;
 import com.extjs.gxt.ui.client.GXT;
 import com.extjs.gxt.ui.client.util.Theme;
 import com.extjs.gxt.ui.client.widget.Info;
@@ -77,6 +80,7 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 
 	public Messenger() {
 		// GXT.setDefaultTheme(new Slate(), true);
+		GXT.setDefaultTheme(Theme.BLUE, true);
 		instance = this;
 
 		User user = new User();
@@ -87,6 +91,16 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 
 		this.presenceCallback = new PresenceCallbackImpl(session.getPresencePlugin(), session.getRosterPlugin());
 		this.rosterComponent = new Roster(this.presenceCallback);
+		this.rosterComponent.setContactComparator(new ContactComparator() {
+			private String x(Item i) {
+				return i.getName();
+			}
+
+			public int compare(Item o1, Item o2) {
+
+				return x(o1).compareToIgnoreCase(x(o2));
+			}
+		});
 
 		this.session.getConnector().addListener(this);
 
@@ -116,6 +130,13 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 		});
 		Messenger.session().getEventsManager().addListener(Events.resourceBinded, new Listener<ResourceBindEvenet>() {
 			public void handleEvent(ResourceBindEvenet event) {
+				JID[] directPresences = config.getDirectPresenceAdressees();
+				if (directPresences != null) {
+					for (JID jid : directPresences) {
+						session.getPresencePlugin().sendDirectPresence(jid, defaultPresenceShow, nickname);
+					}
+				}
+
 				updateWaitDialog("Resource binded.");
 
 				RosterPresence rp;
@@ -137,6 +158,8 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 					break;
 				}
 
+				rosterComponent.setOwnJid(event.getBindedJid());
+
 				tabbedViewport.getStatusToolItem().setNewStatus(rp);
 				Timer x = new Timer() {
 
@@ -156,6 +179,8 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 		Messenger.session().getEventsManager().addListener(Events.beforeSendInitialPresence, new Listener<PresenceEvent>() {
 			public void handleEvent(PresenceEvent event) {
 				event.getPresence().setShow(defaultPresenceShow);
+				if (nickname != null)
+					event.getPresence().setExtNick(nickname);
 				System.out.println("!!!!! " + defaultPresenceShow);
 				updateWaitDialog("Sending presence...");
 			}
@@ -284,18 +309,27 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 	}
 
 	public void onLogin(LoginDialog loginDialog) {
-		final JID jid = JID.fromString(loginDialog.getJID());
-
 		session.reset();
-		session.getUser().setPassword(loginDialog.getPassword());
-		session.getUser().setDomainname(jid.getDomain());
-		session.getUser().setUsername(jid.getNode());
-		String resource = config.getDefaultResource();
-		if (jid.getResource() != null) {
-			resource = jid.getResource();
-		}
-		session.getUser().setResource(resource);
+		nickname = null;
+		if (loginDialog.isAnonymous()) {
+			nickname = loginDialog.getNickname();
+			System.out.println("!!! " + nickname);
 
+			session.getUser().setDomainname(config.getDefaultHostname());
+			session.getAuthPlugin().setMechanism(new AnonymousMechanism());
+		} else {
+			session.getAuthPlugin().setMechanism(new PlainMechanism(session.getUser()));
+			final JID jid = JID.fromString(loginDialog.getJID());
+
+			session.getUser().setPassword(loginDialog.getPassword());
+			session.getUser().setDomainname(jid.getDomain());
+			session.getUser().setUsername(jid.getNode());
+			String resource = config.getDefaultResource();
+			if (jid.getResource() != null) {
+				resource = jid.getResource();
+			}
+			session.getUser().setResource(resource);
+		}
 		session.login();
 		if (!config.isDebugEnabled()) {
 			waitDialog = MessageBox.progress("Please wait", "Loading items...", "Initializing...");
@@ -323,6 +357,8 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 		d.show();
 	}
 
+	private String nickname = null;
+
 	private void updateWaitDialog(final String message) {
 		if (this.waitDialog != null) {
 			final ProgressBar bar = this.waitDialog.getProgressBar();
@@ -331,5 +367,9 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 			System.out.println("=== " + message + "   (" + x + ")");
 			bar.updateProgress(x, message);
 		}
+	}
+
+	public String getNickname() {
+		return nickname;
 	}
 }

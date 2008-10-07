@@ -2,9 +2,48 @@
 	text-align: center;
 }
 
+.header .links {
+	border-bottom: 1px solid #e1ecfe;
+}
+
+.header .jidLabel {
+	font-weight: bold;
+}
+
+.chatTabItem textarea {
+	border: none;
+}
+
+.chatHeader * {
+	background-color: #dfe8f6;
+}
+
+.chatDescription {
+	margin-left: 5px;
+	font-weight: normal;
+}
+
+.chatTitle {
+	margin-top: 5px;
+	margin-left: 5px;
+	font-size: 18px;
+	font-weight: bold;
+}
+
+.header div { //
+	background: white;
+	font-size: 13px;
+	font-family: arial, sans-serif;
+}
+
 .about .name {
 	font-size: 18px;
 	font-weight: bold;
+}
+
+.logoutLink {
+	color: blue;
+	cursor: pointer;
 }
 
 * {
