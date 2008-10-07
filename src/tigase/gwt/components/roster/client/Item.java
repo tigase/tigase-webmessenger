@@ -35,6 +35,7 @@ public class Item extends SimplePanel {
 		Group.disableContextMenu(this.getElement());
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T extends Object> T getData() {
 		return (T) data;
 	}
