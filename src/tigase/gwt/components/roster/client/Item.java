@@ -3,7 +3,6 @@ package tigase.gwt.components.roster.client;
 import tigase.xmpp4gwt.client.JID;
 
 import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Label;
@@ -11,21 +10,17 @@ import com.google.gwt.user.client.ui.SimplePanel;
 
 public class Item extends SimplePanel {
 
+	private Object data;
+
 	private final Group group;
 
 	private final JID jid;
 
 	private final Label label;
 
-	private Object data;
+	private RosterPresence rosterPresence;
 
-	public <T extends Object> void setData(T data) {
-		this.data = data;
-	}
-
-	public <T extends Object> T getData() {
-		return (T) data;
-	}
+	private Timer timer;
 
 	Item(Group group, final JID jid, final String displayedName) {
 		super();
@@ -40,6 +35,10 @@ public class Item extends SimplePanel {
 		Group.disableContextMenu(this.getElement());
 	}
 
+	public <T extends Object> T getData() {
+		return (T) data;
+	}
+
 	public JID getJID() {
 		return jid;
 	}
@@ -48,7 +47,9 @@ public class Item extends SimplePanel {
 		return this.label.getText();
 	}
 
-	private Timer timer;
+	public RosterPresence getRosterPresence() {
+		return rosterPresence;
+	}
 
 	@Override
 	public void onBrowserEvent(final Event event) {
@@ -81,13 +82,12 @@ public class Item extends SimplePanel {
 		}
 	}
 
-	public boolean update(String displayedName) {
-		boolean changed = !displayedName.equals(this.label.getText());
-		this.label.setText(displayedName);
-		return changed;
+	public <T extends Object> void setData(T data) {
+		this.data = data;
 	}
 
 	public boolean update(final RosterPresence p) {
+		this.rosterPresence = p;
 		boolean visible = this.group.showElement(p);
 		setVisible(visible);
 		setStyleName("buddy");
@@ -124,5 +124,11 @@ public class Item extends SimplePanel {
 			break;
 		}
 		return visible;
+	}
+
+	public boolean update(String displayedName) {
+		boolean changed = !displayedName.equals(this.label.getText());
+		this.label.setText(displayedName);
+		return changed;
 	}
 }
