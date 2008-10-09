@@ -35,6 +35,7 @@ import com.extjs.gxt.ui.client.widget.Info;
 import com.extjs.gxt.ui.client.widget.MessageBox;
 import com.extjs.gxt.ui.client.widget.ProgressBar;
 import com.google.gwt.core.client.EntryPoint;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.http.client.Response;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.DeferredCommand;
@@ -78,6 +79,8 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 
 	private MessageBox waitDialog;
 
+	private VersionInfo versionInfo = GWT.create(VersionInfo.class);
+
 	public Messenger() {
 		// GXT.setDefaultTheme(new Slate(), true);
 		GXT.setDefaultTheme(Theme.BLUE, true);
@@ -85,6 +88,8 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 
 		User user = new User();
 		this.session = new Session(user);
+		this.session.getSoftwareVersionPlugin().setName("tigase-messenger");
+		this.session.getSoftwareVersionPlugin().setVersion(versionInfo.versionNumber());
 
 		String http = config.getHTTPBase();
 		this.session.getConnector().setHttpBase(http == null ? "/bosh" : http);
