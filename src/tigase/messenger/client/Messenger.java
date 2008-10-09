@@ -105,6 +105,7 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 		this.session.getConnector().addListener(this);
 
 		this.chatManager = new ChatManager<ChatTab>(this.session.getChatPlugin());
+		this.session.getChatPlugin().setChatManager(chatManager);
 
 		session.addEventListener(Events.saslFail, new Listener<SaslEvent>() {
 

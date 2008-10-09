@@ -2,16 +2,20 @@ package tigase.messenger.client;
 
 import java.util.Date;
 
+import tigase.gwt.components.roster.client.GroupChatRoster;
+import tigase.gwt.components.roster.client.PresenceCallback;
+import tigase.gwt.components.roster.client.Roster;
+import tigase.gwt.components.roster.client.RosterPresence;
+import tigase.gwt.components.roster.client.GroupChatRoster.GroupNamesCallback;
+import tigase.xmpp4gwt.client.JID;
 import tigase.xmpp4gwt.client.TextUtils;
-import tigase.xmpp4gwt.client.stanzas.IQ;
 import tigase.xmpp4gwt.client.stanzas.Message;
+import tigase.xmpp4gwt.client.stanzas.Presence;
 import tigase.xmpp4gwt.client.stanzas.Message.Type;
 import tigase.xmpp4gwt.client.xmpp.ErrorCondition;
 import tigase.xmpp4gwt.client.xmpp.message.Chat;
-import tigase.xmpp4gwt.client.xmpp.roster.RosterItem;
-import tigase.xmpp4gwt.client.xmpp.roster.RosterPlugin;
-import tigase.xmpp4gwt.client.xmpp.xeps.vcard.VCard;
-import tigase.xmpp4gwt.client.xmpp.xeps.vcard.VCardResponseHandler;
+import tigase.xmpp4gwt.client.xmpp.xeps.muc.GroupChat;
+import tigase.xmpp4gwt.client.xmpp.xeps.muc.Role;
 
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.Style.Orientation;
@@ -37,7 +41,7 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.Widget;
 
-public class ChatTab extends TabItem {
+public class GroupChatTab extends TabItem {
 
 	private static String linkhtml(String body) {
 		body = body == null ? body : body.replaceAll("([^>/\";]|^)(www\\.[^ ]+)",
@@ -52,13 +56,9 @@ public class ChatTab extends TabItem {
 
 	private DateTimeFormat dtf = DateTimeFormat.getFormat("HH:mm:ss");
 
-	private Chat<ChatTab> item;
+	private GroupChat item;
 
 	private final TextArea message = new TextArea();
-
-	private String nick;
-
-	private final RosterPlugin rosterPlugin;
 
 	private boolean unread = false;
 
@@ -76,7 +76,7 @@ public class ChatTab extends TabItem {
 
 		description.setStyleName("chatDescription");
 
-		Image i = new Image("chat-big.png");
+		Image i = new Image("group-chat-big.png");
 
 		result.add(i, new RowData(58, 58));
 
@@ -97,21 +97,20 @@ public class ChatTab extends TabItem {
 		return result;
 	}
 
-	private boolean titleSetted = false;
+	private final GroupChatRoster rosterComponent;
 
-	public ChatTab(Chat<ChatTab> chat, RosterPlugin rosterPlugin) {
-		this.item = chat;
-		this.rosterPlugin = rosterPlugin;
-		this.nick = chat.getJid().toString();
+	@Override
+	public void setEnabled(boolean enabled) {
+		message.setEnabled(enabled);
+	}
+
+	public GroupChatTab(final GroupChat groupChat) {
+		this.item = groupChat;
 		addStyleName("chatTabItem");
+		this.message.setEnabled(false);
 
-		RosterItem ri = rosterPlugin.getRosterItem(chat.getJid());
-		if (ri != null && ri.getName() != null && ri.getName().trim().length() > 0) {
-			titleSetted = true;
-			this.nick = ri.getName();
-		}
-		setText("Chat with " + this.nick);
-		setIconStyle("chat-icon");
+		setText("Room: " + groupChat.getRoomJid().getNode());
+		setIconStyle("group-chat-icon");
 		setClosable(true);
 
 		setLayout(new BorderLayout());
@@ -131,6 +130,44 @@ public class ChatTab extends TabItem {
 		southData.setFloatable(true);
 		southData.setMargins(new Margins(5, 0, 0, 0));
 
+		BorderLayoutData eastData = new BorderLayoutData(LayoutRegion.EAST, 200);
+		eastData.setSplit(true);
+		eastData.setCollapsible(true);
+		eastData.setMargins(new Margins(5));
+
+		this.rosterComponent = new GroupChatRoster(new PresenceCallback() {
+
+			public RosterPresence getRosterPresence(JID jid) {
+				Presence presence = groupChat.getPresence(jid);
+				if (presence != null) {
+					return Roster.rosterPresenceFromPresence(presence);
+				} else {
+					return RosterPresence.OFFLINE;
+				}
+			}
+		}, new GroupNamesCallback() {
+
+			public String[] getGroupsOf(JID jid) {
+				Role role = groupChat.getRole(jid);
+				switch (role) {
+				case moderator:
+					return new String[] { "Moderators" };
+				case participant:
+					return new String[] { "Participants" };
+				case visitor:
+					return new String[] { "Visitors" };
+				case none:
+					return new String[] { "None" };
+				}
+				return null;
+			}
+		});
+
+		ContentPanel east = new ContentPanel();
+		east.setHeaderVisible(false);
+		east.setScrollMode(Scroll.AUTO);
+		east.add(rosterComponent);
+
 		center.setHeaderVisible(false);
 		center.add(this.chat);
 		center.setScrollMode(Scroll.AUTO);
@@ -138,6 +175,7 @@ public class ChatTab extends TabItem {
 		ContentPanel north = prepareChatHeader();
 
 		ContentPanel south = new ContentPanel();
+
 		FlowLayout layout = new FlowLayout();
 		south.setLayout(layout);
 		south.setHeaderVisible(false);
@@ -158,6 +196,7 @@ public class ChatTab extends TabItem {
 		add(north, northData);
 		add(center, centerData);
 		add(south, southData);
+		add(east, eastData);
 
 		this.message.addKeyboardListener(new KeyboardListener() {
 
@@ -175,24 +214,9 @@ public class ChatTab extends TabItem {
 			}
 		});
 
-		title.setText(this.nick);
-		description.setText(item.getJid().toString());
-		this.title.setTitle(item.getJid().toString());
-
-		if (!titleSetted)
-			Messenger.session().getVCardPlugin().vCardRequest(chat.getJid().getBareJID(), new VCardResponseHandler() {
-
-				public void onSuccess(VCard vcard) {
-					String n = vcard.getName();
-					if (n != null && n.trim().length() > 0) {
-						title.setText(n);
-						titleSetted = true;
-					}
-				}
-
-				public void onError(IQ iq, ErrorType errorType, ErrorCondition errorCondition, String text) {
-				}
-			});
+		title.setText(item.getRoomJid().toStringBare());
+		description.setText(" ");
+		this.title.setTitle(item.getRoomJid().toStringBare());
 	}
 
 	private void add(String x) {
@@ -205,26 +229,13 @@ public class ChatTab extends TabItem {
 	private void add(String style, Date date, String nick, String message) {
 		String x = "[" + dtf.format(date) + "]&nbsp; <span class='" + style + "'>" + nick + ": "
 				+ linkhtml(TextUtils.escape(message)) + "</span>";
-		System.out.println(x);
 		add(x);
 	}
 
-	public Chat<ChatTab> getChatItem() {
-		return item;
-	}
-
 	public void process(Message message) {
-		if (!titleSetted && message.getExtNick() != null && message.getExtNick().trim().length() > 0) {
-			title.setText(message.getExtNick());
-			titleSetted = true;
-		}
-		if (!item.getJid().toString().equals(this.description.getText())) {
-			this.description.setText(item.getJid().toString());
-			this.title.setTitle(item.getJid().toString());
-		}
 		final String body = message.getBody();
+		final String nick = message.getFrom().getResource();
 		final Date date = new Date();
-
 		if (message.getType() == Type.error) {
 			ErrorCondition condition = ErrorDialog.getErrorCondition(message.getFirstChild("error"));
 			String text = ErrorDialog.getErrorText(message.getFirstChild("error"));
@@ -237,13 +248,7 @@ public class ChatTab extends TabItem {
 				x += "<br/>----<br/>" + TextUtils.escape(body);
 			x += "</span></div>";
 			add(x);
-		} else if (message.getFrom() != null) {
-			RosterItem ri = this.rosterPlugin.getRosterItem(message.getFrom().getBareJID());
-			if (ri != null && ri.getName() != null) {
-				this.nick = ri.getName();
-			}
-		}
-		if (body != null) {
+		} else if (body != null) {
 			add("peer", date, nick, body);
 		}
 
@@ -252,7 +257,6 @@ public class ChatTab extends TabItem {
 	private void send() {
 		final String message = this.message.getText();
 		this.message.setText("");
-		add("me", new Date(), "Me", message);
 		this.item.send(message);
 	}
 
@@ -261,15 +265,24 @@ public class ChatTab extends TabItem {
 		if (unread) {
 			unread = false;
 			getHeader().removeStyleName("unread");
-			setText("Chat with " + this.nick);
+			setText("Room: " + item.getRoomJid().getNode());
 		}
 	}
 
 	public void setUnread() {
 		if (!unread) {
 			getHeader().addStyleName("unread");
-			setText("* Chat with " + this.nick);
+			setText("* Room: " + item.getRoomJid().getNode());
 			unread = true;
 		}
+	}
+
+	public void process(Presence presence) {
+		System.out.println(presence);
+		rosterComponent.updatePresence(presence);
+	}
+
+	public GroupChat getGroupChat() {
+		return this.item;
 	}
 }

@@ -10,24 +10,24 @@ import tigase.xmpp4gwt.client.Bosh2Connector;
 import tigase.xmpp4gwt.client.JID;
 import tigase.xmpp4gwt.client.stanzas.Message;
 import tigase.xmpp4gwt.client.stanzas.Presence.Show;
+import tigase.xmpp4gwt.client.stanzas.Presence.Type;
 import tigase.xmpp4gwt.client.xmpp.ResourceBindEvenet;
 import tigase.xmpp4gwt.client.xmpp.message.Chat;
 import tigase.xmpp4gwt.client.xmpp.message.ChatListener;
 import tigase.xmpp4gwt.client.xmpp.message.ChatManager;
 import tigase.xmpp4gwt.client.xmpp.roster.RosterItem;
 import tigase.xmpp4gwt.client.xmpp.roster.RosterItem.Subscription;
+import tigase.xmpp4gwt.client.xmpp.xeps.muc.GroupChatEvent;
 
 import com.extjs.gxt.ui.client.Events;
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.Style.Scroll;
-import com.extjs.gxt.ui.client.core.Template;
 import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.MenuEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.event.TabPanelEvent;
 import com.extjs.gxt.ui.client.event.ToolBarEvent;
 import com.extjs.gxt.ui.client.util.Margins;
-import com.extjs.gxt.ui.client.util.Params;
 import com.extjs.gxt.ui.client.widget.Component;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Dialog;
@@ -82,6 +82,8 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		public void handleEvent(TabPanelEvent be) {
 			if (be.item instanceof ChatTab) {
 				((ChatTab) be.item).getChatItem().remove();
+			} else if (be.item instanceof GroupChatTab) {
+				((GroupChatTab) be.item).getGroupChat().leave();
 			}
 		}
 	};
@@ -112,9 +114,70 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 			public void handleEvent(TabPanelEvent be) {
 				if (be.item instanceof ChatTab) {
 					((ChatTab) be.item).setReaded();
+				} else if (be.item instanceof GroupChatTab) {
+					((GroupChatTab) be.item).setReaded();
 				}
 			}
 		});
+		Messenger.session().addEventListener(tigase.xmpp4gwt.client.events.Events.groupChatMessageReceived,
+				new tigase.xmpp4gwt.client.events.Listener<GroupChatEvent>() {
+
+					public void handleEvent(GroupChatEvent event) {
+						GroupChatTab gct = event.getGroupChat().getUserData();
+						if (gct != null) {
+							gct.process(event.getMessage());
+						}
+					}
+				});
+		Messenger.session().addEventListener(tigase.xmpp4gwt.client.events.Events.groupChatJoined,
+				new tigase.xmpp4gwt.client.events.Listener<GroupChatEvent>() {
+
+					public void handleEvent(GroupChatEvent event) {
+						GroupChatTab gct = event.getGroupChat().getUserData();
+						if (gct != null) {
+							gct.setEnabled(true);
+						}
+					}
+				});
+		Messenger.session().addEventListener(tigase.xmpp4gwt.client.events.Events.groupChatJoinDeny,
+				new tigase.xmpp4gwt.client.events.Listener<GroupChatEvent>() {
+
+					public void handleEvent(GroupChatEvent event) {
+						GroupChatTab gct = event.getGroupChat().getUserData();
+						if (gct != null) {
+							(new ErrorDialog("Unable to join groupchat", "", event.getPresence())).show();
+						}
+					}
+				});
+		Messenger.session().addEventListener(tigase.xmpp4gwt.client.events.Events.groupChatPresenceChange,
+				new tigase.xmpp4gwt.client.events.Listener<GroupChatEvent>() {
+
+					public void handleEvent(GroupChatEvent event) {
+						GroupChatTab gct = event.getGroupChat().getUserData();
+						if (gct != null) {
+							if (event.getGroupChat().getRoomJid().equals(event.getPresence().getFrom())
+									&& event.getPresence().getType() == Type.unavailable) {
+								gct.setEnabled(false);
+							}
+							gct.process(event.getPresence());
+						}
+					}
+				});
+		Messenger.session().addEventListener(tigase.xmpp4gwt.client.events.Events.groupChatCreated,
+				new tigase.xmpp4gwt.client.events.Listener<GroupChatEvent>() {
+
+					public void handleEvent(GroupChatEvent event) {
+						System.out.println("...");
+						if (event.getGroupChat().getUserData() == null) {
+							GroupChatTab gct = new GroupChatTab(event.getGroupChat());
+							gct.addListener(Events.Close, chatTabCloseListener);
+							event.getGroupChat().setUserData(gct);
+							tabPanel.add(gct);
+							tabPanel.setSelection(gct);
+							event.getGroupChat().join();
+						}
+					}
+				});
 	}
 
 	public void afterRosterChange() {
@@ -196,7 +259,8 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		ChatTab ct = chat.getUserData();
 		if (ct != null) {
 			ct.process(message);
-			if (this.tabPanel.getSelectedItem() != ct && message.getBody() != null) {
+			if (this.tabPanel.getSelectedItem() != ct
+					&& (message.getBody() != null || message.getType() == tigase.xmpp4gwt.client.stanzas.Message.Type.error)) {
 				ct.setUnread();
 			}
 		}
@@ -398,6 +462,16 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		});
 		menu.add(openChatWithMenuItem);
 
+		MenuItem joinGroupChatMenuItem = new MenuItem("Join to groupchat");
+		joinGroupChatMenuItem.addSelectionListener(new SelectionListener<MenuEvent>() {
+
+			public void componentSelected(MenuEvent ce) {
+				OpenGroupChatWithDialog ocw = new OpenGroupChatWithDialog(Messenger.session().getMucPlugin());
+				ocw.show();
+			}
+		});
+		menu.add(joinGroupChatMenuItem);
+
 		final MenuItem debugMenuItem = new MenuItem("Open debug tab", new SelectionListener<MenuEvent>() {
 
 			@Override
@@ -534,6 +608,9 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 
 		ContentPanel center = new ContentPanel();
 		center.setHeaderVisible(false);
+		center.setScrollMode(Scroll.AUTO);
+		center.add(this.rosterComponent);
+
 		ContentPanel south = new ContentPanel();
 		south.setHeaderVisible(false);
 
@@ -542,9 +619,6 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		southData.setCollapsible(false);
 		southData.setFloatable(false);
 		southData.setMargins(new Margins(0, 0, 0, 0));
-
-		center.setScrollMode(Scroll.AUTO);
-		center.add(this.rosterComponent);
 
 		ToolBar toolBar = new ToolBar();
 		toolBar.add(statusToolItem);

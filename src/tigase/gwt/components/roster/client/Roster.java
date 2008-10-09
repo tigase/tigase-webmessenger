@@ -27,7 +27,7 @@ public class Roster extends Composite {
 
 	}
 
-	private final Map<JID, Set<Group>> buddies = new HashMap<JID, Set<Group>>();
+	protected final Map<JID, Set<Group>> buddies = new HashMap<JID, Set<Group>>();
 
 	private ContactComparator contactComparator = new ContactComparator() {
 
@@ -55,7 +55,7 @@ public class Roster extends Composite {
 
 	private final VerticalPanel panel = new VerticalPanel();
 
-	private PresenceCallback presenceCallback = new PresenceCallback() {
+	protected PresenceCallback presenceCallback = new PresenceCallback() {
 		public RosterPresence getRosterPresence(JID presence) {
 			return RosterPresence.ERROR;
 		}
@@ -121,7 +121,7 @@ public class Roster extends Composite {
 		fireOnGroupContextMenu(event, group);
 	}
 
-	private void fireAfterRosterChange() {
+	protected void fireAfterRosterChange() {
 		for (RosterListener listener : this.listeners) {
 			listener.afterRosterChange();
 		}
@@ -195,28 +195,31 @@ public class Roster extends Composite {
 		return selectedJID;
 	}
 
-	public void removedFromRoster(RosterItem item) {
-		JID jid = JID.fromString(item.getJid());
+	public void removedFromRoster(JID jid) {
 		Set<Group> buddyGruops = this.buddies.get(jid);
 		if (buddyGruops != null) {
 			for (Group group : buddyGruops) {
 				group.remove(jid);
 
 			}
-		}
-
-		Iterator<Group> git = buddyGruops.iterator();
-		while (git.hasNext()) {
-			Group g = git.next();
-			if (!g.isStaticGroup() && g.getBuddiesCount() == 0) {
-				this.panel.remove(g);
-				this.groups.remove(g.getName());
-				if (this.selectedGroup == g) {
-					select(null, null);
+			Iterator<Group> git = buddyGruops.iterator();
+			while (git.hasNext()) {
+				Group g = git.next();
+				if (!g.isStaticGroup() && g.getBuddiesCount() == 0) {
+					this.panel.remove(g);
+					this.groups.remove(g.getName());
+					if (this.selectedGroup == g) {
+						select(null, null);
+					}
 				}
 			}
 		}
 		fireAfterRosterChange();
+	}
+
+	public void removedFromRoster(RosterItem item) {
+		JID jid = JID.fromString(item.getJid());
+		removedFromRoster(jid);
 	}
 
 	public void removeListener(RosterListener listener) {
@@ -295,7 +298,7 @@ public class Roster extends Composite {
 		update(JID.fromString(item.getJid()), rp, displayedName, groups, false);
 	}
 
-	private void update(final JID jid, final RosterPresence rp, final String displayedName, final List<String> groups,
+	protected void update(final JID jid, final RosterPresence rp, final String displayedName, final List<String> groups,
 			final boolean virtualContact) {
 		Set<Group> buddyGruops = this.buddies.get(jid);
 		if (buddyGruops == null) {
@@ -343,7 +346,7 @@ public class Roster extends Composite {
 		fireAfterRosterChange();
 	}
 
-	private RosterPresence rosterPresenceFromPresence(Presence pi) {
+	public static RosterPresence rosterPresenceFromPresence(Presence pi) {
 		if (pi.getType() == Presence.Type.error) {
 			return RosterPresence.ERROR;
 		} else if (pi.getType() == Presence.Type.unavailable || pi.getType() == Presence.Type.subscribe) {

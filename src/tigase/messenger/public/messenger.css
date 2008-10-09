@@ -73,6 +73,10 @@ textarea.chatinput {
 	background: url("chat.png");
 }
 
+.group-chat-icon {
+	background: url("group-chat.png");
+}
+
 .group-header.open {
 	background: url("opened.png") no-repeat 5px 11px #ebeced;
 }
@@ -87,6 +91,14 @@ textarea.chatinput {
 
 .peer {
 	color: #d58248;
+}
+
+.error {
+	color: red;
+}
+
+div.error {
+	background: #efefef;
 }
 
 .group-header {
