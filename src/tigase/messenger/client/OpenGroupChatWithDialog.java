@@ -10,6 +10,7 @@ import com.extjs.gxt.ui.client.widget.form.Field;
 import com.extjs.gxt.ui.client.widget.form.FormPanel;
 import com.extjs.gxt.ui.client.widget.form.TextField;
 import com.extjs.gxt.ui.client.widget.form.Validator;
+import com.google.gwt.user.client.Random;
 
 public class OpenGroupChatWithDialog extends Dialog {
 
@@ -50,9 +51,12 @@ public class OpenGroupChatWithDialog extends Dialog {
 		});
 
 		jidField.setFieldLabel("Room ID");
+		jidField.setEmptyText("Enter RoomID: room@host/YOURNICKNAME");
 		form.add(jidField);
-		
-		jidField.setValue("testowy@muc.sphere/Alicja");
+
+		jidField.setValue("jabber@confrence.jabber.org/"
+				+ (Messenger.instance().getNickname() == null ? ("Guest" + (Math.round(Math.random() * 1000)))
+						: Messenger.instance().getNickname()));
 	}
 
 	@Override

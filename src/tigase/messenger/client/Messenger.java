@@ -88,7 +88,7 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 
 		User user = new User();
 		this.session = new Session(user);
-		this.session.getSoftwareVersionPlugin().setName("tigase-messenger");
+		this.session.getSoftwareVersionPlugin().setName("Tigase Messenger");
 		this.session.getSoftwareVersionPlugin().setVersion(versionInfo.versionNumber());
 
 		String http = config.getHTTPBase();
