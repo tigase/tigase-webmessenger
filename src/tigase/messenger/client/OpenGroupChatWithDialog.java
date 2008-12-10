@@ -18,13 +18,17 @@ public class OpenGroupChatWithDialog extends Dialog {
 
 	private final TextField<String> jidField = new TextField<String>();
 
+	private final TextField<String> nicknameField = new TextField<String>();
+
+	private final TextField<String> passwordField = new TextField<String>();
+
 	private final MultiUserChatPlugin multiUserChatPlugin;
 
 	public OpenGroupChatWithDialog(MultiUserChatPlugin multiUserChatPlugin) {
 		super();
 		this.multiUserChatPlugin = multiUserChatPlugin;
 		setButtons(Dialog.OKCANCEL);
-		setHeading("Open chat with");
+		setHeading("Join to groupchat");
 		setHideOnButtonClick(false);
 
 		setWidth(370);
@@ -38,25 +42,38 @@ public class OpenGroupChatWithDialog extends Dialog {
 
 		add(form);
 
+		jidField.setFieldLabel("Room ID");
+		jidField.setEmptyText("Enter room name here");
 		jidField.setAllowBlank(false);
 		jidField.setValidator(new Validator<String, Field<String>>() {
-
 			public String validate(Field<String> field, String value) {
 				JID jid = JID.fromString(value);
-				if (!jid.isValid() || jid.getNode() == null) {
-					return "Please enter a valid Room ID";
+				if (!jid.isValid() || jid.getNode() == null || jid.getResource() != null) {
+					return "Please enter a valid room name";
 				} else
 					return null;
 			}
 		});
 
-		jidField.setFieldLabel("Room ID");
-		jidField.setEmptyText("Enter RoomID: room@host/YOURNICKNAME");
-		form.add(jidField);
+		nicknameField.setFieldLabel("Nickname");
+		nicknameField.setAllowBlank(false);
+		nicknameField.setEmptyText("Enter Your nickname here");
 
-		jidField.setValue("jabber@confrence.jabber.org/"
-				+ (Messenger.instance().getNickname() == null ? ("Guest" + (Math.round(Math.random() * 1000)))
-						: Messenger.instance().getNickname()));
+		passwordField.setPassword(true);
+		passwordField.setFieldLabel("Password");
+		passwordField.setAllowBlank(true);
+		passwordField.setEmptyText("Enter room password here");
+
+		form.add(jidField);
+		form.add(nicknameField);
+		form.add(passwordField);
+
+		JID defRoomName = Messenger.config().getDefaultMucRoomName();
+		if (defRoomName != null) {
+			jidField.setValue(defRoomName.toStringBare());
+		}
+
+		nicknameField.setValue(Messenger.instance().getNickname());
 	}
 
 	@Override
@@ -65,7 +82,7 @@ public class OpenGroupChatWithDialog extends Dialog {
 			if (form.isValid()) {
 				final JID jid = JID.fromString(jidField.getValue());
 				close();
-				multiUserChatPlugin.createGroupChat(jid.getBareJID(), jid.getResource());
+				multiUserChatPlugin.createGroupChat(jid.getBareJID(), nicknameField.getValue(), passwordField.getValue());
 			}
 		} else
 			close();

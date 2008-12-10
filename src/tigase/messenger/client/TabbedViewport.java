@@ -351,6 +351,7 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		}));
 
 		ContentPanel west = prepareRosterPanel();
+		west.setScrollMode(Scroll.AUTO);
 
 		ContentPanel east = new ContentPanel();
 		ContentPanel south = new ContentPanel();
@@ -384,7 +385,6 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		TabItem item = new TabItem();
 		item.setText("Tigase Messenger");
 		item.setIconStyle("icon-tabs");
-		item.getHeader().addStyleName("unread");
 		item.setUrl("about.html");
 
 		tabPanel.add(item);

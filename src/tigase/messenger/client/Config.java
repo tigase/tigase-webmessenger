@@ -19,6 +19,13 @@ public class Config {
 		return result;
 	}
 
+	public JID getDefaultMucRoomName() {
+		if (c.keySet().contains("roomname"))
+			return JID.fromString(c.get("roomname"));
+		else
+			return null;
+	}
+
 	public JID[] getDirectPresenceAdressees() {
 		if (c.keySet().contains("directPresences")) {
 			String x = c.get("directPresences");
@@ -38,10 +45,10 @@ public class Config {
 	}
 
 	public static void main(String[] args) {
-	Presence p = new Presence(Type.available);
-	p.setShow(Show.notSpecified);
-	
-	System.out.println(p);
+		Presence p = new Presence(Type.available);
+		p.setShow(Show.notSpecified);
+
+		System.out.println(p);
 	}
 
 	public String getDefaultHostname() {
