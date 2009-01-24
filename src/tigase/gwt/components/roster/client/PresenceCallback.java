@@ -1,6 +1,6 @@
 package tigase.gwt.components.roster.client;
 
-import tigase.xmpp4gwt.client.JID;
+import tigase.jaxmpp.core.client.JID;
 
 public interface PresenceCallback {
 

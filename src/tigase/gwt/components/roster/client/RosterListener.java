@@ -1,6 +1,6 @@
 package tigase.gwt.components.roster.client;
 
-import tigase.xmpp4gwt.client.JID;
+import tigase.jaxmpp.core.client.JID;
 
 import com.google.gwt.user.client.Event;
 
@@ -14,11 +14,10 @@ public interface RosterListener {
 
 	void onGroupContextMenu(final Event event, final Group group);
 
-	void onRosterItemSelect(final JID jid);
-
 	void onGroupToolTip(final Event event, final Group group);
-	
+
 	void onItemToolTip(final Event event, final Item group);
 
-	
+	void onRosterItemSelect(final JID jid);
+
 }

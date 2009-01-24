@@ -2,9 +2,9 @@ package tigase.gwt.components.roster.client;
 
 import java.util.Arrays;
 
-import tigase.xmpp4gwt.client.JID;
-import tigase.xmpp4gwt.client.stanzas.Presence;
-import tigase.xmpp4gwt.client.stanzas.Presence.Type;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.stanzas.Presence;
+import tigase.jaxmpp.core.client.stanzas.Presence.Type;
 
 public class GroupChatRoster extends Roster {
 
@@ -19,6 +19,7 @@ public class GroupChatRoster extends Roster {
 		this.groupNamesCallback = groupNamesCallback;
 	}
 
+	@Override
 	public void updatePresence(Presence presenceItem) {
 		if (presenceItem == null)
 			return;

@@ -1,10 +1,10 @@
 package tigase.messenger.client;
 
-import tigase.xmpp4gwt.client.JID;
-import tigase.xmpp4gwt.client.stanzas.IQ;
-import tigase.xmpp4gwt.client.xmpp.ErrorCondition;
-import tigase.xmpp4gwt.client.xmpp.xeps.vcard.VCard;
-import tigase.xmpp4gwt.client.xmpp.xeps.vcard.VCardResponseHandler;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.stanzas.IQ;
+import tigase.jaxmpp.core.client.xmpp.ErrorCondition;
+import tigase.jaxmpp.core.client.xmpp.xeps.vcard.VCard;
+import tigase.jaxmpp.core.client.xmpp.xeps.vcard.VCardResponseHandler;
 
 import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.TabItem;

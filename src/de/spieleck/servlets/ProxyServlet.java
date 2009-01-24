@@ -33,10 +33,11 @@ import javax.servlet.http.HttpServletResponse;
  * Not Modified answer does not go thru the servelet in the backward direction.
  * It could be that the HttpServletResponse does hava some sideeffects which are
  * not helpfull in this special situation. This type of request is currently
- * avoided by removing all "If-" requests. <br /> <b>Note:</b> This servlet is
- * actually buggy. It is buggy since it does not solve all problems, it only
- * solves the problems I needed to solve. Many thanks to Thorsten Gast the
- * creator of dirjack for pointing at least some bugs.
+ * avoided by removing all "If-" requests. <br />
+ * <b>Note:</b> This servlet is actually buggy. It is buggy since it does not
+ * solve all problems, it only solves the problems I needed to solve. Many
+ * thanks to Thorsten Gast the creator of dirjack for pointing at least some
+ * bugs.
  * 
  * @author <a href="mailto:frank -at- spieleck.de">Frank Nestel</a>.
  */
@@ -228,8 +229,7 @@ public class ProxyServlet extends HttpServlet {
 				//
 				// Throw away persistant connections between servers
 				// Throw away request potentially causing a 304 response.
-				else if (!"Connection".equalsIgnoreCase(k) && !"If-Modified-Since".equalsIgnoreCase(k)
-						&& !"If-None-Match".equalsIgnoreCase(k)) {
+				else if (!"Connection".equalsIgnoreCase(k) && !"If-Modified-Since".equalsIgnoreCase(k) && !"If-None-Match".equalsIgnoreCase(k)) {
 					sb.setLength(0);
 					sb.append(k);
 					sb.append(": ");
@@ -325,7 +325,7 @@ public class ProxyServlet extends HttpServlet {
 					String value = line.substring(i);
 					log("<" + head + ">=<" + value + ">");
 					if (head.equalsIgnoreCase("Location")) {
-						//res.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY
+						// res.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY
 						// );
 						// res.setHeader(head, value );
 						log("Location cutted: " + value);

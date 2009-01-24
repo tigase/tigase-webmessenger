@@ -3,7 +3,7 @@ package tigase.gwt.components.roster.client;
 import java.util.HashMap;
 import java.util.Map;
 
-import tigase.xmpp4gwt.client.JID;
+import tigase.jaxmpp.core.client.JID;
 
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Element;
@@ -38,6 +38,8 @@ public class Group extends Composite {
 	private boolean showOffline = true;
 
 	private boolean staticGroup;
+
+	private Timer timer;
 
 	private int visibleContacts;
 
@@ -78,6 +80,7 @@ public class Group extends Composite {
 				} else if (DOM.eventGetType(event) == Event.ONMOUSEOVER) {
 					if (timer == null) {
 						timer = new Timer() {
+							@Override
 							public void run() {
 								roster.callGropToolTip(event, Group.this);
 							}
@@ -116,8 +119,6 @@ public class Group extends Composite {
 		else
 			header.addStyleName("close");
 	}
-
-	private Timer timer;
 
 	public int getBuddiesCount() {
 		return this.buddies.size();
@@ -191,8 +192,7 @@ public class Group extends Composite {
 		if (showOffline) {
 			return true;
 		} else {
-			return p != null && p != RosterPresence.ERROR && p != RosterPresence.NOAUTH && p != RosterPresence.ASK
-					&& p != RosterPresence.OFFLINE;
+			return p != null && p != RosterPresence.ERROR && p != RosterPresence.NOAUTH && p != RosterPresence.ASK && p != RosterPresence.OFFLINE;
 		}
 	}
 

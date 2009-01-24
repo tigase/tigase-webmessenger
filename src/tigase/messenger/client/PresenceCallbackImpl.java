@@ -2,12 +2,12 @@ package tigase.messenger.client;
 
 import tigase.gwt.components.roster.client.PresenceCallback;
 import tigase.gwt.components.roster.client.RosterPresence;
-import tigase.xmpp4gwt.client.JID;
-import tigase.xmpp4gwt.client.stanzas.Presence;
-import tigase.xmpp4gwt.client.stanzas.Presence.Show;
-import tigase.xmpp4gwt.client.xmpp.presence.PresencePlugin;
-import tigase.xmpp4gwt.client.xmpp.roster.RosterItem;
-import tigase.xmpp4gwt.client.xmpp.roster.RosterPlugin;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.stanzas.Presence;
+import tigase.jaxmpp.core.client.stanzas.Presence.Show;
+import tigase.jaxmpp.core.client.xmpp.presence.PresencePlugin;
+import tigase.jaxmpp.core.client.xmpp.roster.RosterItem;
+import tigase.jaxmpp.core.client.xmpp.roster.RosterPlugin;
 
 public class PresenceCallbackImpl implements PresenceCallback {
 

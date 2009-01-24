@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import tigase.xmpp4gwt.client.JID;
-import tigase.xmpp4gwt.client.stanzas.Presence;
-import tigase.xmpp4gwt.client.stanzas.Presence.Show;
-import tigase.xmpp4gwt.client.xmpp.roster.RosterItem;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.stanzas.Presence;
+import tigase.jaxmpp.core.client.stanzas.Presence.Show;
+import tigase.jaxmpp.core.client.xmpp.roster.RosterItem;
 
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.Composite;
@@ -25,6 +25,27 @@ public class Roster extends Composite {
 
 		boolean isGroupShowsOffline(String groupName);
 
+	}
+
+	public static RosterPresence rosterPresenceFromPresence(Presence pi) {
+		if (pi.getType() == Presence.Type.error) {
+			return RosterPresence.ERROR;
+		} else if (pi.getType() == Presence.Type.unavailable || pi.getType() == Presence.Type.subscribe) {
+			return RosterPresence.OFFLINE;
+		} else if (pi.getType() == Presence.Type.unsubscribed || pi.getType() == Presence.Type.unsubscribe) {
+			return RosterPresence.NOAUTH;
+		} else if (pi.getShow() == Show.notSpecified) {
+			return RosterPresence.ONLINE;
+		} else if (pi.getShow() == Show.away) {
+			return RosterPresence.AWAY;
+		} else if (pi.getShow() == Show.chat) {
+			return RosterPresence.READY_FOR_CHAT;
+		} else if (pi.getShow() == Show.dnd) {
+			return RosterPresence.DND;
+		} else if (pi.getShow() == Show.xa) {
+			return RosterPresence.XA;
+		}
+		return RosterPresence.ERROR;
 	}
 
 	protected final Map<JID, Set<Group>> buddies = new HashMap<JID, Set<Group>>();
@@ -53,6 +74,8 @@ public class Roster extends Composite {
 
 	private final List<RosterListener> listeners = new ArrayList<RosterListener>();
 
+	private JID ownJid;
+
 	private final VerticalPanel panel = new VerticalPanel();
 
 	protected PresenceCallback presenceCallback = new PresenceCallback() {
@@ -68,8 +91,6 @@ public class Roster extends Composite {
 	private Widget selectedPanel;
 
 	private boolean showTransportAsContacts = false;
-
-	private JID ownJid;
 
 	public Roster(PresenceCallback presenceCallback) {
 		initWidget(panel);
@@ -117,8 +138,16 @@ public class Roster extends Composite {
 		fireOnContactDoubleClick(event, item);
 	}
 
+	void callGropToolTip(Event event, Group group) {
+		fireOnGroupToolTip(event, group);
+	}
+
 	void callGroupsContextMenu(Event event, Group group) {
 		fireOnGroupContextMenu(event, group);
+	}
+
+	void callItemToolTip(Event event, Item item) {
+		fireOnItemToolTip(event, item);
 	}
 
 	protected void fireAfterRosterChange() {
@@ -145,12 +174,6 @@ public class Roster extends Composite {
 		}
 	}
 
-	private void fireOnRosterItemSelect(final JID jid) {
-		for (RosterListener listener : this.listeners) {
-			listener.onRosterItemSelect(jid);
-		}
-	}
-
 	private void fireOnGroupToolTip(Event event, Group group) {
 		for (RosterListener listener : this.listeners) {
 			listener.onGroupToolTip(event, group);
@@ -160,6 +183,12 @@ public class Roster extends Composite {
 	private void fireOnItemToolTip(Event event, Item group) {
 		for (RosterListener listener : this.listeners) {
 			listener.onItemToolTip(event, group);
+		}
+	}
+
+	private void fireOnRosterItemSelect(final JID jid) {
+		for (RosterListener listener : this.listeners) {
+			listener.onRosterItemSelect(jid);
 		}
 	}
 
@@ -181,6 +210,10 @@ public class Roster extends Composite {
 
 	public String[] getGroupsNames() {
 		return this.groups.keySet().toArray(new String[] {});
+	}
+
+	public JID getOwnJid() {
+		return ownJid;
 	}
 
 	PresenceCallback getPresenceCallback() {
@@ -279,27 +312,11 @@ public class Roster extends Composite {
 		this.groupShowOfflineCallback = groupShowOfflineCallback;
 	}
 
-	public void updatedRosterItem(RosterItem item) {
-		if (!showTransportAsContacts && item.getJid() != null && JID.fromString(item.getJid()).getNode() == null)
-			return;
-		List<String> groups = Arrays.asList(item.getGroups());
-		if (groups.size() == 0) {
-			groups = new ArrayList<String>();
-			groups.add(this.defaultGroupName);
-		}
-
-		final RosterPresence rp = presenceCallback.getRosterPresence(JID.fromString(item.getJid()));
-
-		String displayedName = item.getName();
-		if (displayedName == null || displayedName.trim().length() == 0) {
-			displayedName = item.getJid();
-		}
-
-		update(JID.fromString(item.getJid()), rp, displayedName, groups, false);
+	public void setOwnJid(JID ownJid) {
+		this.ownJid = ownJid;
 	}
 
-	protected void update(final JID jid, final RosterPresence rp, final String displayedName, final List<String> groups,
-			final boolean virtualContact) {
+	protected void update(final JID jid, final RosterPresence rp, final String displayedName, final List<String> groups, final boolean virtualContact) {
 		Set<Group> buddyGruops = this.buddies.get(jid);
 		if (buddyGruops == null) {
 			buddyGruops = new HashSet<Group>();
@@ -346,25 +363,23 @@ public class Roster extends Composite {
 		fireAfterRosterChange();
 	}
 
-	public static RosterPresence rosterPresenceFromPresence(Presence pi) {
-		if (pi.getType() == Presence.Type.error) {
-			return RosterPresence.ERROR;
-		} else if (pi.getType() == Presence.Type.unavailable || pi.getType() == Presence.Type.subscribe) {
-			return RosterPresence.OFFLINE;
-		} else if (pi.getType() == Presence.Type.unsubscribed || pi.getType() == Presence.Type.unsubscribe) {
-			return RosterPresence.NOAUTH;
-		} else if (pi.getShow() == Show.notSpecified) {
-			return RosterPresence.ONLINE;
-		} else if (pi.getShow() == Show.away) {
-			return RosterPresence.AWAY;
-		} else if (pi.getShow() == Show.chat) {
-			return RosterPresence.READY_FOR_CHAT;
-		} else if (pi.getShow() == Show.dnd) {
-			return RosterPresence.DND;
-		} else if (pi.getShow() == Show.xa) {
-			return RosterPresence.XA;
+	public void updatedRosterItem(RosterItem item) {
+		if (!showTransportAsContacts && item.getJid() != null && JID.fromString(item.getJid()).getNode() == null)
+			return;
+		List<String> groups = Arrays.asList(item.getGroups());
+		if (groups.size() == 0) {
+			groups = new ArrayList<String>();
+			groups.add(this.defaultGroupName);
 		}
-		return RosterPresence.ERROR;
+
+		final RosterPresence rp = presenceCallback.getRosterPresence(JID.fromString(item.getJid()));
+
+		String displayedName = item.getName();
+		if (displayedName == null || displayedName.trim().length() == 0) {
+			displayedName = item.getJid();
+		}
+
+		update(JID.fromString(item.getJid()), rp, displayedName, groups, false);
 	}
 
 	public void updatePresence(Presence presenceItem) {
@@ -392,22 +407,6 @@ public class Roster extends Composite {
 				group.updatePresence(jid, p);
 			}
 		fireAfterRosterChange();
-	}
-
-	void callGropToolTip(Event event, Group group) {
-		fireOnGroupToolTip(event, group);
-	}
-
-	void callItemToolTip(Event event, Item item) {
-		fireOnItemToolTip(event, item);
-	}
-
-	public JID getOwnJid() {
-		return ownJid;
-	}
-
-	public void setOwnJid(JID ownJid) {
-		this.ownJid = ownJid;
 	}
 
 }

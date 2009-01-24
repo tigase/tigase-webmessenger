@@ -1,8 +1,7 @@
 package tigase.messenger.client;
 
-import tigase.xmpp4gwt.client.JID;
-import tigase.xmpp4gwt.client.xmpp.message.ChatManager;
-import tigase.xmpp4gwt.client.xmpp.xeps.muc.MultiUserChatPlugin;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.xmpp.xeps.muc.MultiUserChatPlugin;
 
 import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.button.Button;
@@ -10,7 +9,6 @@ import com.extjs.gxt.ui.client.widget.form.Field;
 import com.extjs.gxt.ui.client.widget.form.FormPanel;
 import com.extjs.gxt.ui.client.widget.form.TextField;
 import com.extjs.gxt.ui.client.widget.form.Validator;
-import com.google.gwt.user.client.Random;
 
 public class OpenGroupChatWithDialog extends Dialog {
 
@@ -18,11 +16,11 @@ public class OpenGroupChatWithDialog extends Dialog {
 
 	private final TextField<String> jidField = new TextField<String>();
 
+	private final MultiUserChatPlugin multiUserChatPlugin;
+
 	private final TextField<String> nicknameField = new TextField<String>();
 
 	private final TextField<String> passwordField = new TextField<String>();
-
-	private final MultiUserChatPlugin multiUserChatPlugin;
 
 	public OpenGroupChatWithDialog(MultiUserChatPlugin multiUserChatPlugin) {
 		super();

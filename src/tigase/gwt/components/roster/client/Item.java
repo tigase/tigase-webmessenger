@@ -1,6 +1,6 @@
 package tigase.gwt.components.roster.client;
 
-import tigase.xmpp4gwt.client.JID;
+import tigase.jaxmpp.core.client.JID;
 
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
@@ -69,6 +69,7 @@ public class Item extends SimplePanel {
 		} else if (DOM.eventGetType(event) == Event.ONMOUSEOVER) {
 			if (timer == null) {
 				timer = new Timer() {
+					@Override
 					public void run() {
 						group.getRoster().callItemToolTip(event, Item.this);
 					}

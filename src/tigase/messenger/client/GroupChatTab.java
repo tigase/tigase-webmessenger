@@ -7,15 +7,14 @@ import tigase.gwt.components.roster.client.PresenceCallback;
 import tigase.gwt.components.roster.client.Roster;
 import tigase.gwt.components.roster.client.RosterPresence;
 import tigase.gwt.components.roster.client.GroupChatRoster.GroupNamesCallback;
-import tigase.xmpp4gwt.client.JID;
-import tigase.xmpp4gwt.client.TextUtils;
-import tigase.xmpp4gwt.client.stanzas.Message;
-import tigase.xmpp4gwt.client.stanzas.Presence;
-import tigase.xmpp4gwt.client.stanzas.Message.Type;
-import tigase.xmpp4gwt.client.xmpp.ErrorCondition;
-import tigase.xmpp4gwt.client.xmpp.message.Chat;
-import tigase.xmpp4gwt.client.xmpp.xeps.muc.GroupChat;
-import tigase.xmpp4gwt.client.xmpp.xeps.muc.Role;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.TextUtils;
+import tigase.jaxmpp.core.client.stanzas.Message;
+import tigase.jaxmpp.core.client.stanzas.Presence;
+import tigase.jaxmpp.core.client.stanzas.Message.Type;
+import tigase.jaxmpp.core.client.xmpp.ErrorCondition;
+import tigase.jaxmpp.core.client.xmpp.xeps.muc.GroupChat;
+import tigase.jaxmpp.core.client.xmpp.xeps.muc.Role;
 
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.Style.Orientation;
@@ -44,8 +43,7 @@ import com.google.gwt.user.client.ui.Widget;
 public class GroupChatTab extends TabItem {
 
 	private static String linkhtml(String body) {
-		body = body == null ? body : body.replaceAll("([^>/\";]|^)(www\\.[^ ]+)",
-				"$1<a href=\"http://$2\" target=\"_blank\">$2</a>");
+		body = body == null ? body : body.replaceAll("([^>/\";]|^)(www\\.[^ ]+)", "$1<a href=\"http://$2\" target=\"_blank\">$2</a>");
 		body = body == null ? body : body.replaceAll("([^\">;]|^)(http://[^ ]+)", "$1<a href=\"$2\" target=\"_blank\">$2</a>");
 		return body;
 	}
@@ -54,55 +52,19 @@ public class GroupChatTab extends TabItem {
 
 	private final Html chat = new Html();
 
+	private final Label description = new Label("");
+
 	private DateTimeFormat dtf = DateTimeFormat.getFormat("HH:mm:ss");
 
 	private GroupChat item;
 
 	private final TextArea message = new TextArea();
 
-	private boolean unread = false;
+	private final GroupChatRoster rosterComponent;
 
 	private final Label title = new Label("");
 
-	private final Label description = new Label("");
-
-	private ContentPanel prepareChatHeader() {
-		ContentPanel result = new ContentPanel();
-		result.addStyleName("chatHeader");
-		result.setLayout(new RowLayout(Orientation.HORIZONTAL));
-		result.setHeaderVisible(false);
-
-		title.setStyleName("chatTitle");
-
-		description.setStyleName("chatDescription");
-
-		Image i = new Image("group-chat-big.png");
-
-		result.add(i, new RowData(58, 58));
-
-		ContentPanel textPanel = new ContentPanel();
-		textPanel.setHeight("100%");
-		textPanel.setWidth("100%");
-		textPanel.setHeaderVisible(false);
-		textPanel.setBodyBorder(false);
-		textPanel.setFrame(false);
-
-		textPanel.setLayout(new RowLayout(Orientation.VERTICAL));
-
-		textPanel.add(title, new RowData());
-		textPanel.add(description, new RowData());
-
-		result.add(textPanel, new RowData());
-
-		return result;
-	}
-
-	private final GroupChatRoster rosterComponent;
-
-	@Override
-	public void setEnabled(boolean enabled) {
-		message.setEnabled(enabled);
-	}
+	private boolean unread = false;
 
 	public GroupChatTab(final GroupChat groupChat) {
 		this.item = groupChat;
@@ -184,6 +146,7 @@ public class GroupChatTab extends TabItem {
 		tb.add(new FillToolItem());
 		tb.add(new TextToolItem("Send", new SelectionListener<ToolBarEvent>() {
 
+			@Override
 			public void componentSelected(ToolBarEvent ce) {
 				send();
 			}
@@ -227,9 +190,43 @@ public class GroupChatTab extends TabItem {
 	}
 
 	private void add(String style, Date date, String nick, String message) {
-		String x = "[" + dtf.format(date) + "]&nbsp; <span class='" + style + "'>" + nick + ": "
-				+ linkhtml(TextUtils.escape(message)) + "</span>";
+		String x = "[" + dtf.format(date) + "]&nbsp; <span class='" + style + "'>" + nick + ": " + linkhtml(TextUtils.escape(message)) + "</span>";
 		add(x);
+	}
+
+	public GroupChat getGroupChat() {
+		return this.item;
+	}
+
+	private ContentPanel prepareChatHeader() {
+		ContentPanel result = new ContentPanel();
+		result.addStyleName("chatHeader");
+		result.setLayout(new RowLayout(Orientation.HORIZONTAL));
+		result.setHeaderVisible(false);
+
+		title.setStyleName("chatTitle");
+
+		description.setStyleName("chatDescription");
+
+		Image i = new Image("group-chat-big.png");
+
+		result.add(i, new RowData(58, 58));
+
+		ContentPanel textPanel = new ContentPanel();
+		textPanel.setHeight("100%");
+		textPanel.setWidth("100%");
+		textPanel.setHeaderVisible(false);
+		textPanel.setBodyBorder(false);
+		textPanel.setFrame(false);
+
+		textPanel.setLayout(new RowLayout(Orientation.VERTICAL));
+
+		textPanel.add(title, new RowData());
+		textPanel.add(description, new RowData());
+
+		result.add(textPanel, new RowData());
+
+		return result;
 	}
 
 	public void process(Message message) {
@@ -239,8 +236,7 @@ public class GroupChatTab extends TabItem {
 		if (message.getType() == Type.error) {
 			ErrorCondition condition = ErrorDialog.getErrorCondition(message.getFirstChild("error"));
 			String text = ErrorDialog.getErrorText(message.getFirstChild("error"));
-			String x = "<div class='error'>[" + dtf.format(date) + "]&nbsp; <span class='error'>Error: "
-					+ condition.name().replace('_', ' ');
+			String x = "<div class='error'>[" + dtf.format(date) + "]&nbsp; <span class='error'>Error: " + condition.name().replace('_', ' ');
 			if (text != null) {
 				x += "<br/>" + TextUtils.escape(text);
 			}
@@ -254,10 +250,20 @@ public class GroupChatTab extends TabItem {
 
 	}
 
+	public void process(Presence presence) {
+		System.out.println(presence);
+		rosterComponent.updatePresence(presence);
+	}
+
 	private void send() {
 		final String message = this.message.getText();
 		this.message.setText("");
 		this.item.send(message);
+	}
+
+	@Override
+	public void setEnabled(boolean enabled) {
+		message.setEnabled(enabled);
 	}
 
 	public void setReaded() {
@@ -275,14 +281,5 @@ public class GroupChatTab extends TabItem {
 			setText("* Room: " + item.getRoomJid().getNode());
 			unread = true;
 		}
-	}
-
-	public void process(Presence presence) {
-		System.out.println(presence);
-		rosterComponent.updatePresence(presence);
-	}
-
-	public GroupChat getGroupChat() {
-		return this.item;
 	}
 }

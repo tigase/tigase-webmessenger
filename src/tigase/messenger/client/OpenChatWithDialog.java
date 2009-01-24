@@ -1,7 +1,7 @@
 package tigase.messenger.client;
 
-import tigase.xmpp4gwt.client.JID;
-import tigase.xmpp4gwt.client.xmpp.message.ChatManager;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.xmpp.message.ChatManager;
 
 import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.button.Button;
@@ -12,11 +12,11 @@ import com.extjs.gxt.ui.client.widget.form.Validator;
 
 public class OpenChatWithDialog extends Dialog {
 
+	private final ChatManager<ChatTab> chatManager;
+
 	private final FormPanel form = new FormPanel();
 
 	private final TextField<String> jidField = new TextField<String>();
-
-	private final ChatManager<ChatTab> chatManager ;
 
 	public OpenChatWithDialog(ChatManager<ChatTab> chatManager) {
 		super();

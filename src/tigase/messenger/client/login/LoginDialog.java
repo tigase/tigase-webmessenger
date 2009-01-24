@@ -3,8 +3,8 @@ package tigase.messenger.client.login;
 import java.util.ArrayList;
 import java.util.List;
 
+import tigase.jaxmpp.core.client.JID;
 import tigase.messenger.client.Messenger;
-import tigase.xmpp4gwt.client.JID;
 
 import com.extjs.gxt.ui.client.Events;
 import com.extjs.gxt.ui.client.Style.HorizontalAlignment;
@@ -29,11 +29,11 @@ public class LoginDialog extends Dialog {
 
 	private final List<LoginDialogListener> listeners = new ArrayList<LoginDialogListener>();
 
-	private final TextField<String> password;
+	private Button loginButton;
 
 	private TextField<String> nickname;
 
-	private Button loginButton;
+	private final TextField<String> password;
 
 	public LoginDialog() {
 		super();
@@ -124,6 +124,7 @@ public class LoginDialog extends Dialog {
 		});
 		getButtonBar().add(loginButton);
 		getButtonBar().add(new Button("Cancel", new SelectionListener<ComponentEvent>() {
+			@Override
 			public void componentSelected(ComponentEvent ce) {
 				close();
 			}
@@ -173,14 +174,14 @@ public class LoginDialog extends Dialog {
 		return this.jid.getRawValue();
 	}
 
-	public String getPassword() {
-		return this.password.getRawValue();
-	}
-
 	public String getNickname() {
 		String x = this.nickname.getRawValue();
 		x = x.trim().length() == 0 ? null : x;
 		return x;
+	}
+
+	public String getPassword() {
+		return this.password.getRawValue();
 	}
 
 	public boolean isAnonymous() {

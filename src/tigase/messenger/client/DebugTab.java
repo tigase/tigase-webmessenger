@@ -3,13 +3,13 @@ package tigase.messenger.client;
 import java.util.Date;
 import java.util.List;
 
-import tigase.xmpp4gwt.client.Bosh2Connector;
-import tigase.xmpp4gwt.client.Connector;
-import tigase.xmpp4gwt.client.ConnectorListener;
-import tigase.xmpp4gwt.client.TextUtils;
-import tigase.xmpp4gwt.client.Connector.BoshErrorCondition;
-import tigase.xmpp4gwt.client.packet.Packet;
-import tigase.xmpp4gwt.client.xmpp.ErrorCondition;
+import tigase.jaxmpp.core.client.Connector;
+import tigase.jaxmpp.core.client.ConnectorListener;
+import tigase.jaxmpp.core.client.StreamEventDetails;
+import tigase.jaxmpp.core.client.TextUtils;
+import tigase.jaxmpp.core.client.packets.Packet;
+import tigase.jaxmpp.core.client.xmpp.ErrorCondition;
+import tigase.jaxmpp.xmpp4gwt.client.Bosh2Connector;
 
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.Style.Scroll;
@@ -19,7 +19,6 @@ import com.extjs.gxt.ui.client.widget.Html;
 import com.extjs.gxt.ui.client.widget.TabItem;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayout;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
-import com.google.gwt.http.client.Response;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.ui.KeyboardListener;
 import com.google.gwt.user.client.ui.TextArea;
@@ -104,12 +103,11 @@ public class DebugTab extends TabItem implements ConnectorListener {
 			style = "me";
 			n = "OUT:";
 		}
-		String x = "[" + dtf.format(new Date()) + "]&nbsp;" + n + "&nbsp;<span class='" + style + "'>" + TextUtils.escape(message)
-				+ "</span><br/>";
+		String x = "[" + dtf.format(new Date()) + "]&nbsp;" + n + "&nbsp;<span class='" + style + "'>" + TextUtils.escape(message) + "</span><br/>";
 		add(x);
 	}
 
-	public void onBodyReceive(Response code, String body) {
+	public void onBodyReceive(StreamEventDetails details, String body) {
 		add(Type.in, body);
 	}
 
@@ -117,13 +115,10 @@ public class DebugTab extends TabItem implements ConnectorListener {
 		add(Type.out, body);
 	}
 
-	public void onBoshError(ErrorCondition errorCondition, BoshErrorCondition boshErrorCondition, String message) {
-	}
-
-	public void onBoshTerminate(Connector con, BoshErrorCondition boshErrorCondition) {
-	}
-
 	public void onConnect(Connector con) {
+	}
+
+	public void onConnectionError(Connector con, ErrorCondition xmppErrorCondition, StreamEventDetails details, String message) {
 	}
 
 	public void onStanzaReceived(List<? extends Packet> nodes) {

@@ -1,9 +1,9 @@
 package tigase.messenger.client;
 
-import tigase.xmpp4gwt.client.JID;
-import tigase.xmpp4gwt.client.ResponseHandler;
-import tigase.xmpp4gwt.client.stanzas.IQ;
-import tigase.xmpp4gwt.client.xmpp.ErrorCondition;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.ResponseHandler;
+import tigase.jaxmpp.core.client.stanzas.IQ;
+import tigase.jaxmpp.core.client.xmpp.ErrorCondition;
 
 import com.extjs.gxt.ui.client.Events;
 import com.extjs.gxt.ui.client.Style.HorizontalAlignment;
@@ -25,6 +25,11 @@ import com.extjs.gxt.ui.client.widget.layout.FlowLayout;
 public class AddContactDialog extends Dialog {
 
 	private static class Protocol extends BaseModel {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -5485694596528581813L;
+
 		public Protocol(String name, String jid) {
 			set("name", name);
 			set("jid", jid);

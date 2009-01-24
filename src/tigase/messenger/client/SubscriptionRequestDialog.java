@@ -1,6 +1,6 @@
 package tigase.messenger.client;
 
-import tigase.xmpp4gwt.client.JID;
+import tigase.jaxmpp.core.client.JID;
 
 import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.button.Button;

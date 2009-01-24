@@ -5,8 +5,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import tigase.xmpp4gwt.client.JID;
-import tigase.xmpp4gwt.client.xmpp.roster.RosterItem;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.xmpp.roster.RosterItem;
 
 import com.extjs.gxt.ui.client.Style.Scroll;
 import com.extjs.gxt.ui.client.event.ButtonEvent;

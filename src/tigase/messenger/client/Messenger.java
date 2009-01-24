@@ -7,27 +7,28 @@ import tigase.gwt.components.roster.client.Item;
 import tigase.gwt.components.roster.client.PresenceCallback;
 import tigase.gwt.components.roster.client.Roster;
 import tigase.gwt.components.roster.client.RosterPresence;
+import tigase.jaxmpp.core.client.Connector;
+import tigase.jaxmpp.core.client.ConnectorListener;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.Session;
+import tigase.jaxmpp.core.client.StreamEventDetails;
+import tigase.jaxmpp.core.client.User;
+import tigase.jaxmpp.core.client.events.Events;
+import tigase.jaxmpp.core.client.events.Listener;
+import tigase.jaxmpp.core.client.packets.Packet;
+import tigase.jaxmpp.core.client.stanzas.Presence.Show;
+import tigase.jaxmpp.core.client.xmpp.ErrorCondition;
+import tigase.jaxmpp.core.client.xmpp.ResourceBindEvenet;
+import tigase.jaxmpp.core.client.xmpp.message.ChatManager;
+import tigase.jaxmpp.core.client.xmpp.presence.PresenceEvent;
+import tigase.jaxmpp.core.client.xmpp.roster.RosterEvent;
+import tigase.jaxmpp.core.client.xmpp.roster.RosterItem;
+import tigase.jaxmpp.core.client.xmpp.sasl.AnonymousMechanism;
+import tigase.jaxmpp.core.client.xmpp.sasl.PlainMechanism;
+import tigase.jaxmpp.core.client.xmpp.sasl.SaslEvent;
+import tigase.jaxmpp.xmpp4gwt.client.GWTSession;
 import tigase.messenger.client.login.LoginDialog;
 import tigase.messenger.client.login.LoginDialogListener;
-import tigase.xmpp4gwt.client.Connector;
-import tigase.xmpp4gwt.client.ConnectorListener;
-import tigase.xmpp4gwt.client.JID;
-import tigase.xmpp4gwt.client.Session;
-import tigase.xmpp4gwt.client.User;
-import tigase.xmpp4gwt.client.Connector.BoshErrorCondition;
-import tigase.xmpp4gwt.client.events.Events;
-import tigase.xmpp4gwt.client.events.Listener;
-import tigase.xmpp4gwt.client.packet.Packet;
-import tigase.xmpp4gwt.client.stanzas.Presence.Show;
-import tigase.xmpp4gwt.client.xmpp.ErrorCondition;
-import tigase.xmpp4gwt.client.xmpp.ResourceBindEvenet;
-import tigase.xmpp4gwt.client.xmpp.message.ChatManager;
-import tigase.xmpp4gwt.client.xmpp.presence.PresenceEvent;
-import tigase.xmpp4gwt.client.xmpp.roster.RosterEvent;
-import tigase.xmpp4gwt.client.xmpp.roster.RosterItem;
-import tigase.xmpp4gwt.client.xmpp.sasl.AnonymousMechanism;
-import tigase.xmpp4gwt.client.xmpp.sasl.PlainMechanism;
-import tigase.xmpp4gwt.client.xmpp.sasl.SaslEvent;
 
 import com.extjs.gxt.ui.client.GXT;
 import com.extjs.gxt.ui.client.util.Theme;
@@ -36,7 +37,6 @@ import com.extjs.gxt.ui.client.widget.MessageBox;
 import com.extjs.gxt.ui.client.widget.ProgressBar;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.http.client.Response;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.DeferredCommand;
 import com.google.gwt.user.client.Timer;
@@ -69,6 +69,8 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 
 	private Show defaultPresenceShow = Show.notSpecified;
 
+	private String nickname = null;
+
 	public final PresenceCallback presenceCallback;
 
 	private final Roster rosterComponent;
@@ -77,9 +79,9 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 
 	private TabbedViewport tabbedViewport;
 
-	private MessageBox waitDialog;
-
 	private VersionInfo versionInfo = GWT.create(VersionInfo.class);
+
+	private MessageBox waitDialog;
 
 	public Messenger() {
 		// GXT.setDefaultTheme(new Slate(), true);
@@ -87,7 +89,7 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 		instance = this;
 
 		User user = new User();
-		this.session = new Session(user);
+		this.session = new GWTSession(user);
 		this.session.getSoftwareVersionPlugin().setName("Tigase Messenger");
 		this.session.getSoftwareVersionPlugin().setVersion(versionInfo.versionNumber());
 
@@ -97,13 +99,13 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 		this.presenceCallback = new PresenceCallbackImpl(session.getPresencePlugin(), session.getRosterPlugin());
 		this.rosterComponent = new Roster(this.presenceCallback);
 		this.rosterComponent.setContactComparator(new ContactComparator() {
-			private String x(Item i) {
-				return i.getName();
-			}
-
 			public int compare(Item o1, Item o2) {
 
 				return x(o1).compareToIgnoreCase(x(o2));
+			}
+
+			private String x(Item i) {
+				return i.getName();
 			}
 		});
 
@@ -268,6 +270,10 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 		});
 	}
 
+	public String getNickname() {
+		return nickname;
+	}
+
 	private void hideWaitDialog() {
 		if (this.waitDialog != null) {
 			waitDialog.hide();
@@ -275,13 +281,18 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 		}
 	}
 
-	public void onBodyReceive(Response code, String body) {
+	public void onBodyReceive(StreamEventDetails details, String body) {
 	}
 
 	public void onBodySend(String body) {
 	}
 
-	public void onBoshError(ErrorCondition errorCondition, BoshErrorCondition boshErrorCondition, final String message) {
+	public void onConnect(Connector con) {
+		updateWaitDialog("Connecting...");
+	}
+
+	public void onConnectionError(final Connector con, final ErrorCondition errorCondition, final StreamEventDetails details, final String message) {
+
 		rosterComponent.reset();
 		if (errorCondition == ErrorCondition.item_not_found) {
 			hideWaitDialog();
@@ -302,16 +313,6 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 				}
 			});
 		}
-	}
-
-	public void onBoshTerminate(Connector con, BoshErrorCondition boshErrorCondition) {
-		rosterComponent.reset();
-		hideWaitDialog();
-		tabbedViewport.getStatusToolItem().setNewStatus(RosterPresence.OFFLINE);
-	}
-
-	public void onConnect(Connector con) {
-		updateWaitDialog("Connecting...");
 	}
 
 	public void onLogin(LoginDialog loginDialog) {
@@ -363,8 +364,6 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 		d.show();
 	}
 
-	private String nickname = null;
-
 	private void updateWaitDialog(final String message) {
 		if (this.waitDialog != null) {
 			final ProgressBar bar = this.waitDialog.getProgressBar();
@@ -375,7 +374,4 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 		}
 	}
 
-	public String getNickname() {
-		return nickname;
-	}
 }

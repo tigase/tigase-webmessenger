@@ -5,19 +5,19 @@ import tigase.gwt.components.roster.client.Item;
 import tigase.gwt.components.roster.client.Roster;
 import tigase.gwt.components.roster.client.RosterListener;
 import tigase.gwt.components.roster.client.RosterPresence;
+import tigase.jaxmpp.core.client.JID;
+import tigase.jaxmpp.core.client.stanzas.Message;
+import tigase.jaxmpp.core.client.stanzas.Presence.Show;
+import tigase.jaxmpp.core.client.stanzas.Presence.Type;
+import tigase.jaxmpp.core.client.xmpp.ResourceBindEvenet;
+import tigase.jaxmpp.core.client.xmpp.message.Chat;
+import tigase.jaxmpp.core.client.xmpp.message.ChatListener;
+import tigase.jaxmpp.core.client.xmpp.message.ChatManager;
+import tigase.jaxmpp.core.client.xmpp.roster.RosterItem;
+import tigase.jaxmpp.core.client.xmpp.roster.RosterItem.Subscription;
+import tigase.jaxmpp.core.client.xmpp.xeps.muc.GroupChatEvent;
+import tigase.jaxmpp.xmpp4gwt.client.Bosh2Connector;
 import tigase.messenger.client.ChangeStatusToolItem.ChangeStatusListener;
-import tigase.xmpp4gwt.client.Bosh2Connector;
-import tigase.xmpp4gwt.client.JID;
-import tigase.xmpp4gwt.client.stanzas.Message;
-import tigase.xmpp4gwt.client.stanzas.Presence.Show;
-import tigase.xmpp4gwt.client.stanzas.Presence.Type;
-import tigase.xmpp4gwt.client.xmpp.ResourceBindEvenet;
-import tigase.xmpp4gwt.client.xmpp.message.Chat;
-import tigase.xmpp4gwt.client.xmpp.message.ChatListener;
-import tigase.xmpp4gwt.client.xmpp.message.ChatManager;
-import tigase.xmpp4gwt.client.xmpp.roster.RosterItem;
-import tigase.xmpp4gwt.client.xmpp.roster.RosterItem.Subscription;
-import tigase.xmpp4gwt.client.xmpp.xeps.muc.GroupChatEvent;
 
 import com.extjs.gxt.ui.client.Events;
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
@@ -51,9 +51,9 @@ import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, RosterListener {
@@ -90,6 +90,8 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 
 	private DebugTab debugTab;
 
+	private final Label jidLabel = new Label("");
+
 	private final Roster rosterComponent;
 
 	private final ChangeStatusToolItem statusToolItem = new ChangeStatusToolItem();
@@ -119,8 +121,8 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 				}
 			}
 		});
-		Messenger.session().addEventListener(tigase.xmpp4gwt.client.events.Events.groupChatMessageReceived,
-				new tigase.xmpp4gwt.client.events.Listener<GroupChatEvent>() {
+		Messenger.session().addEventListener(tigase.jaxmpp.core.client.events.Events.groupChatMessageReceived,
+				new tigase.jaxmpp.core.client.events.Listener<GroupChatEvent>() {
 
 					public void handleEvent(GroupChatEvent event) {
 						GroupChatTab gct = event.getGroupChat().getUserData();
@@ -129,8 +131,8 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 						}
 					}
 				});
-		Messenger.session().addEventListener(tigase.xmpp4gwt.client.events.Events.groupChatJoined,
-				new tigase.xmpp4gwt.client.events.Listener<GroupChatEvent>() {
+		Messenger.session().addEventListener(tigase.jaxmpp.core.client.events.Events.groupChatJoined,
+				new tigase.jaxmpp.core.client.events.Listener<GroupChatEvent>() {
 
 					public void handleEvent(GroupChatEvent event) {
 						GroupChatTab gct = event.getGroupChat().getUserData();
@@ -139,8 +141,8 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 						}
 					}
 				});
-		Messenger.session().addEventListener(tigase.xmpp4gwt.client.events.Events.groupChatJoinDeny,
-				new tigase.xmpp4gwt.client.events.Listener<GroupChatEvent>() {
+		Messenger.session().addEventListener(tigase.jaxmpp.core.client.events.Events.groupChatJoinDeny,
+				new tigase.jaxmpp.core.client.events.Listener<GroupChatEvent>() {
 
 					public void handleEvent(GroupChatEvent event) {
 						GroupChatTab gct = event.getGroupChat().getUserData();
@@ -149,22 +151,21 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 						}
 					}
 				});
-		Messenger.session().addEventListener(tigase.xmpp4gwt.client.events.Events.groupChatPresenceChange,
-				new tigase.xmpp4gwt.client.events.Listener<GroupChatEvent>() {
+		Messenger.session().addEventListener(tigase.jaxmpp.core.client.events.Events.groupChatPresenceChange,
+				new tigase.jaxmpp.core.client.events.Listener<GroupChatEvent>() {
 
 					public void handleEvent(GroupChatEvent event) {
 						GroupChatTab gct = event.getGroupChat().getUserData();
 						if (gct != null) {
-							if (event.getGroupChat().getRoomJid().equals(event.getPresence().getFrom())
-									&& event.getPresence().getType() == Type.unavailable) {
+							if (event.getGroupChat().getRoomJid().equals(event.getPresence().getFrom()) && event.getPresence().getType() == Type.unavailable) {
 								gct.setEnabled(false);
 							}
 							gct.process(event.getPresence());
 						}
 					}
 				});
-		Messenger.session().addEventListener(tigase.xmpp4gwt.client.events.Events.groupChatCreated,
-				new tigase.xmpp4gwt.client.events.Listener<GroupChatEvent>() {
+		Messenger.session().addEventListener(tigase.jaxmpp.core.client.events.Events.groupChatCreated,
+				new tigase.jaxmpp.core.client.events.Listener<GroupChatEvent>() {
 
 					public void handleEvent(GroupChatEvent event) {
 						System.out.println("...");
@@ -254,68 +255,36 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 
 	}
 
+	public void onGroupToolTip(Event event, Group group) {
+		System.out.println("pick group");
+	}
+
+	public void onItemToolTip(Event event, Item item) {
+		ToolTipConfig c = new ToolTipConfig(item.getName(), "Jabber ID: " + item.getJID());
+		Component cmp = item.getData();
+		if (cmp == null) {
+			cmp = new Component(item.getElement(), true) {
+			};
+			item.setData(cmp);
+		}
+		ToolTip tt = new ToolTip(cmp, c);
+
+		try {
+			tt.show();
+		} catch (Exception e) {
+		}
+	}
+
 	public void onMessageReceived(Chat<ChatTab> chat, Message message) {
 		System.out.println("mamy");
 		ChatTab ct = chat.getUserData();
 		if (ct != null) {
 			ct.process(message);
 			if (this.tabPanel.getSelectedItem() != ct
-					&& (message.getBody() != null || message.getType() == tigase.xmpp4gwt.client.stanzas.Message.Type.error)) {
+					&& (message.getBody() != null || message.getType() == tigase.jaxmpp.core.client.stanzas.Message.Type.error)) {
 				ct.setUnread();
 			}
 		}
-	}
-
-	private final Label jidLabel = new Label("");
-
-	private ContentPanel prepareHeaderPanel() {
-
-		ContentPanel headerPanel = new ContentPanel();
-		headerPanel.addStyleName("header");
-		headerPanel.setHeaderVisible(false);
-		headerPanel.setBodyBorder(false);
-
-		Label logoutLabel = new Label("Logout");
-		logoutLabel.addClickListener(new ClickListener() {
-
-			public void onClick(Widget sender) {
-				Messenger.session().logout();
-				statusToolItem.setNewStatus(RosterPresence.OFFLINE);
-				rosterComponent.reset();
-			}
-		});
-		logoutLabel.addStyleName("logoutLink");
-		jidLabel.addStyleName("jidLabel");
-		Label separator = new HTML("&nbsp;");
-		headerPanel.setLayout(new RowLayout());
-
-		Messenger.session().addEventListener(tigase.xmpp4gwt.client.events.Events.resourceBinded,
-				new tigase.xmpp4gwt.client.events.Listener<ResourceBindEvenet>() {
-
-					public void handleEvent(ResourceBindEvenet event) {
-						jidLabel.setText(event.getBindedJid().toString());
-					}
-				});
-
-		com.google.gwt.user.client.ui.HorizontalPanel hp = new com.google.gwt.user.client.ui.HorizontalPanel();
-		hp.setStyleName("links");
-		hp.setWidth("100%");
-		hp.add(jidLabel);
-		hp.add(separator);
-		hp.add(logoutLabel);
-
-		hp.setSpacing(3);
-		hp.setCellHorizontalAlignment(jidLabel, VerticalPanel.ALIGN_RIGHT);
-		hp.setCellHorizontalAlignment(separator, VerticalPanel.ALIGN_CENTER);
-		hp.setCellWidth(separator, "10px");
-		hp.setCellHorizontalAlignment(logoutLabel, VerticalPanel.ALIGN_RIGHT);
-		hp.setCellWidth(logoutLabel, "10px");
-
-		// hp.setHorizontalAlign(HorizontalAlignment.RIGHT);
-		headerPanel.add(hp);
-		headerPanel.add(new Image("logo.png"));
-		headerPanel.add(this.toolBar);
-		return headerPanel;
 	}
 
 	@Override
@@ -343,6 +312,7 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		toolBar.add(new FillToolItem());
 		toolBar.add(new TextToolItem("Logout", new SelectionListener<ToolBarEvent>() {
 
+			@Override
 			public void componentSelected(ToolBarEvent ce) {
 				Messenger.session().logout();
 				statusToolItem.setNewStatus(RosterPresence.OFFLINE);
@@ -455,6 +425,7 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		MenuItem openChatWithMenuItem = new MenuItem("Open chat with...");
 		openChatWithMenuItem.addSelectionListener(new SelectionListener<MenuEvent>() {
 
+			@Override
 			public void componentSelected(MenuEvent ce) {
 				OpenChatWithDialog ocw = new OpenChatWithDialog(chatManager);
 				ocw.show();
@@ -465,6 +436,7 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		MenuItem joinGroupChatMenuItem = new MenuItem("Join to groupchat");
 		joinGroupChatMenuItem.addSelectionListener(new SelectionListener<MenuEvent>() {
 
+			@Override
 			public void componentSelected(MenuEvent ce) {
 				OpenGroupChatWithDialog ocw = new OpenGroupChatWithDialog(Messenger.session().getMucPlugin());
 				ocw.show();
@@ -505,14 +477,13 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 
 		final Menu subscriptionMenu = new Menu();
 
-		final MenuItem allowSubscriptionMenuItem = new MenuItem("Allow him/her to see my status",
-				new SelectionListener<MenuEvent>() {
+		final MenuItem allowSubscriptionMenuItem = new MenuItem("Allow him/her to see my status", new SelectionListener<MenuEvent>() {
 
-					@Override
-					public void componentSelected(MenuEvent ce) {
-						allowSubscription();
-					}
-				});
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				allowSubscription();
+			}
+		});
 		final MenuItem askSubscriptionMenuItem = new MenuItem("Ask to see his/her status", new SelectionListener<MenuEvent>() {
 
 			@Override
@@ -520,14 +491,13 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 				askSubscription();
 			}
 		});
-		final MenuItem forbidSubscriptionMenuItem = new MenuItem("Forbid him/her to see my status",
-				new SelectionListener<MenuEvent>() {
+		final MenuItem forbidSubscriptionMenuItem = new MenuItem("Forbid him/her to see my status", new SelectionListener<MenuEvent>() {
 
-					@Override
-					public void componentSelected(MenuEvent ce) {
-						forbidSubscription();
-					}
-				});
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				forbidSubscription();
+			}
+		});
 
 		subscriptionMenu.add(allowSubscriptionMenuItem);
 		subscriptionMenu.add(askSubscriptionMenuItem);
@@ -577,8 +547,7 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 
 			public void handleEvent(MenuEvent be) {
 				boolean selected = rosterComponent.getSelectedJID() != null;
-				boolean active = selected
-						&& Messenger.session().getRosterPlugin().isContactExists(rosterComponent.getSelectedJID());
+				boolean active = selected && Messenger.session().getRosterPlugin().isContactExists(rosterComponent.getSelectedJID());
 				subscriptionMenuItem.setEnabled(active);
 				removeMenuItem.setEnabled(active);
 				editContactMenuItem.setEnabled(active);
@@ -597,6 +566,56 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		});
 
 		return menu;
+	}
+
+	private ContentPanel prepareHeaderPanel() {
+
+		ContentPanel headerPanel = new ContentPanel();
+		headerPanel.addStyleName("header");
+		headerPanel.setHeaderVisible(false);
+		headerPanel.setBodyBorder(false);
+
+		Label logoutLabel = new Label("Logout");
+		logoutLabel.addClickListener(new ClickListener() {
+
+			public void onClick(Widget sender) {
+				Messenger.session().logout();
+				statusToolItem.setNewStatus(RosterPresence.OFFLINE);
+				rosterComponent.reset();
+			}
+		});
+		logoutLabel.addStyleName("logoutLink");
+		jidLabel.addStyleName("jidLabel");
+		Label separator = new HTML("&nbsp;");
+		headerPanel.setLayout(new RowLayout());
+
+		Messenger.session().addEventListener(tigase.jaxmpp.core.client.events.Events.resourceBinded,
+				new tigase.jaxmpp.core.client.events.Listener<ResourceBindEvenet>() {
+
+					public void handleEvent(ResourceBindEvenet event) {
+						jidLabel.setText(event.getBindedJid().toString());
+					}
+				});
+
+		com.google.gwt.user.client.ui.HorizontalPanel hp = new com.google.gwt.user.client.ui.HorizontalPanel();
+		hp.setStyleName("links");
+		hp.setWidth("100%");
+		hp.add(jidLabel);
+		hp.add(separator);
+		hp.add(logoutLabel);
+
+		hp.setSpacing(3);
+		hp.setCellHorizontalAlignment(jidLabel, HasHorizontalAlignment.ALIGN_RIGHT);
+		hp.setCellHorizontalAlignment(separator, HasHorizontalAlignment.ALIGN_CENTER);
+		hp.setCellWidth(separator, "10px");
+		hp.setCellHorizontalAlignment(logoutLabel, HasHorizontalAlignment.ALIGN_RIGHT);
+		hp.setCellWidth(logoutLabel, "10px");
+
+		// hp.setHorizontalAlign(HorizontalAlignment.RIGHT);
+		headerPanel.add(hp);
+		headerPanel.add(new Image("logo.png"));
+		headerPanel.add(this.toolBar);
+		return headerPanel;
 	}
 
 	private ContentPanel prepareRosterPanel() {
@@ -695,26 +714,6 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 			});
 			box.show();
 
-		}
-	}
-
-	public void onGroupToolTip(Event event, Group group) {
-		System.out.println("pick group");
-	}
-
-	public void onItemToolTip(Event event, Item item) {
-		ToolTipConfig c = new ToolTipConfig(item.getName(), "Jabber ID: " + item.getJID());
-		Component cmp = item.getData();
-		if (cmp == null) {
-			cmp = new Component(item.getElement(), true) {
-			};
-			item.setData(cmp);
-		}
-		ToolTip tt = new ToolTip(cmp, c);
-
-		try {
-			tt.show();
-		} catch (Exception e) {
 		}
 	}
 
