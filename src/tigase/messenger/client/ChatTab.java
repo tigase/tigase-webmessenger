@@ -3,6 +3,7 @@ package tigase.messenger.client;
 import java.util.Date;
 
 import tigase.jaxmpp.core.client.TextUtils;
+import tigase.jaxmpp.core.client.events.Event;
 import tigase.jaxmpp.core.client.stanzas.IQ;
 import tigase.jaxmpp.core.client.stanzas.Message;
 import tigase.jaxmpp.core.client.stanzas.Message.Type;
@@ -38,6 +39,31 @@ import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.Widget;
 
 public class ChatTab extends TabItem {
+
+	public static class ChatTabEvent extends Event {
+
+		private final Chat<ChatTab> item;
+
+		private final String message;
+
+		public ChatTabEvent(Chat<ChatTab> item, String message) {
+			this.item = item;
+			this.message = message;
+		}
+
+		public Chat<ChatTab> getItem() {
+			return item;
+		}
+
+		public String getMessage() {
+			return message;
+		}
+
+	}
+
+	public static enum Events {
+		MESSAGE_SENT
+	}
 
 	private static String linkhtml(String body) {
 		body = body == null ? body : body.replaceAll("([^>/\";]|^)(www\\.[^ ]+)", "$1<a href=\"http://$2\" target=\"_blank\">$2</a>");
@@ -250,9 +276,11 @@ public class ChatTab extends TabItem {
 
 	private void send() {
 		final String message = this.message.getText();
+		final ChatTabEvent event = new ChatTabEvent(item, message);
 		this.message.setText("");
 		add("me", new Date(), "Me", message);
 		this.item.send(message);
+		Messenger.eventsManager().fireEvent(Events.MESSAGE_SENT, event);
 	}
 
 	public void setReaded() {

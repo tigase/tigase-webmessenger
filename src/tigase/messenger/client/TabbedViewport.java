@@ -18,7 +18,10 @@ import tigase.jaxmpp.core.client.xmpp.roster.RosterItem.Subscription;
 import tigase.jaxmpp.core.client.xmpp.xeps.muc.GroupChatEvent;
 import tigase.jaxmpp.xmpp4gwt.client.Bosh2Connector;
 import tigase.messenger.client.ChangeStatusToolItem.ChangeStatusListener;
+import tigase.messenger.client.ChatTab.ChatTabEvent;
 
+import com.allen_sauer.gwt.voices.client.Sound;
+import com.allen_sauer.gwt.voices.client.SoundController;
 import com.extjs.gxt.ui.client.Events;
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.Style.Scroll;
@@ -92,7 +95,17 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 
 	private final Label jidLabel = new Label("");
 
+	protected boolean playSounds = true;
+
 	private final Roster rosterComponent;
+
+	final Sound sound_message_in;
+
+	final Sound sound_message_new;
+
+	final Sound sound_sent;
+
+	private final SoundController soundController = new SoundController();
 
 	private final ChangeStatusToolItem statusToolItem = new ChangeStatusToolItem();
 
@@ -102,6 +115,21 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 
 	public TabbedViewport(Roster rosterComponent, ChatManager<ChatTab> chatManager) {
 		tabPanel.setTabScroll(true);
+		sound_sent = soundController.createSound(Sound.MIME_TYPE_AUDIO_MPEG, "sounds/sent.mp3");
+		sound_message_in = soundController.createSound(Sound.MIME_TYPE_AUDIO_MPEG, "sounds/message_in.mp3");
+		sound_message_new = soundController.createSound(Sound.MIME_TYPE_AUDIO_MPEG, "sounds/message_new.mp3");
+
+		Messenger.eventsManager().addListener(ChatTab.Events.MESSAGE_SENT, new tigase.jaxmpp.core.client.events.Listener<ChatTabEvent>() {
+
+			public void handleEvent(ChatTabEvent event) {
+				if (playSounds)
+					try {
+						sound_sent.play();
+					} catch (Exception e) {
+					}
+			}
+		});
+
 		this.rosterComponent = rosterComponent;
 		this.chatManager = chatManager;
 		this.chatManager.addListener(this);
@@ -179,6 +207,7 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 						}
 					}
 				});
+
 	}
 
 	public void afterRosterChange() {
@@ -275,7 +304,16 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		}
 	}
 
-	public void onMessageReceived(Chat<ChatTab> chat, Message message) {
+	public void onMessageReceived(Chat<ChatTab> chat, Message message, boolean firstMessage) {
+		if (playSounds)
+			try {
+				if (firstMessage)
+					sound_message_new.play();
+				else
+					sound_message_in.play();
+			} catch (Exception e) {
+			}
+
 		System.out.println("mamy");
 		ChatTab ct = chat.getUserData();
 		if (ct != null) {
@@ -452,6 +490,16 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 			}
 		});
 		menu.add(debugMenuItem);
+
+		final CheckMenuItem playSounds = new CheckMenuItem("Play sounds");
+		playSounds.setChecked(TabbedViewport.this.playSounds);
+		playSounds.addListener(Events.CheckChange, new Listener<MenuEvent>() {
+
+			public void handleEvent(MenuEvent be) {
+				TabbedViewport.this.playSounds = playSounds.isChecked();
+			}
+		});
+		menu.add(playSounds);
 
 		menu.addListener(Events.BeforeShow, new Listener<MenuEvent>() {
 

@@ -7,8 +7,8 @@
 	<inherits name='tigase.gwt.components.roster.Roster' />
 	<inherits name='com.extjs.gxt.ui.GXT' />
 	<inherits name='com.extjs.gxt.themes.Themes' />
-	<inherits name='org.miller.gwt.Sound' />
- 
+	<inherits name='com.allen_sauer.gwt.voices.gwt-voices' />
+
 	<!-- Specify the app entry point class.                   -->
 	<entry-point class='tigase.messenger.client.Messenger' />
 </module>

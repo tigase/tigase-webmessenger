@@ -14,6 +14,7 @@ import tigase.jaxmpp.core.client.Session;
 import tigase.jaxmpp.core.client.StreamEventDetails;
 import tigase.jaxmpp.core.client.User;
 import tigase.jaxmpp.core.client.events.Events;
+import tigase.jaxmpp.core.client.events.EventsManager;
 import tigase.jaxmpp.core.client.events.Listener;
 import tigase.jaxmpp.core.client.packets.Packet;
 import tigase.jaxmpp.core.client.stanzas.Presence.Show;
@@ -53,6 +54,10 @@ public class Messenger implements ConnectorListener, EntryPoint, LoginDialogList
 
 	public static Config config() {
 		return instance.config;
+	}
+
+	public static EventsManager eventsManager() {
+		return instance.session.getEventsManager();
 	}
 
 	public static Messenger instance() {
