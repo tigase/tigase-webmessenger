@@ -4,11 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import tigase.jaxmpp.core.client.JID;
-import tigase.messenger.client.Messenger;
+import tigase.messenger.client.Tigase_messenger;
 
-import com.extjs.gxt.ui.client.Events;
 import com.extjs.gxt.ui.client.Style.HorizontalAlignment;
+import com.extjs.gxt.ui.client.event.ButtonEvent;
 import com.extjs.gxt.ui.client.event.ComponentEvent;
+import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.FieldEvent;
 import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.SelectionListener;
@@ -58,9 +59,9 @@ public class LoginDialog extends Dialog {
 		this.jid.setEmptyText("Enter Your Jabber ID here");
 		this.jid.setAllowBlank(false);
 		this.jid.setFieldLabel("JID");
-		this.jid.setValidator(new Validator<String, Field<String>>() {
+		this.jid.setValidator(new Validator() {
 
-			public String validate(Field<String> field, String value) {
+			public String validate(Field<?> field, String value) {
 				boolean anonymous = anonumousLogin.getValue() == null ? false : anonumousLogin.getValue();
 				if (!anonymous) {
 					JID jid = JID.fromString(value);
@@ -82,9 +83,9 @@ public class LoginDialog extends Dialog {
 		this.nickname.setAllowBlank(true);
 		this.nickname.setEmptyText("Enter Your nickname here");
 		this.nickname.setFieldLabel("Nickname");
-		this.nickname.setValidator(new Validator<String, Field<String>>() {
+		this.nickname.setValidator(new Validator() {
 
-			public String validate(Field<String> field, String value) {
+			public String validate(Field<?> field, String value) {
 				boolean anonymous = anonumousLogin.getValue() == null ? false : anonumousLogin.getValue();
 				if (anonymous && (value == null || value.length() < 3)) {
 					return "Please enter Your nickname";
@@ -93,11 +94,13 @@ public class LoginDialog extends Dialog {
 			}
 		});
 
-		this.anonumousLogin.setValue((Messenger.config().isDefaultAnonymous()));
+		this.anonumousLogin.setValue((Tigase_messenger.config().isDefaultAnonymous()));
 		this.anonumousLogin.setFieldLabel("Anonumous");
+		this.anonumousLogin.setFireChangeEventOnSetValue(true);
 		this.anonumousLogin.addListener(Events.Change, new Listener<FieldEvent>() {
 
 			public void handleEvent(FieldEvent be) {
+				System.out.println("!!!+");
 				jid.setEnabled(!anonumousLogin.getValue());
 				nickname.setEnabled(anonumousLogin.getValue());
 				password.setEnabled(!anonumousLogin.getValue());
@@ -111,11 +114,11 @@ public class LoginDialog extends Dialog {
 		nickname.setEnabled(anonumousLogin.getValue());
 		password.setEnabled(!anonumousLogin.getValue());
 
-		setButtonBar(new ButtonBar());
+		// setButtonBar(new ButtonBar());
 		getButtonBar().removeAll();
-		this.loginButton = new Button("Login", new SelectionListener<ComponentEvent>() {
+		this.loginButton = new Button("Login", new SelectionListener<ButtonEvent>() {
 			@Override
-			public void componentSelected(ComponentEvent ce) {
+			public void componentSelected(ButtonEvent ce) {
 				if (panel.isValid()) {
 					close();
 					fireLogin();
@@ -123,9 +126,9 @@ public class LoginDialog extends Dialog {
 			}
 		});
 		getButtonBar().add(loginButton);
-		getButtonBar().add(new Button("Cancel", new SelectionListener<ComponentEvent>() {
+		getButtonBar().add(new Button("Cancel", new SelectionListener<ButtonEvent>() {
 			@Override
-			public void componentSelected(ComponentEvent ce) {
+			public void componentSelected(ButtonEvent ce) {
 				close();
 			}
 		}));
@@ -150,11 +153,11 @@ public class LoginDialog extends Dialog {
 		 * password.addListener(Events.Valid, validInvalidListener);
 		 * nickname.addListener(Events.Invalid, validInvalidListener);
 		 */
-		JID defaultJID = Messenger.config().getJid();
+		JID defaultJID = Tigase_messenger.config().getJid();
 		if (defaultJID != null)
 			this.jid.setValue(defaultJID.toString());
-		if (Messenger.config().getPassword() != null)
-			this.password.setValue(Messenger.config().getPassword());
+		if (Tigase_messenger.config().getPassword() != null)
+			this.password.setValue(Tigase_messenger.config().getPassword());
 
 		add(panel);
 		// panel.isValid();

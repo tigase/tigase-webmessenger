@@ -6,12 +6,13 @@ import tigase.gwt.components.roster.client.RosterPresence;
 
 import com.extjs.gxt.ui.client.event.MenuEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
+import com.extjs.gxt.ui.client.widget.Component;
+import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.menu.Menu;
 import com.extjs.gxt.ui.client.widget.menu.MenuItem;
 import com.extjs.gxt.ui.client.widget.menu.SeparatorMenuItem;
-import com.extjs.gxt.ui.client.widget.toolbar.TextToolItem;
 
-public class ChangeStatusToolItem extends TextToolItem {
+public class ChangeStatusToolItem extends Button {
 
 	public static interface ChangeStatusListener {
 		void onNewStatusSelected(RosterPresence newStatus);
@@ -58,7 +59,8 @@ public class ChangeStatusToolItem extends TextToolItem {
 
 			@Override
 			public void componentSelected(MenuEvent ce) {
-				RosterPresence rp = ce.item.getData(STATUS_KEY);
+				Component x = ce.getItem();
+				RosterPresence rp = x.getData(STATUS_KEY);
 				for (ChangeStatusListener listener : listeners) {
 					listener.onNewStatusSelected(rp);
 				}

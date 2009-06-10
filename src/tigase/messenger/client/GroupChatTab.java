@@ -19,19 +19,19 @@ import tigase.jaxmpp.core.client.xmpp.xeps.muc.Role;
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.Style.Orientation;
 import com.extjs.gxt.ui.client.Style.Scroll;
+import com.extjs.gxt.ui.client.event.ButtonEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
-import com.extjs.gxt.ui.client.event.ToolBarEvent;
 import com.extjs.gxt.ui.client.util.Margins;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Html;
 import com.extjs.gxt.ui.client.widget.TabItem;
+import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayout;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
 import com.extjs.gxt.ui.client.widget.layout.FlowLayout;
 import com.extjs.gxt.ui.client.widget.layout.RowData;
 import com.extjs.gxt.ui.client.widget.layout.RowLayout;
 import com.extjs.gxt.ui.client.widget.toolbar.FillToolItem;
-import com.extjs.gxt.ui.client.widget.toolbar.TextToolItem;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.ui.Image;
@@ -144,10 +144,10 @@ public class GroupChatTab extends TabItem {
 		this.message.setSize("100%", "100%");
 		ToolBar tb = new ToolBar();
 		tb.add(new FillToolItem());
-		tb.add(new TextToolItem("Send", new SelectionListener<ToolBarEvent>() {
+		tb.add(new Button("Send", new SelectionListener<ButtonEvent>() {
 
 			@Override
-			public void componentSelected(ToolBarEvent ce) {
+			public void componentSelected(ButtonEvent ce) {
 				send();
 			}
 		}));

@@ -46,12 +46,12 @@ public class SubscriptionRequestDialog extends VCardDialog {
 	@Override
 	protected void onButtonPressed(Button button) {
 		if (AUTHORIZE.equals(button.getItemId())) {
-			Messenger.session().getPresencePlugin().subscribed(jid);
+			Tigase_messenger.session().getPresencePlugin().subscribed(jid);
 			if (sendRequest.getValue()) {
-				Messenger.session().getPresencePlugin().subscribe(jid);
+				Tigase_messenger.session().getPresencePlugin().subscribe(jid);
 			}
 		} else if (DENY.equals(button.getItemId())) {
-			Messenger.session().getPresencePlugin().unsubscribed(jid);
+			Tigase_messenger.session().getPresencePlugin().unsubscribed(jid);
 		}
 		super.onButtonPressed(button);
 	}

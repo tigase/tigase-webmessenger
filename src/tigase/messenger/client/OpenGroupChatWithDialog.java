@@ -43,8 +43,8 @@ public class OpenGroupChatWithDialog extends Dialog {
 		jidField.setFieldLabel("Room ID");
 		jidField.setEmptyText("Enter room name here");
 		jidField.setAllowBlank(false);
-		jidField.setValidator(new Validator<String, Field<String>>() {
-			public String validate(Field<String> field, String value) {
+		jidField.setValidator(new Validator() {
+			public String validate(Field<?> field, String value) {
 				JID jid = JID.fromString(value);
 				if (!jid.isValid() || jid.getNode() == null || jid.getResource() != null) {
 					return "Please enter a valid room name";
@@ -66,12 +66,12 @@ public class OpenGroupChatWithDialog extends Dialog {
 		form.add(nicknameField);
 		form.add(passwordField);
 
-		JID defRoomName = Messenger.config().getDefaultMucRoomName();
+		JID defRoomName = Tigase_messenger.config().getDefaultMucRoomName();
 		if (defRoomName != null) {
 			jidField.setValue(defRoomName.toStringBare());
 		}
 
-		nicknameField.setValue(Messenger.instance().getNickname());
+		nicknameField.setValue(Tigase_messenger.instance().getNickname());
 	}
 
 	@Override

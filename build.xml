@@ -15,11 +15,11 @@
 	<property file="build.properties" />
 
 	<path id="classpath">
-		<!--
+
 		<fileset dir="${GWT_HOME}">
 			<include name="**/*.jar" />
 		</fileset>
--->
+
 		<fileset dir="./lib">
 			<include name="**/*.jar" />
 		</fileset>
@@ -53,7 +53,7 @@
          ================================= -->
 	<target name="clean" description="--> clean">
 		<delete dir="${classes.build.dir}" />
-		<delete dir="${gwt.build.dir}" />
+		<delete dir="war/tigase_messenger/" />
 		<delete dir=".gwt-cache" />
 		<delete dir="${dist.dir}" />
 	</target>
@@ -65,25 +65,21 @@
 			<entry key="versionNumber" value="${appVersion}" />
 		</propertyfile>
 
-		<java failonerror="true" maxmemory="256m" classname="com.google.gwt.dev.GWTCompiler" fork="true" dir="./">
-			<arg value="-out" />
-			<arg value="${gwt.build.dir}" />
-
-			<arg value="-style" />
-			<arg value="${gwt.style}" />
-
-			<arg value="tigase.messenger.Messenger" />
+		<java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
+			<jvmarg value="-Xmx256M" />
+			<jvmarg value="-XstartOnFirstThread" />
+			<!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
+			<arg value="tigase.messenger.Tigase_messenger" />
 
 			<classpath>
 				<path refid="classpath" />
 			</classpath>
 		</java>
 
-		<replace summary="true" dir="${gwt.build.dir}/tigase.messenger.Messenger">
+		<replace summary="true" dir="war">
 			<include name="**/*.html" />
-			<replacefilter token="@version@" value="${ver}" />
+			<replacefilter token="@tigase-messenger-version@" value="${ver}" />
 		</replace>
-
 	</target>
 
 
@@ -94,8 +90,9 @@
 	<target name="dist" depends="gwt-compile" description="--> Jabber/XMPP Client">
 		<mkdir dir="${dist.dir}" />
 		<zip duplicate="preserve" destfile="${dist.dir}/messenger-${ver}.zip">
-			<zipfileset dir="${gwt.build.dir}/tigase.messenger.Messenger">
-				<exclude name="**/Messenger.html" />
+			<zipfileset dir="war">
+				<exclude name="**/Tigase_messenger.html" />
+				<exclude name="**/WEB-INF/**/*.*" />
 				<include name="**/*.*" />
 			</zipfileset>
 		</zip>

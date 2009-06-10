@@ -31,7 +31,7 @@ public class EditContactDialog extends Dialog {
 
 	public EditContactDialog(JID jid) {
 		super();
-		ri = Messenger.session().getRosterPlugin().getRosterItem(jid);
+		ri = Tigase_messenger.session().getRosterPlugin().getRosterItem(jid);
 		setHeading("Edit contact");
 		setButtons(OKCANCEL);
 
@@ -61,7 +61,7 @@ public class EditContactDialog extends Dialog {
 		groups.setCheckable(true);
 
 		Set<String> groupsNames = new HashSet<String>();
-		for (RosterItem $ri : Messenger.session().getRosterPlugin().getAllRosteritems()) {
+		for (RosterItem $ri : Tigase_messenger.session().getRosterPlugin().getAllRosteritems()) {
 			String[] g = $ri.getGroups();
 			if (g != null)
 				for (String string : g) {
@@ -122,7 +122,7 @@ public class EditContactDialog extends Dialog {
 			for (DataListItem dataListItem : selectedGroups) {
 				groups.add((String) dataListItem.getData("name"));
 			}
-			Messenger.session().getRosterPlugin().addItem(JID.fromString(ri.getJid()), name.getValue(), groups, null);
+			Tigase_messenger.session().getRosterPlugin().addItem(JID.fromString(ri.getJid()), name.getValue(), groups, null);
 		}
 		close();
 	}

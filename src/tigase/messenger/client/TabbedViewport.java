@@ -22,14 +22,15 @@ import tigase.messenger.client.ChatTab.ChatTabEvent;
 
 import com.allen_sauer.gwt.voices.client.Sound;
 import com.allen_sauer.gwt.voices.client.SoundController;
-import com.extjs.gxt.ui.client.Events;
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.Style.Scroll;
+import com.extjs.gxt.ui.client.event.ButtonEvent;
+import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.MenuEvent;
+import com.extjs.gxt.ui.client.event.MessageBoxEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.event.TabPanelEvent;
-import com.extjs.gxt.ui.client.event.ToolBarEvent;
 import com.extjs.gxt.ui.client.util.Margins;
 import com.extjs.gxt.ui.client.widget.Component;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
@@ -38,6 +39,7 @@ import com.extjs.gxt.ui.client.widget.MessageBox;
 import com.extjs.gxt.ui.client.widget.TabItem;
 import com.extjs.gxt.ui.client.widget.TabPanel;
 import com.extjs.gxt.ui.client.widget.Viewport;
+import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayout;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
 import com.extjs.gxt.ui.client.widget.layout.RowLayout;
@@ -48,10 +50,10 @@ import com.extjs.gxt.ui.client.widget.menu.SeparatorMenuItem;
 import com.extjs.gxt.ui.client.widget.tips.ToolTip;
 import com.extjs.gxt.ui.client.widget.tips.ToolTipConfig;
 import com.extjs.gxt.ui.client.widget.toolbar.FillToolItem;
-import com.extjs.gxt.ui.client.widget.toolbar.TextToolItem;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
@@ -83,10 +85,11 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 	private final Listener<TabPanelEvent> chatTabCloseListener = new Listener<TabPanelEvent>() {
 
 		public void handleEvent(TabPanelEvent be) {
-			if (be.item instanceof ChatTab) {
-				((ChatTab) be.item).getChatItem().remove();
-			} else if (be.item instanceof GroupChatTab) {
-				((GroupChatTab) be.item).getGroupChat().leave();
+			Object x = be.getItem();
+			if (x instanceof ChatTab) {
+				((ChatTab) x).getChatItem().remove();
+			} else if (x instanceof GroupChatTab) {
+				((GroupChatTab) x).getGroupChat().leave();
 			}
 		}
 	};
@@ -119,16 +122,17 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		sound_message_in = soundController.createSound(Sound.MIME_TYPE_AUDIO_MPEG, "sounds/message_in.mp3");
 		sound_message_new = soundController.createSound(Sound.MIME_TYPE_AUDIO_MPEG, "sounds/message_new.mp3");
 
-		Messenger.eventsManager().addListener(ChatTab.Events.MESSAGE_SENT, new tigase.jaxmpp.core.client.events.Listener<ChatTabEvent>() {
+		Tigase_messenger.eventsManager().addListener(ChatTab.Events.MESSAGE_SENT,
+				new tigase.jaxmpp.core.client.events.Listener<ChatTabEvent>() {
 
-			public void handleEvent(ChatTabEvent event) {
-				if (playSounds)
-					try {
-						sound_sent.play();
-					} catch (Exception e) {
+					public void handleEvent(ChatTabEvent event) {
+						if (playSounds)
+							try {
+								sound_sent.play();
+							} catch (Exception e) {
+							}
 					}
-			}
-		});
+				});
 
 		this.rosterComponent = rosterComponent;
 		this.chatManager = chatManager;
@@ -142,14 +146,17 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		this.tabPanel.addListener(Events.Select, new Listener<TabPanelEvent>() {
 
 			public void handleEvent(TabPanelEvent be) {
-				if (be.item instanceof ChatTab) {
-					((ChatTab) be.item).setReaded();
-				} else if (be.item instanceof GroupChatTab) {
-					((GroupChatTab) be.item).setReaded();
+				Object x = be.getItem();
+				if (x instanceof ChatTab) {
+					((ChatTab) x).setReaded();
+					checkUnreadMessages();
+				} else if (x instanceof GroupChatTab) {
+					((GroupChatTab) x).setReaded();
+					checkUnreadMessages();
 				}
 			}
 		});
-		Messenger.session().addEventListener(tigase.jaxmpp.core.client.events.Events.groupChatMessageReceived,
+		Tigase_messenger.session().addEventListener(tigase.jaxmpp.core.client.events.Events.groupChatMessageReceived,
 				new tigase.jaxmpp.core.client.events.Listener<GroupChatEvent>() {
 
 					public void handleEvent(GroupChatEvent event) {
@@ -159,7 +166,7 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 						}
 					}
 				});
-		Messenger.session().addEventListener(tigase.jaxmpp.core.client.events.Events.groupChatJoined,
+		Tigase_messenger.session().addEventListener(tigase.jaxmpp.core.client.events.Events.groupChatJoined,
 				new tigase.jaxmpp.core.client.events.Listener<GroupChatEvent>() {
 
 					public void handleEvent(GroupChatEvent event) {
@@ -169,7 +176,7 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 						}
 					}
 				});
-		Messenger.session().addEventListener(tigase.jaxmpp.core.client.events.Events.groupChatJoinDeny,
+		Tigase_messenger.session().addEventListener(tigase.jaxmpp.core.client.events.Events.groupChatJoinDeny,
 				new tigase.jaxmpp.core.client.events.Listener<GroupChatEvent>() {
 
 					public void handleEvent(GroupChatEvent event) {
@@ -179,20 +186,21 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 						}
 					}
 				});
-		Messenger.session().addEventListener(tigase.jaxmpp.core.client.events.Events.groupChatPresenceChange,
+		Tigase_messenger.session().addEventListener(tigase.jaxmpp.core.client.events.Events.groupChatPresenceChange,
 				new tigase.jaxmpp.core.client.events.Listener<GroupChatEvent>() {
 
 					public void handleEvent(GroupChatEvent event) {
 						GroupChatTab gct = event.getGroupChat().getUserData();
 						if (gct != null) {
-							if (event.getGroupChat().getRoomJid().equals(event.getPresence().getFrom()) && event.getPresence().getType() == Type.unavailable) {
+							if (event.getGroupChat().getRoomJid().equals(event.getPresence().getFrom())
+									&& event.getPresence().getType() == Type.unavailable) {
 								gct.setEnabled(false);
 							}
 							gct.process(event.getPresence());
 						}
 					}
 				});
-		Messenger.session().addEventListener(tigase.jaxmpp.core.client.events.Events.groupChatCreated,
+		Tigase_messenger.session().addEventListener(tigase.jaxmpp.core.client.events.Events.groupChatCreated,
 				new tigase.jaxmpp.core.client.events.Listener<GroupChatEvent>() {
 
 					public void handleEvent(GroupChatEvent event) {
@@ -217,7 +225,7 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 	private void allowSubscription() {
 		final JID jid = rosterComponent.getSelectedJID();
 		if (jid != null) {
-			Messenger.session().getPresencePlugin().subscribed(jid);
+			Tigase_messenger.session().getPresencePlugin().subscribed(jid);
 			MessageBox box = new MessageBox();
 			box.setModal(false);
 			box.setTitle("Authorization has been sent");
@@ -231,7 +239,7 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 	private void askSubscription() {
 		final JID jid = rosterComponent.getSelectedJID();
 		if (jid != null) {
-			Messenger.session().getPresencePlugin().subscribe(jid);
+			Tigase_messenger.session().getPresencePlugin().subscribe(jid);
 			MessageBox box = new MessageBox();
 			box.setModal(false);
 			box.setTitle("Subscription request has been sent");
@@ -245,7 +253,7 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 	private void forbidSubscription() {
 		final JID jid = rosterComponent.getSelectedJID();
 		if (jid != null) {
-			Messenger.session().getPresencePlugin().unsubscribed(jid);
+			Tigase_messenger.session().getPresencePlugin().unsubscribed(jid);
 			MessageBox box = new MessageBox();
 			box.setModal(false);
 			box.setTitle("Authorization has been removed");
@@ -262,14 +270,14 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 
 	private void newStatusSet(RosterPresence newStatus) {
 		if (newStatus == RosterPresence.OFFLINE) {
-			Messenger.session().logout();
+			Tigase_messenger.session().logout();
 			statusToolItem.setNewStatus(RosterPresence.OFFLINE);
 			rosterComponent.reset();
-		} else if (Messenger.session().isActive()) {
-			Messenger.session().getPresencePlugin().sendStatus(rosterPresence2Show(newStatus));
+		} else if (Tigase_messenger.session().isActive()) {
+			Tigase_messenger.session().getPresencePlugin().sendStatus(rosterPresence2Show(newStatus));
 			statusToolItem.setNewStatus(newStatus);
-		} else if (Messenger.session().getConnector().isDisconnected()) {
-			Messenger.instance().openLoginDialog(rosterPresence2Show(newStatus));
+		} else if (Tigase_messenger.session().getConnector().isDisconnected()) {
+			Tigase_messenger.instance().openLoginDialog(rosterPresence2Show(newStatus));
 		}
 	}
 
@@ -317,11 +325,26 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		System.out.println("mamy");
 		ChatTab ct = chat.getUserData();
 		if (ct != null) {
-			ct.process(message);
-			if (this.tabPanel.getSelectedItem() != ct
+			if ((this.tabPanel.getSelectedItem() != ct || !Tigase_messenger.instance().isFocused())
 					&& (message.getBody() != null || message.getType() == tigase.jaxmpp.core.client.stanzas.Message.Type.error)) {
 				ct.setUnread();
 			}
+			ct.process(message);
+
+			checkUnreadMessages();
+		}
+	}
+
+	private int unreadMessagesCount = 0;
+
+	private void checkUnreadMessages() {
+		int $unread = 0;
+		for (Chat<ChatTab> c : chatManager.getChatsList()) {
+			$unread += c.getUserData().getUnreadCount();
+		}
+		if ($unread != this.unreadMessagesCount) {
+			this.unreadMessagesCount = $unread;
+			Window.setTitle((this.unreadMessagesCount == 0 ? "" : ("(" + this.unreadMessagesCount + ") ")) + "Tigase Messenger");
 		}
 	}
 
@@ -335,24 +358,24 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		north.setBodyBorder(false);
 		north.add(this.toolBar);
 
-		TextToolItem actionToolItem = new TextToolItem("Actions");
+		Button actionToolItem = new Button("Actions");
 		actionToolItem.setMenu(prepareActionMenu());
 
-		TextToolItem contactsToolItem = new TextToolItem("Contacts");
+		Button contactsToolItem = new Button("Contacts");
 		contactsToolItem.setMenu(prepareContactMenu());
 
-		TextToolItem viewToolItem = new TextToolItem("View");
+		Button viewToolItem = new Button("View");
 		viewToolItem.setMenu(prepareViewMenu());
 
 		toolBar.add(actionToolItem);
 		toolBar.add(contactsToolItem);
 		toolBar.add(viewToolItem);
 		toolBar.add(new FillToolItem());
-		toolBar.add(new TextToolItem("Logout", new SelectionListener<ToolBarEvent>() {
+		toolBar.add(new Button("Logout", new SelectionListener<ButtonEvent>() {
 
 			@Override
-			public void componentSelected(ToolBarEvent ce) {
-				Messenger.session().logout();
+			public void componentSelected(ButtonEvent ce) {
+				Tigase_messenger.session().logout();
 				statusToolItem.setNewStatus(RosterPresence.OFFLINE);
 				rosterComponent.reset();
 			}
@@ -398,7 +421,7 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		tabPanel.add(item);
 		tabPanel.setSelection(item);
 
-		if (Messenger.config().isDebugEnabled()) {
+		if (Tigase_messenger.config().isDebugEnabled()) {
 			openDebugTab();
 		}
 
@@ -417,9 +440,9 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 
 	public void onStartNewChat(Chat<ChatTab> chat) {
 		if (chat.getUserData() == null) {
-			chat.setUserNickname(Messenger.instance().getNickname());
-			System.out.println(" New chat. Set nickname to: " + Messenger.instance().getNickname());
-			ChatTab ct = new ChatTab(chat, Messenger.session().getRosterPlugin());
+			chat.setUserNickname(Tigase_messenger.instance().getNickname());
+			System.out.println(" New chat. Set nickname to: " + Tigase_messenger.instance().getNickname());
+			ChatTab ct = new ChatTab(chat, Tigase_messenger.session().getRosterPlugin());
 			ct.addListener(Events.Close, this.chatTabCloseListener);
 			chat.setUserData(ct);
 			this.tabPanel.add(ct);
@@ -429,15 +452,15 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 
 	private void openDebugTab() {
 		if (debugTab == null) {
-			debugTab = new DebugTab((Bosh2Connector) Messenger.session().getConnector());
+			debugTab = new DebugTab((Bosh2Connector) Tigase_messenger.session().getConnector());
 			tabPanel.add(debugTab);
 			tabPanel.setSelection(debugTab);
-			Messenger.session().getConnector().addListener(debugTab);
+			Tigase_messenger.session().getConnector().addListener(debugTab);
 
 			debugTab.addListener(Events.Close, new Listener<TabPanelEvent>() {
 
 				public void handleEvent(TabPanelEvent be) {
-					Messenger.session().getConnector().addListener(debugTab);
+					Tigase_messenger.session().getConnector().addListener(debugTab);
 					debugTab = null;
 				}
 			});
@@ -451,7 +474,8 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 
 			@Override
 			public void componentSelected(MenuEvent ce) {
-				RosterPresence rp = ce.item.getData(ChangeStatusToolItem.STATUS_KEY);
+				Component mi = ce.getItem();
+				RosterPresence rp = mi.getData(ChangeStatusToolItem.STATUS_KEY);
 				newStatusSet(rp);
 			}
 		});
@@ -476,7 +500,7 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 
 			@Override
 			public void componentSelected(MenuEvent ce) {
-				OpenGroupChatWithDialog ocw = new OpenGroupChatWithDialog(Messenger.session().getMucPlugin());
+				OpenGroupChatWithDialog ocw = new OpenGroupChatWithDialog(Tigase_messenger.session().getMucPlugin());
 				ocw.show();
 			}
 		});
@@ -525,13 +549,14 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 
 		final Menu subscriptionMenu = new Menu();
 
-		final MenuItem allowSubscriptionMenuItem = new MenuItem("Allow him/her to see my status", new SelectionListener<MenuEvent>() {
+		final MenuItem allowSubscriptionMenuItem = new MenuItem("Allow him/her to see my status",
+				new SelectionListener<MenuEvent>() {
 
-			@Override
-			public void componentSelected(MenuEvent ce) {
-				allowSubscription();
-			}
-		});
+					@Override
+					public void componentSelected(MenuEvent ce) {
+						allowSubscription();
+					}
+				});
 		final MenuItem askSubscriptionMenuItem = new MenuItem("Ask to see his/her status", new SelectionListener<MenuEvent>() {
 
 			@Override
@@ -539,13 +564,14 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 				askSubscription();
 			}
 		});
-		final MenuItem forbidSubscriptionMenuItem = new MenuItem("Forbid him/her to see my status", new SelectionListener<MenuEvent>() {
+		final MenuItem forbidSubscriptionMenuItem = new MenuItem("Forbid him/her to see my status",
+				new SelectionListener<MenuEvent>() {
 
-			@Override
-			public void componentSelected(MenuEvent ce) {
-				forbidSubscription();
-			}
-		});
+					@Override
+					public void componentSelected(MenuEvent ce) {
+						forbidSubscription();
+					}
+				});
 
 		subscriptionMenu.add(allowSubscriptionMenuItem);
 		subscriptionMenu.add(askSubscriptionMenuItem);
@@ -567,7 +593,7 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 			@Override
 			public void componentSelected(MenuEvent ce) {
 				final JID jid = rosterComponent.getSelectedJID();
-				if (jid != null && Messenger.session().getRosterPlugin().isContactExists(jid)) {
+				if (jid != null && Tigase_messenger.session().getRosterPlugin().isContactExists(jid)) {
 					EditContactDialog rcd = new EditContactDialog(jid);
 					rcd.show();
 				}
@@ -595,14 +621,15 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 
 			public void handleEvent(MenuEvent be) {
 				boolean selected = rosterComponent.getSelectedJID() != null;
-				boolean active = selected && Messenger.session().getRosterPlugin().isContactExists(rosterComponent.getSelectedJID());
+				boolean active = selected
+						&& Tigase_messenger.session().getRosterPlugin().isContactExists(rosterComponent.getSelectedJID());
 				subscriptionMenuItem.setEnabled(active);
 				removeMenuItem.setEnabled(active);
 				editContactMenuItem.setEnabled(active);
 				vcardMenuItem.setEnabled(selected);
 
 				if (active) {
-					RosterItem ri = Messenger.session().getRosterPlugin().getRosterItem(rosterComponent.getSelectedJID());
+					RosterItem ri = Tigase_messenger.session().getRosterPlugin().getRosterItem(rosterComponent.getSelectedJID());
 					Subscription s = ri.getSubscription();
 
 					allowSubscriptionMenuItem.setEnabled(s == Subscription.to);
@@ -627,7 +654,7 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		logoutLabel.addClickListener(new ClickListener() {
 
 			public void onClick(Widget sender) {
-				Messenger.session().logout();
+				Tigase_messenger.session().logout();
 				statusToolItem.setNewStatus(RosterPresence.OFFLINE);
 				rosterComponent.reset();
 			}
@@ -637,7 +664,7 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		Label separator = new HTML("&nbsp;");
 		headerPanel.setLayout(new RowLayout());
 
-		Messenger.session().addEventListener(tigase.jaxmpp.core.client.events.Events.resourceBinded,
+		Tigase_messenger.session().addEventListener(tigase.jaxmpp.core.client.events.Events.resourceBinded,
 				new tigase.jaxmpp.core.client.events.Listener<ResourceBindEvenet>() {
 
 					public void handleEvent(ResourceBindEvenet event) {
@@ -744,19 +771,19 @@ public class TabbedViewport extends Viewport implements ChatListener<ChatTab>, R
 		final JID jid = rosterComponent.getSelectedJID();
 		if (jid != null) {
 			// XXX translation
-			Messenger.session().getPresencePlugin().subscribe(jid);
+			Tigase_messenger.session().getPresencePlugin().subscribe(jid);
 			MessageBox box = new MessageBox();
 			box.setModal(false);
 			box.setTitle("Remove contact");
 			box.setMessage("Are You sure you want to remove '" + jid.toStringBare() + "' from Your roster?");
 			box.setButtons(MessageBox.YESNO);
 			box.setIcon(MessageBox.QUESTION);
-			box.addCallback(new Listener<com.extjs.gxt.ui.client.event.WindowEvent>() {
+			box.addCallback(new Listener<MessageBoxEvent>() {
 
-				public void handleEvent(com.extjs.gxt.ui.client.event.WindowEvent be) {
-					System.out.println(be.buttonClicked.getItemId());
-					if (Dialog.YES.equals(be.buttonClicked.getItemId())) {
-						Messenger.session().getRosterPlugin().removeRosterItem(jid);
+				public void handleEvent(MessageBoxEvent be) {
+					System.out.println(be.getButtonClicked().getItemId());
+					if (Dialog.YES.equals(be.getButtonClicked().getItemId())) {
+						Tigase_messenger.session().getRosterPlugin().removeRosterItem(jid);
 					}
 				}
 			});

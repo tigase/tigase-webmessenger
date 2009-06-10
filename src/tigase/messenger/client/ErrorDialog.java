@@ -14,7 +14,7 @@ public class ErrorDialog extends Dialog {
 		List<? extends Packet> kids = error.getChildren();
 		if (kids != null)
 			for (Packet k : kids) {
-				String xmlns = k.getAtribute("xmlns");
+				String xmlns = k.getXMLNS();
 				if (xmlns != null && xmlns.equals("urn:ietf:params:xml:ns:xmpp-stanzas")) {
 					try {
 						return ErrorCondition.valueOf(k.getName().replace('-', '_'));

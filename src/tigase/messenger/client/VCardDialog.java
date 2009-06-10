@@ -31,7 +31,7 @@ public class VCardDialog extends Dialog {
 
 		init();
 
-		Messenger.session().getVCardPlugin().vCardRequest(jid.getBareJID(), new VCardResponseHandler() {
+		Tigase_messenger.session().getVCardPlugin().vCardRequest(jid.getBareJID(), new VCardResponseHandler() {
 
 			public void onError(IQ iq, ErrorType errorType, ErrorCondition errorCondition, String text) {
 			}

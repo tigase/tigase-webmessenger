@@ -37,9 +37,9 @@ public class OpenChatWithDialog extends Dialog {
 		add(form);
 
 		jidField.setAllowBlank(false);
-		jidField.setValidator(new Validator<String, Field<String>>() {
+		jidField.setValidator(new Validator() {
 
-			public String validate(Field<String> field, String value) {
+			public String validate(Field<?> field, String value) {
 				JID jid = JID.fromString(value);
 				if (!jid.isValid() || jid.getNode() == null) {
 					return "Please enter a valid Jabber ID";

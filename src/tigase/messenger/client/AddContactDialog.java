@@ -5,9 +5,9 @@ import tigase.jaxmpp.core.client.ResponseHandler;
 import tigase.jaxmpp.core.client.stanzas.IQ;
 import tigase.jaxmpp.core.client.xmpp.ErrorCondition;
 
-import com.extjs.gxt.ui.client.Events;
 import com.extjs.gxt.ui.client.Style.HorizontalAlignment;
 import com.extjs.gxt.ui.client.data.BaseModel;
+import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.FieldEvent;
 import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.store.ListStore;
@@ -183,9 +183,9 @@ public class AddContactDialog extends Dialog {
 		jidNameForm.setHeaderVisible(false);
 
 		jid.setAllowBlank(false);
-		jid.setValidator(new Validator<String, Field<String>>() {
+		jid.setValidator(new Validator() {
 
-			public String validate(Field<String> field, String value) {
+			public String validate(Field<?> field, String value) {
 				try {
 					JID jid = JID.fromString(value);
 					if (!jid.isValid()) {
@@ -229,7 +229,7 @@ public class AddContactDialog extends Dialog {
 		add(baseForm);
 		serviceTranslationFieldSet.setEnabled(!services.getSelection().contains(jabberProtocol));
 		serviceTranslationFieldSet.setExpanded(serviceTranslationFieldSet.isEnabled());
-		services.addListener(com.extjs.gxt.ui.client.Events.Select, new Listener<FieldEvent>() {
+		services.addListener(Events.Select, new Listener<FieldEvent>() {
 
 			public void handleEvent(FieldEvent be) {
 				serviceTranslationFieldSet.setEnabled(!services.getSelection().contains(jabberProtocol));
@@ -242,7 +242,7 @@ public class AddContactDialog extends Dialog {
 	protected void onButtonPressed(Button button) {
 		if (button.getItemId().equals(Dialog.OK)) {
 			final JID jid = JID.fromString(this.jid.getValue());
-			Messenger.session().getRosterPlugin().addItem(jid, this.name.getValue(), (String[]) null, new ResponseHandler() {
+			Tigase_messenger.session().getRosterPlugin().addItem(jid, this.name.getValue(), (String[]) null, new ResponseHandler() {
 
 				public void onError(IQ iq, ErrorType errorType, ErrorCondition errorCondition, String text) {
 					// TODO Auto-generated method stub
@@ -251,7 +251,7 @@ public class AddContactDialog extends Dialog {
 
 				public void onResult(IQ iq) {
 					if (sendRequest.getValue()) {
-						Messenger.session().getPresencePlugin().subscribe(jid);
+						Tigase_messenger.session().getPresencePlugin().subscribe(jid);
 					}
 					close();
 				}
