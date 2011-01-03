@@ -5,7 +5,6 @@ import java.util.Date;
 import com.extjs.gxt.ui.client.Style.Scroll;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Html;
-import com.extjs.gxt.ui.client.widget.Info;
 import com.extjs.gxt.ui.client.widget.VerticalPanel;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
@@ -16,9 +15,9 @@ public class MessagePanel extends ContentPanel {
 
 	private String lastMessageTimestamp;
 
-	private final DateTimeFormat timeFormat = DateTimeFormat.getFormat("HH:mm:ss");
-
 	private String nicknameSeparator = ":";
+
+	private final DateTimeFormat timeFormat = DateTimeFormat.getFormat("HH:mm:ss");
 
 	private final VerticalPanel vp = new VerticalPanel();
 
