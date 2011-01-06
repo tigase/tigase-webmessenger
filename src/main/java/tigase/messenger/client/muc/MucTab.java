@@ -1,8 +1,12 @@
-package tigase.messenger.client;
+package tigase.messenger.client.muc;
 
 import tigase.jaxmpp.core.client.xml.XMLException;
-import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule.MucEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
+import tigase.messenger.client.MessagePanel;
+import tigase.messenger.client.Tab;
 
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.event.ButtonEvent;
@@ -12,7 +16,6 @@ import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.util.Margins;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
-import com.extjs.gxt.ui.client.widget.TabItem;
 import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.form.TextArea;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayout;
@@ -20,19 +23,15 @@ import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.toolbar.FillToolItem;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
-import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.KeyCodes;
 
-public class ChatTab extends TabItem {
-
-	private final Chat chat;
-
-	private boolean hasUnread = false;
+public class MucTab extends Tab {
 
 	private final MessagePanel messagePanel = new MessagePanel();
 
-	private boolean selected;
+	private final OccupantsListPanel occupantsList;
+
+	private Room room;
 
 	private final Button sendButton;
 
@@ -40,11 +39,14 @@ public class ChatTab extends TabItem {
 
 	private final TextArea text = new TextArea();
 
-	public ChatTab(Chat chat) {
-		this.chat = chat;
-		setText("Chat with " + chat.getJid().getBareJid().toString());
+	public MucTab(Room room) {
+		this.room = room;
+
+		setText("MUC room ");
 		setClosable(true);
 		setLayout(new BorderLayout());
+
+		this.occupantsList = new OccupantsListPanel(room);
 
 		BorderLayoutData centerData = new BorderLayoutData(LayoutRegion.CENTER);
 		centerData.setMargins(new Margins(0));
@@ -54,6 +56,11 @@ public class ChatTab extends TabItem {
 		southData.setCollapsible(true);
 		southData.setFloatable(true);
 		southData.setMargins(new Margins(5, 0, 0, 0));
+
+		BorderLayoutData eastData = new BorderLayoutData(LayoutRegion.EAST, 150);
+		eastData.setSplit(true);
+		eastData.setCollapsible(true);
+		eastData.setMargins(new Margins(0, 0, 0, 5));
 
 		text.setBorders(false);
 		southPanel.setBodyBorder(false);
@@ -87,55 +94,49 @@ public class ChatTab extends TabItem {
 
 		add(messagePanel, centerData);
 		add(southPanel, southData);
+		add(this.occupantsList, eastData);
 	}
 
-	public void add(final Message message) {
+	public Room getRoom() {
+		return room;
+	}
+
+	public void process(Message message) {
 		try {
-			messagePanel.addHisMessage(chat.getJid().toString(), message.getBody());
-			if (!selected) {
-				markUnread(true);
+			String nick = message.getFrom().getResource();
+			if (message.getBody() != null) {
+				if (nick == null)
+					messagePanel.addAppMessage(message.getBody());
+				if (nick != null && nick.equals(room.getNickname()))
+					messagePanel.addMineMessage(nick, message.getBody());
+				else
+					messagePanel.addHisMessage(nick.hashCode() % 5, nick, message.getBody());
 			}
 		} catch (XMLException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public Chat getChat() {
-		return chat;
-	}
-
-	private void markUnread(boolean b) {
-		if (this.hasUnread != b && b) {
-			setText("* Chat with " + chat.getJid().getBareJid().toString());
-		} else if (this.hasUnread != b && !b) {
-			setText("Chat with " + chat.getJid().getBareJid().toString());
+	public void process(MucEvent event) throws XMLException {
+		if (event.getType() == MucModule.OccupantComes) {
+			messagePanel.addAppMessage(event.getNickname() + " join to room");
+			occupantsList.add(event.getPresence().getFrom(), event.getPresence());
+		} else if (event.getType() == MucModule.OccupantLeaved) {
+			messagePanel.addAppMessage(event.getNickname() + " leaved room");
+			occupantsList.remove(event.getPresence().getFrom());
+		} else if (event.getType() == MucModule.OccupantChangedPresence) {
+			occupantsList.update(event.getPresence().getFrom(), event.getPresence());
 		}
-		this.hasUnread = b;
-	}
-
-	public void onDeselect() {
-		this.selected = false;
-	}
-
-	public void onSelect() {
-		this.selected = true;
-		markUnread(false);
-		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-
-			public void execute() {
-				text.focus();
-			}
-		});
 	}
 
 	private void sendMessage() {
 		String v = text.getValue();
 		text.clear();
-		messagePanel.addMineMessage("me", v);
 		try {
-			ChatTab.this.chat.sendMessage(v);
+			MucTab.this.room.sendMessage(v);
 		} catch (Exception e) {
 			messagePanel.addErrorMessage(e.getMessage());
 		}
 	}
+
 }

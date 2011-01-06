@@ -7,6 +7,10 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule;
 import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule.SaslEvent;
+import tigase.messenger.client.chat.ChatManagerModule;
+import tigase.messenger.client.muc.JoinRoomDialog;
+import tigase.messenger.client.muc.MucManagerModule;
+import tigase.messenger.client.roster.RosterPanel;
 
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.event.MenuEvent;
@@ -32,6 +36,8 @@ public class MainViewport extends Viewport {
 
 	private final ContentPanel cp = new ContentPanel(new BorderLayout());
 
+	private final MucManagerModule mucManager;
+
 	private final RosterPanel rosterPanel = new RosterPanel();
 
 	private final Status status = new Status();
@@ -44,6 +50,9 @@ public class MainViewport extends Viewport {
 
 		chatManager = new ChatManagerModule(center);
 		chatManager.init();
+
+		mucManager = new MucManagerModule(center);
+		mucManager.init();
 
 		BorderLayoutData westData = new BorderLayoutData(LayoutRegion.WEST, 270);
 		westData.setSplit(true);
@@ -89,6 +98,29 @@ public class MainViewport extends Viewport {
 		Button statusButton = new Button("Status");
 		statusButton.setMenu(statusMenu);
 		tb.add(statusButton);
+
+		Menu actionMenu = new Menu();
+		actionMenu.add(new MenuItem("Join room", new SelectionListener<MenuEvent>() {
+
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				JoinRoomDialog d = new JoinRoomDialog() {
+					@Override
+					protected void onSubmit(String roomName, String server, String nickname) {
+						try {
+							mucManager.join(roomName, server, nickname);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				};
+				d.show();
+			}
+		}));
+
+		Button actionButton = new Button("Action");
+		actionButton.setMenu(actionMenu);
+		tb.add(actionButton);
 
 		cp.setTopComponent(tb);
 

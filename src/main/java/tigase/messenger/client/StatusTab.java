@@ -15,6 +15,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEv
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule;
 import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule.SaslEvent;
+import tigase.messenger.client.roster.RosterPanel;
 
 import com.extjs.gxt.ui.client.widget.TabItem;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
@@ -37,6 +38,9 @@ public class StatusTab extends TabItem {
 				String m = "Connector error. code=" + be.getResponseCode();
 				if (be.getCaught() != null) {
 					m += ",  message=" + be.getCaught().getMessage();
+				}
+				if (be.getResponseData() != null && be.getResponseData().length() > 0) {
+					m += ",  responseData=" + be.getResponseData();
 				}
 				vp.addErrorMessage(m);
 			}
@@ -108,7 +112,7 @@ public class StatusTab extends TabItem {
 						RosterItem item = XmppService.get().getSessionObject().getRoster().get(be.getJid().getBareJid());
 						if (item != null)
 							try {
-								vp.addAppMessage(be.getJid() + " is now " + RosterPanel.getShowOf(item));
+								vp.addAppMessage(be.getJid() + " is now " + RosterPanel.getShowOfRosterItem(item));
 							} catch (XMLException e) {
 								e.printStackTrace();
 							}

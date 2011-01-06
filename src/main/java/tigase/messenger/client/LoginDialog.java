@@ -125,6 +125,10 @@ public class LoginDialog extends Dialog {
 					!anonymous ? JID.jidInstance(userJID) : null);
 			XmppService.get().getProperties().setUserProperty(SessionObject.PASSWORD, !anonymous ? password : null);
 
+			XmppService.get().getProperties().setUserProperty(SessionObject.PASSWORD, !anonymous ? password : null);
+
+			XmppService.get().getProperties().setUserProperty(SessionObject.NICKNAME, nickname);
+
 			XmppService.get().login();
 
 			hide();

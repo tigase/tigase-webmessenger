@@ -28,6 +28,22 @@
 	color: #0000ff;
 }
 
+.hisMessage.a1 {
+	color: #000080;
+}
+
+.hisMessage.a2 {
+	color: #800080;
+}
+
+.hisMessage.a3 {
+	color: #993366;
+}
+
+.hisMessage.a4 {
+	color: #993300;
+}
+
 .mineMessage {
 	color: #ff0000;
 }

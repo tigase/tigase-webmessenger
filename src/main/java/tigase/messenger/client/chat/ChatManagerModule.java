@@ -1,9 +1,10 @@
-package tigase.messenger.client;
+package tigase.messenger.client.chat;
 
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.MessageModule;
 import tigase.jaxmpp.core.client.xmpp.modules.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
+import tigase.messenger.client.XmppService;
 
 import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.TabPanelEvent;

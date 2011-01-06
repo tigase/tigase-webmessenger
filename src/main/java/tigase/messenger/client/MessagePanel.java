@@ -67,9 +67,13 @@ public class MessagePanel extends ContentPanel {
 	}
 
 	public void addHisMessage(Date date, String nickname, String message) {
+		addHisMessage(0, date, nickname, message);
+	}
+
+	public void addHisMessage(int number, Date date, String nickname, String message) {
 		String msg = SafeHtmlUtils.fromString(message).asString();
 
-		String t = "<div class='line hisMessage'>";
+		String t = "<div class='line hisMessage a" + number + "'>";
 		t += "<span class='timestamp'>[" + timeFormat.format(date) + "]</span>&nbsp;";
 		t += "<span class='nick'>" + nickname + nicknameSeparator + "&nbsp;</span>";
 		t += "<span class='msg'>" + msg + "</span>";
@@ -78,8 +82,12 @@ public class MessagePanel extends ContentPanel {
 		addLine(date, t);
 	}
 
+	public void addHisMessage(int number, String nickname, String message) {
+		addHisMessage(number, new Date(), nickname, message);
+	}
+
 	public void addHisMessage(String nickname, String message) {
-		addHisMessage(new Date(), nickname, message);
+		addHisMessage(0, new Date(), nickname, message);
 	}
 
 	private void addLine(Date date, String line) {
