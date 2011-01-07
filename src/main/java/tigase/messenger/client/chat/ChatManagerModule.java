@@ -10,6 +10,8 @@ import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.TabPanelEvent;
 import com.extjs.gxt.ui.client.widget.TabItem;
 import com.extjs.gxt.ui.client.widget.TabPanel;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 
 public class ChatManagerModule {
 
@@ -65,8 +67,14 @@ public class ChatManagerModule {
 	}
 
 	protected void onChatCreated(MessageEvent be) {
-		ChatTab tab = new ChatTab(be.getChat());
+		final ChatTab tab = new ChatTab(be.getChat());
 		tabPanel.add(tab);
+		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+
+			public void execute() {
+				tabPanel.setSelection(tab);
+			}
+		});
 	}
 
 	protected void onChatTabClose(final ChatTab item) {

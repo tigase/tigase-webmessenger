@@ -8,8 +8,12 @@ import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule.MucEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import tigase.messenger.client.XmppService;
 
+import com.extjs.gxt.ui.client.event.Events;
+import com.extjs.gxt.ui.client.event.TabPanelEvent;
 import com.extjs.gxt.ui.client.widget.TabItem;
 import com.extjs.gxt.ui.client.widget.TabPanel;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 
 public class MucManagerModule {
 
@@ -36,13 +40,31 @@ public class MucManagerModule {
 	}
 
 	public void init() {
+		tabPanel.addListener(Events.Remove, new com.extjs.gxt.ui.client.event.Listener<TabPanelEvent>() {
+
+			public void handleEvent(TabPanelEvent be) {
+				if (be.getItem() instanceof MucTab)
+					onMucTabClose((MucTab) be.getItem());
+			}
+		});
 		XmppService.get().getModulesManager().getModule(MucModule.class).addListener(listener);
 	}
 
 	public void join(String roomName, String mucServer, String nickName) throws XMLException, JaxmppException {
 		Room room = XmppService.get().getModulesManager().getModule(MucModule.class).join(roomName, mucServer, nickName);
-		MucTab mt = new MucTab(room);
-		tabPanel.add(mt);
+
+		MucTab mt = getMucTab(room);
+		if (mt == null) {
+			mt = new MucTab(room);
+			tabPanel.add(mt);
+		}
+		final MucTab m = mt;
+		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+
+			public void execute() {
+				tabPanel.setSelection(m);
+			}
+		});
 	}
 
 	protected void onMucEvent(MucEvent be) {
@@ -59,7 +81,16 @@ public class MucManagerModule {
 		ct.process(be.getMessage());
 	}
 
-	private void onPresenceEvent(MucEvent be) {
+	protected void onMucTabClose(MucTab item) {
+		try {
+			XmppService.get().getModulesManager().getModule(MucModule.class).leave(item.getRoom());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	protected void onPresenceEvent(MucEvent be) {
 		MucTab ct = getMucTab(be.getRoom());
 		try {
 			ct.process(be);

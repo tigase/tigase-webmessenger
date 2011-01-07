@@ -4,7 +4,10 @@ import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule.MucEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.XMucUserElement;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
+import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 import tigase.messenger.client.MessagePanel;
 import tigase.messenger.client.Tab;
 
@@ -69,6 +72,8 @@ public class MucTab extends Tab {
 		southPanel.setHeaderVisible(false);
 		southPanel.add(text);
 
+		text.setEnabled(false);
+
 		this.text.addListener(Events.KeyPress, new Listener<FieldEvent>() {
 
 			public void handleEvent(FieldEvent be) {
@@ -101,6 +106,18 @@ public class MucTab extends Tab {
 		return room;
 	}
 
+	protected void onPresenceReceived(String nickname, Presence presence) throws XMLException {
+		XMucUserElement x = XMucUserElement.extract(presence);
+		showStatuses(nickname, x);
+		if (!text.isEnabled() && x != null && x.getStatuses().contains(110)) {
+			text.setEnabled(true);
+		}
+		if (presence.getType() == StanzaType.unavailable
+				&& (x != null && x.getStatuses().contains(110) || nickname != null && nickname.equals(room.getNickname()))) {
+			text.setEnabled(false);
+		}
+	}
+
 	public void process(Message message) {
 		try {
 			String nick = message.getFrom().getResource();
@@ -112,6 +129,8 @@ public class MucTab extends Tab {
 				else
 					messagePanel.addHisMessage(nick.hashCode() % 5, nick, message.getBody());
 			}
+			XMucUserElement x = XMucUserElement.extract(message);
+			showStatuses(nick, x);
 		} catch (XMLException e) {
 			e.printStackTrace();
 		}
@@ -121,11 +140,14 @@ public class MucTab extends Tab {
 		if (event.getType() == MucModule.OccupantComes) {
 			messagePanel.addAppMessage(event.getNickname() + " join to room");
 			occupantsList.add(event.getPresence().getFrom(), event.getPresence());
+			onPresenceReceived(event.getNickname(), event.getPresence());
 		} else if (event.getType() == MucModule.OccupantLeaved) {
 			messagePanel.addAppMessage(event.getNickname() + " leaved room");
 			occupantsList.remove(event.getPresence().getFrom());
+			onPresenceReceived(event.getNickname(), event.getPresence());
 		} else if (event.getType() == MucModule.OccupantChangedPresence) {
 			occupantsList.update(event.getPresence().getFrom(), event.getPresence());
+			onPresenceReceived(event.getNickname(), event.getPresence());
 		}
 	}
 
@@ -137,6 +159,43 @@ public class MucTab extends Tab {
 		} catch (Exception e) {
 			messagePanel.addErrorMessage(e.getMessage());
 		}
+	}
+
+	private void showStatuses(String nickname, XMucUserElement x) {
+		if (x == null)
+			return;
+
+		if (x.getStatuses().contains(100))
+			messagePanel.addAppMessage("Any occupant is allowed to see your full JID");
+		if (x.getStatuses().contains(101))
+			messagePanel.addAppMessage("Your affiliation changed while not in the room");
+		if (x.getStatuses().contains(102))
+			messagePanel.addAppMessage("Room now shows unavailable members");
+		if (x.getStatuses().contains(103))
+			messagePanel.addAppMessage("Room now does not show unavailable members");
+		if (x.getStatuses().contains(104))
+			messagePanel.addAppMessage("Non-privacy-related room configuration change has occurred");
+		if (x.getStatuses().contains(170))
+			messagePanel.addAppMessage("Room logging is now enabled");
+		if (x.getStatuses().contains(171))
+			messagePanel.addAppMessage("Room logging is now disabled");
+		if (x.getStatuses().contains(172))
+			messagePanel.addAppMessage("Room is now non-anonymous");
+		if (x.getStatuses().contains(173))
+			messagePanel.addAppMessage("Room is now semi-anonymous");
+		if (x.getStatuses().contains(174))
+			messagePanel.addAppMessage("Room is now fully-anonymous");
+		if (x.getStatuses().contains(201))
+			messagePanel.addAppMessage("New room has been created");
+		if (x.getStatuses().contains(210))
+			messagePanel.addAppMessage("Service has assigned or modified your roomnick");
+		if (x.getStatuses().contains(301))
+			messagePanel.addAppMessage(nickname + " has been banned from the room");
+		if (x.getStatuses().contains(303))
+			messagePanel.addAppMessage(nickname + " has new nickname");
+		if (x.getStatuses().contains(307))
+			messagePanel.addAppMessage(nickname + " has been kicked from the room");
+
 	}
 
 }
