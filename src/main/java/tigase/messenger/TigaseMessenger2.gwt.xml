@@ -12,6 +12,9 @@
 
 	<!-- Other module inherits -->
 
+	<inherits name="tigase.gwtcommons.GwtCommons" />
+
+
 	<inherits name="tigase.jaxmpp.core.JaxmppCore" />
 	<inherits name='tigase.jaxmpp.gwt.JaxmppGWT' />
 

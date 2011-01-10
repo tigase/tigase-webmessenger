@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE module PUBLIC "-//Google Inc.//DTD Google Web Toolkit 2.1.1//EN" "http://google-web-toolkit.googlecode.com/svn/tags/2.1.1/distro-source/core/src/gwt-module.dtd">
+<module rename-to='tigasemucclient'>
+	<inherits name="com.google.gwt.user.User" />
+	<inherits name="tigase.gwtcommons.GwtCommons" />
+
+	<inherits name="tigase.jaxmpp.core.JaxmppCore" />
+	<inherits name='tigase.jaxmpp.gwt.JaxmppGWT' />
+
+
+	<inherits name='com.extjs.gxt.ui.GXT' />
+
+	<entry-point class='tigase.mucclient.client.MucClient' />
+
+	<source path="client" />
+</module>

@@ -1,5 +1,13 @@
 package tigase.messenger.client;
 
+import tigase.gwtcommons.client.LoginDialog;
+import tigase.gwtcommons.client.StatusTab;
+import tigase.gwtcommons.client.XmlConsoleTab;
+import tigase.gwtcommons.client.XmppService;
+import tigase.gwtcommons.client.chat.ChatManagerModule;
+import tigase.gwtcommons.client.muc.JoinRoomDialog;
+import tigase.gwtcommons.client.muc.MucManagerModule;
+import tigase.gwtcommons.client.roster.RosterPanel;
 import tigase.jaxmpp.core.client.Connector.State;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.JaxmppCore.JaxmppEvent;
@@ -7,10 +15,6 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule;
 import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule.SaslEvent;
-import tigase.messenger.client.chat.ChatManagerModule;
-import tigase.messenger.client.muc.JoinRoomDialog;
-import tigase.messenger.client.muc.MucManagerModule;
-import tigase.messenger.client.roster.RosterPanel;
 
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.event.MenuEvent;
