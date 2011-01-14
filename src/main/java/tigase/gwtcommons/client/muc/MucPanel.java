@@ -154,6 +154,7 @@ public class MucPanel extends ContentPanel {
 			return;
 		try {
 			String nick = message.getFrom().getResource();
+			XMucUserElement x = XMucUserElement.extract(message);
 			XmppDelay delay = XmppDelay.extract(message);
 			Date d = delay == null ? new Date() : delay.getStamp();
 			d = delay == null ? new Date() : d;
@@ -168,6 +169,17 @@ public class MucPanel extends ContentPanel {
 				else
 					messagePanel.addHisMessage(nick.hashCode() % 5, d, nick, message.getBody());
 			}
+			show(x, "Now any occupant is allowed to see the user's full JID", 100);
+			show(x, "Your affiliation changed while not in the room", 101);
+			show(x, "Room now shows unavailable members", 102);
+			show(x, "Room now does not show unavailable members", 103);
+			show(x, "Non-privacy-related room configuration change has occurred", 104);
+			show(x, "Room logging is now enabled", 170);
+			show(x, "Room logging is now disabled", 171);
+			show(x, "Room is now non-anonymous", 172);
+			show(x, "Room is now semi-anonymous", 173);
+			show(x, "Room is now fully-anonymous", 174);
+
 			// TODO process messages statuses
 		} catch (XMLException e) {
 			e.printStackTrace();
