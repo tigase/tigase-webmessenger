@@ -28,11 +28,10 @@ public abstract class BasicRosterPanel<M> extends ContentPanel {
 
 		private Object data;
 
-		private final M id;
+		private M id;
 
 		public RosterItem(M id) {
-			set("id", id);
-			this.id = id;
+			setId(id);
 		}
 
 		public <T> RosterItem(M id, T data) {
@@ -61,6 +60,11 @@ public abstract class BasicRosterPanel<M> extends ContentPanel {
 		public <T> void setData(T data) {
 			set("data", data);
 			this.data = data;
+		}
+
+		public void setId(M id) {
+			set("id", id);
+			this.id = id;
 		}
 
 	}

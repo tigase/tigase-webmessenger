@@ -107,7 +107,7 @@ public class XmlConsoleTab extends TabItem {
 
 					}
 				});
-		XmppService.get().getConnector().addListener(Connector.StanzaReceived,
+		XmppService.get().getConnector().addListener(Connector.BodyReceived,
 				new tigase.jaxmpp.core.client.observer.Listener<Connector.ConnectorEvent>() {
 
 					public void handleEvent(ConnectorEvent be) {

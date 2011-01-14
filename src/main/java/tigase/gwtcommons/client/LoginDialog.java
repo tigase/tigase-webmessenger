@@ -6,6 +6,7 @@ import tigase.jaxmpp.core.client.connector.AbstractBoshConnector;
 
 import com.extjs.gxt.ui.client.event.BaseEvent;
 import com.extjs.gxt.ui.client.event.Events;
+import com.extjs.gxt.ui.client.event.FieldEvent;
 import com.extjs.gxt.ui.client.event.Listener;
 import com.extjs.gxt.ui.client.widget.Dialog;
 import com.extjs.gxt.ui.client.widget.MessageBox;
@@ -15,6 +16,7 @@ import com.extjs.gxt.ui.client.widget.form.Radio;
 import com.extjs.gxt.ui.client.widget.form.RadioGroup;
 import com.extjs.gxt.ui.client.widget.form.TextField;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
+import com.google.gwt.event.dom.client.KeyCodes;
 
 public class LoginDialog extends Dialog {
 
@@ -71,6 +73,19 @@ public class LoginDialog extends Dialog {
 		nickname.setFieldLabel("Nickname");
 		form.add(nickname);
 
+		Listener<FieldEvent> keyListener = new Listener<FieldEvent>() {
+
+			public void handleEvent(FieldEvent be) {
+				if (be.getKeyCode() == KeyCodes.KEY_ENTER) {
+					trySubmit();
+				}
+			}
+		};
+		jid.addListener(Events.KeyPress, keyListener);
+		password.addListener(Events.KeyPress, keyListener);
+		nickname.addListener(Events.KeyPress, keyListener);
+		anonymous.addListener(Events.KeyPress, keyListener);
+
 		add(form);
 		check();
 	}
@@ -97,19 +112,16 @@ public class LoginDialog extends Dialog {
 	@Override
 	protected void onButtonPressed(Button button) {
 		if (button.getItemId().equals(OK)) {
-			if (form.isValid()) {
-
-				onSubmit(anonymous.getValue() == yesRadio, jid.getValue(), password.getValue(), nickname.getValue());
-			}
+			trySubmit();
 		} else if (button.getItemId().equals(CANCEL)) {
 			form.clear();
 			anonymous.setValue(noRadio);
 			onCancel();
 		}
-	};
+	}
 
 	protected void onCancel() {
-	}
+	};
 
 	protected void onSubmit(boolean anonymous, String userJID, String password, String nickname) {
 		try {
@@ -136,6 +148,12 @@ public class LoginDialog extends Dialog {
 			MessageBox.alert("Error", e.getMessage(), null);
 		}
 
+	}
+
+	private void trySubmit() {
+		if (form.isValid()) {
+			onSubmit(anonymous.getValue() == yesRadio, jid.getValue(), password.getValue(), nickname.getValue());
+		}
 	}
 
 }

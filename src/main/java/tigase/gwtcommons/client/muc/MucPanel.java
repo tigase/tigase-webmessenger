@@ -72,7 +72,7 @@ public class MucPanel extends ContentPanel {
 		southPanel.setHeaderVisible(false);
 		southPanel.add(text);
 
-		text.setEnabled(false);
+		setPanelEnabled(false);
 
 		this.text.addListener(Events.KeyPress, new Listener<FieldEvent>() {
 
@@ -112,13 +112,13 @@ public class MucPanel extends ContentPanel {
 		if (room == null)
 			return;
 		XMucUserElement x = XMucUserElement.extract(presence);
-		showStatuses(nickname, x);
+		showStatuses(nickname, x, presence, null);
 		if (!text.isEnabled() && x != null && x.getStatuses().contains(110)) {
-			text.setEnabled(true);
+			setPanelEnabled(true);
 		}
 		if (presence.getType() == StanzaType.unavailable
 				&& (x != null && x.getStatuses().contains(110) || nickname != null && nickname.equals(room.getNickname()))) {
-			text.setEnabled(false);
+			setPanelEnabled(false);
 		}
 	}
 
@@ -136,7 +136,7 @@ public class MucPanel extends ContentPanel {
 					messagePanel.addHisMessage(nick.hashCode() % 5, nick, message.getBody());
 			}
 			XMucUserElement x = XMucUserElement.extract(message);
-			showStatuses(nick, x);
+			showStatuses(nick, x, null, message);
 		} catch (XMLException e) {
 			e.printStackTrace();
 		}
@@ -144,15 +144,17 @@ public class MucPanel extends ContentPanel {
 
 	public void process(MucEvent event) throws XMLException {
 		if (event.getType() == MucModule.OccupantComes) {
-			messagePanel.addAppMessage(event.getNickname() + " join to room");
+			// messagePanel.addAppMessage(event.getNickname() +
+			// " join to room");
 			occupantsList.add(event.getPresence().getFrom(), event.getPresence());
 			onPresenceReceived(event.getNickname(), event.getPresence());
 		} else if (event.getType() == MucModule.OccupantLeaved) {
-			messagePanel.addAppMessage(event.getNickname() + " leaved room");
+			// messagePanel.addAppMessage(event.getNickname() + " leaved room");
 			occupantsList.remove(event.getPresence().getFrom());
 			onPresenceReceived(event.getNickname(), event.getPresence());
 		} else if (event.getType() == MucModule.OccupantChangedPresence) {
 			occupantsList.update(event.getPresence().getFrom(), event.getPresence());
+			messagePanel.addAppMessage(event.getNickname() + " changed his status");
 			onPresenceReceived(event.getNickname(), event.getPresence());
 		}
 	}
@@ -169,6 +171,11 @@ public class MucPanel extends ContentPanel {
 		}
 	}
 
+	public void setPanelEnabled(boolean b) {
+		text.setEnabled(b);
+		occupantsList.setEnabled(b);
+	}
+
 	public void setRoom(Room room) {
 		this.room = room;
 		if (this.room != null)
@@ -176,9 +183,13 @@ public class MucPanel extends ContentPanel {
 
 	}
 
-	private void showStatuses(String nickname, XMucUserElement x) {
+	private void showStatuses(String nickname, XMucUserElement x, Presence presence, Message message) throws XMLException {
 		if (x == null)
 			return;
+
+		if (x.getJID() != null) {
+			nickname += " (" + x.getJID() + ")";
+		}
 
 		if (x.getStatuses().contains(100))
 			messagePanel.addAppMessage("Any occupant is allowed to see your full JID");
@@ -206,8 +217,19 @@ public class MucPanel extends ContentPanel {
 			messagePanel.addAppMessage("Service has assigned or modified your roomnick");
 		if (x.getStatuses().contains(301))
 			messagePanel.addAppMessage(nickname + " has been banned from the room");
-		if (x.getStatuses().contains(303))
-			messagePanel.addAppMessage(nickname + " has new nickname");
+
+		if (x.getStatuses().contains(303)) {
+			messagePanel.addAppMessage(nickname + " is known as " + x.getNick());
+		} else if (presence != null && presence.getType() == StanzaType.unavailable) {
+			messagePanel.addAppMessage(nickname + " leaved room");
+		} else if (presence != null && presence.getType() == null) {
+			String m = nickname + " join to room";
+			if (x.getRole() != null) {
+				m += " as " + x.getRole();
+			}
+			messagePanel.addAppMessage(m);
+		}
+
 		if (x.getStatuses().contains(307))
 			messagePanel.addAppMessage(nickname + " has been kicked from the room");
 
