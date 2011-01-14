@@ -1,14 +1,14 @@
 package tigase.gwtcommons.client.muc;
 
 import tigase.gwtcommons.client.roster.BasicRosterPanel;
-import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.xml.XMLException;
+import tigase.jaxmpp.core.client.xmpp.modules.muc.Occupant;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 
-public class OccupantsListPanel extends BasicRosterPanel<JID> {
+public class OccupantsListPanel extends BasicRosterPanel<Occupant> {
 
 	private final Room room;
 
@@ -17,12 +17,13 @@ public class OccupantsListPanel extends BasicRosterPanel<JID> {
 	}
 
 	@Override
-	protected String getItemName(RosterItem<JID> model) throws XMLException {
+	protected String getItemName(RosterItem<Occupant> model) throws XMLException {
 		return ((Presence) model.getData()).getFrom().getResource();
 	}
 
 	@Override
-	protected tigase.gwtcommons.client.roster.BasicRosterPanel.RosterShow getShowOf(RosterItem<JID> model) throws XMLException {
+	protected tigase.gwtcommons.client.roster.BasicRosterPanel.RosterShow getShowOf(RosterItem<Occupant> model)
+			throws XMLException {
 		Presence p = model.getData();
 		if (p == null || p.getType() == StanzaType.unavailable)
 			return RosterShow.offline;
@@ -41,7 +42,7 @@ public class OccupantsListPanel extends BasicRosterPanel<JID> {
 	}
 
 	@Override
-	protected void onDoubleClick(RosterItem<JID> item) {
+	protected void onDoubleClick(RosterItem<Occupant> item) {
 		// TODO Auto-generated method stub
 
 	}

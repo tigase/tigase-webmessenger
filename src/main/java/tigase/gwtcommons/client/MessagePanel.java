@@ -11,6 +11,13 @@ import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 
 public class MessagePanel extends ContentPanel {
 
+	private static String linkhtml(String body) {
+		body = body == null ? body : body.replaceAll("([^>/\";]|^)(www\\.[^ ]+)",
+				"$1<a href=\"http://$2\" target=\"_blank\">$2</a>");
+		body = body == null ? body : body.replaceAll("([^\">;]|^)(http://[^ ]+)", "$1<a href=\"$2\" target=\"_blank\">$2</a>");
+		return body;
+	}
+
 	private final DateTimeFormat dateFormat = DateTimeFormat.getFormat("yyyy-MM-dd");
 
 	private String lastMessageTimestamp;
@@ -37,7 +44,7 @@ public class MessagePanel extends ContentPanel {
 	}
 
 	public void addAppMessage(Date date, String message) {
-		String msg = SafeHtmlUtils.fromString(message).asString();
+		String msg = buildSafeHtml(message);
 
 		String t = "<div class='line appMessage'>";
 		t += "<span class='timestamp'>[" + timeFormat.format(date) + "]</span>&nbsp;";
@@ -52,7 +59,7 @@ public class MessagePanel extends ContentPanel {
 	}
 
 	public void addErrorMessage(Date date, String message) {
-		String msg = SafeHtmlUtils.fromString(message).asString();
+		String msg = buildSafeHtml(message);
 
 		String t = "<div class='line errorMessage'>";
 		t += "<span class='timestamp'>[" + timeFormat.format(date) + "]</span>&nbsp;";
@@ -71,14 +78,22 @@ public class MessagePanel extends ContentPanel {
 	}
 
 	public void addHisMessage(int number, Date date, String nickname, String message) {
-		String msg = SafeHtmlUtils.fromString(message).asString();
+		String msg = buildSafeHtml(message);
 
-		String t = "<div class='line hisMessage a" + number + "'>";
-		t += "<span class='timestamp'>[" + timeFormat.format(date) + "]</span>&nbsp;";
-		t += "<span class='nick'>" + nickname + nicknameSeparator + "&nbsp;</span>";
-		t += "<span class='msg'>" + msg + "</span>";
-		t += "</div>";
-
+		String t;
+		if (msg.startsWith("/me ")) {
+			msg = msg.substring(4);
+			t = "<div class='line hisMessage a" + number + "'>";
+			t += "<span class='timestamp'>[" + timeFormat.format(date) + "]</span>&nbsp;";
+			t += "<span class='nick'>*" + nickname + "&nbsp;" + msg + "</span>";
+			t += "</div>";
+		} else {
+			t = "<div class='line hisMessage a" + number + "'>";
+			t += "<span class='timestamp'>[" + timeFormat.format(date) + "]</span>&nbsp;";
+			t += "<span class='nick'>" + nickname + nicknameSeparator + "&nbsp;</span>";
+			t += "<span class='msg'>" + msg + "</span>";
+			t += "</div>";
+		}
 		addLine(date, t);
 	}
 
@@ -93,7 +108,7 @@ public class MessagePanel extends ContentPanel {
 	private void addLine(Date date, String line) {
 		String fd = dateFormat.format(date);
 		if (this.lastMessageTimestamp == null || !this.lastMessageTimestamp.equals(fd)) {
-			Html h = new Html("<div class='line newDay'>" + fd + "</div>");
+			Html h = new Html("<div class='line newDay'>*** " + fd + "</div>");
 			vp.add(h);
 		}
 		Html h = new Html(line);
@@ -110,20 +125,34 @@ public class MessagePanel extends ContentPanel {
 	public void addMineMessage(Date date, String nickname, String message) {
 		if (message == null)
 			return;
-		String msg = SafeHtmlUtils.fromString(message).asString();
+		String msg = buildSafeHtml(message);
 
-		String t = "<div class='line mineMessage'>";
-		t += "<span class='timestamp'>[" + timeFormat.format(date) + "]</span>&nbsp;";
-		t += "<span class='nick'>" + nickname + nicknameSeparator + "&nbsp;</span>";
-		t += "<span class='msg'>" + msg + "</span>";
-		t += "</div>";
-
+		String t;
+		if (msg.startsWith("/me ")) {
+			msg = msg.substring(4);
+			t = "<div class='line mineMessage'>";
+			t += "<span class='timestamp'>[" + timeFormat.format(date) + "]</span>&nbsp;";
+			t += "<span class='nick'>*" + nickname + "&nbsp;" + msg + "</span>";
+			t += "</div>";
+		} else {
+			t = "<div class='line mineMessage'>";
+			t += "<span class='timestamp'>[" + timeFormat.format(date) + "]</span>&nbsp;";
+			t += "<span class='nick'>" + nickname + nicknameSeparator + "&nbsp;</span>";
+			t += "<span class='msg'>" + msg + "</span>";
+			t += "</div>";
+		}
 		addLine(date, t);
 
 	}
 
 	public void addMineMessage(String nickname, String message) {
 		addMineMessage(new Date(), nickname, message);
+	}
+
+	private String buildSafeHtml(String message) {
+		String msg = SafeHtmlUtils.fromString(message).asString();
+		msg = linkhtml(msg);
+		return msg;
 	}
 
 	public String getNicknameSeparator() {

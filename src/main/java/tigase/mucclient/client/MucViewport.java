@@ -188,8 +188,7 @@ public class MucViewport extends Viewport {
 			return;
 		if (be.getType() == MucModule.MessageReceived)
 			mucPanel.process(be.getMessage());
-		else if (be.getType() == MucModule.OccupantComes || be.getType() == MucModule.OccupantLeaved
-				|| be.getType() == MucModule.OccupantChangedPresence) {
+		else {
 			mucPanel.process(be);
 		}
 	}
