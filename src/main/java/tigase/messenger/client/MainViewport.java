@@ -8,6 +8,7 @@ import tigase.gwtcommons.client.chat.ChatManagerModule;
 import tigase.gwtcommons.client.muc.JoinRoomDialog;
 import tigase.gwtcommons.client.muc.MucManagerModule;
 import tigase.gwtcommons.client.roster.RosterPanel;
+import tigase.gwtcommons.client.roster.RosterPanel.SortMethod;
 import tigase.jaxmpp.core.client.Connector.State;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.JaxmppCore.JaxmppEvent;
@@ -17,6 +18,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule;
 import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule.SaslEvent;
 
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
+import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.MenuEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
 import com.extjs.gxt.ui.client.util.Margins;
@@ -28,8 +30,10 @@ import com.extjs.gxt.ui.client.widget.button.Button;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayout;
 import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
+import com.extjs.gxt.ui.client.widget.menu.CheckMenuItem;
 import com.extjs.gxt.ui.client.widget.menu.Menu;
 import com.extjs.gxt.ui.client.widget.menu.MenuItem;
+import com.extjs.gxt.ui.client.widget.menu.SeparatorMenuItem;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 
 public class MainViewport extends Viewport {
@@ -121,6 +125,80 @@ public class MainViewport extends Viewport {
 				d.show();
 			}
 		}));
+
+		final CheckMenuItem sortUnsortedMenuItem = new CheckMenuItem("Unsorted");
+		sortUnsortedMenuItem.addSelectionListener(new SelectionListener<MenuEvent>() {
+
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				rosterPanel.setSortMethod(SortMethod.unsorted);
+			}
+		});
+		final CheckMenuItem sortNameMenuItem = new CheckMenuItem("Sort by name");
+		sortNameMenuItem.addSelectionListener(new SelectionListener<MenuEvent>() {
+
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				rosterPanel.setSortMethod(SortMethod.name);
+			}
+		});
+		final CheckMenuItem sortOnNameMenuItem = new CheckMenuItem("Sort by name (online first)");
+		sortOnNameMenuItem.addSelectionListener(new SelectionListener<MenuEvent>() {
+
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				rosterPanel.setSortMethod(SortMethod.onlineName);
+			}
+		});
+		final CheckMenuItem sortJidMenuItem = new CheckMenuItem("Sort by jid");
+		sortJidMenuItem.addSelectionListener(new SelectionListener<MenuEvent>() {
+
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				rosterPanel.setSortMethod(SortMethod.jid);
+			}
+		});
+		final CheckMenuItem sortOnJidMenuItem = new CheckMenuItem("Sort by jid (online first)");
+		sortOnJidMenuItem.addSelectionListener(new SelectionListener<MenuEvent>() {
+
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				rosterPanel.setSortMethod(SortMethod.onlineJid);
+			}
+		});
+
+		final CheckMenuItem showOfflineMenuItem = new CheckMenuItem("Show offline");
+		showOfflineMenuItem.addSelectionListener(new SelectionListener<MenuEvent>() {
+
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				rosterPanel.setShowOffline(!rosterPanel.isShowOffline());
+			}
+		});
+		Menu viewMenu = new Menu();
+		viewMenu.addListener(Events.BeforeShow, new com.extjs.gxt.ui.client.event.Listener<MenuEvent>() {
+
+			public void handleEvent(MenuEvent be) {
+				SortMethod sm = rosterPanel.getSortMethod();
+				showOfflineMenuItem.setChecked(rosterPanel.isShowOffline(), true);
+				sortUnsortedMenuItem.setChecked(sm == SortMethod.unsorted, true);
+				sortNameMenuItem.setChecked(sm == SortMethod.name, true);
+				sortOnNameMenuItem.setChecked(sm == SortMethod.onlineName, true);
+				sortJidMenuItem.setChecked(sm == SortMethod.jid, true);
+				sortOnJidMenuItem.setChecked(sm == SortMethod.onlineJid, true);
+			}
+		});
+		viewMenu.add(showOfflineMenuItem);
+		viewMenu.add(new SeparatorMenuItem());
+		viewMenu.add(sortUnsortedMenuItem);
+		viewMenu.add(sortNameMenuItem);
+		viewMenu.add(sortOnNameMenuItem);
+		viewMenu.add(sortJidMenuItem);
+		viewMenu.add(sortOnJidMenuItem);
+
+		Button viewButton = new Button("View");
+		viewButton.setMenu(viewMenu);
+		tb.add(viewButton);
 
 		Button actionButton = new Button("Action");
 		actionButton.setMenu(actionMenu);

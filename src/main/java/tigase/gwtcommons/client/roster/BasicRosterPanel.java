@@ -7,10 +7,14 @@ import tigase.gwtcommons.client.XmppService;
 import tigase.jaxmpp.core.client.xml.XMLException;
 
 import com.extjs.gxt.ui.client.Style.SelectionMode;
+import com.extjs.gxt.ui.client.Style.SortDir;
 import com.extjs.gxt.ui.client.data.BaseModelData;
 import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.GridEvent;
 import com.extjs.gxt.ui.client.store.ListStore;
+import com.extjs.gxt.ui.client.store.Store;
+import com.extjs.gxt.ui.client.store.StoreFilter;
+import com.extjs.gxt.ui.client.store.StoreSorter;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.grid.ColumnConfig;
 import com.extjs.gxt.ui.client.widget.grid.ColumnData;
@@ -96,11 +100,28 @@ public abstract class BasicRosterPanel<M> extends ContentPanel {
 
 	protected final Grid<RosterItem<M>> grid;
 
+	private boolean notSorted = true;
+
+	private boolean showOffline = false;
+
 	private final ListStore<RosterItem<M>> store = new ListStore<RosterItem<M>>();
 
 	public BasicRosterPanel() {
 		setHeading("Roster");
 		setLayout(new FitLayout());
+
+		store.setStoreSorter(new StoreSorter<BasicRosterPanel.RosterItem<M>>(null) {
+			@Override
+			public int compare(Store<RosterItem<M>> store, RosterItem<M> m1, RosterItem<M> m2, String property) {
+				return rosterItemCompare(m1, m2);
+			}
+		});
+		store.addFilter(new StoreFilter<BasicRosterPanel.RosterItem<M>>() {
+
+			public boolean select(Store<RosterItem<M>> store, RosterItem<M> parent, RosterItem<M> item, String property) {
+				return filterSelect(store, parent, item, property);
+			}
+		});
 
 		List<ColumnConfig> columns = new ArrayList<ColumnConfig>();
 		ColumnConfig c = new ColumnConfig("presence", "Presence", 24);
@@ -160,19 +181,59 @@ public abstract class BasicRosterPanel<M> extends ContentPanel {
 	public void add(M item) {
 		RosterItem<M> m = new RosterItem<M>(item);
 		store.add(m);
+		doFilters();
 	}
 
 	public <T> void add(M item, T data) {
 		RosterItem<M> m = new RosterItem<M>(item, data);
 		store.add(m);
+		doFilters();
+	}
+
+	protected void doFilters() {
+		store.applyFilters("");
+		notSorted = true;
+	}
+
+	protected void doSort() {
+		store.sort("", SortDir.ASC);
+		notSorted = false;
+	}
+
+	protected boolean filterSelect(Store<RosterItem<M>> store, RosterItem<M> parent, RosterItem<M> item, String property) {
+		boolean result = true;
+		if (showOffline)
+			result = true;
+		else
+			try {
+				RosterShow r;
+				if (XmppService.get().isConnected())
+					r = getShowOf(item);
+				else
+					r = RosterShow.offline;
+				result = r == RosterShow.away || r == RosterShow.chat || r == RosterShow.dnd || r == RosterShow.online
+						|| r == RosterShow.xa;
+			} catch (XMLException e) {
+				e.printStackTrace();
+				result = showOffline;
+			}
+		return result;
 	}
 
 	protected abstract String getItemName(RosterItem<M> model) throws XMLException;
 
 	protected abstract RosterShow getShowOf(RosterItem<M> model) throws XMLException;
 
-	public ListStore<RosterItem<M>> getStore() {
+	private ListStore<RosterItem<M>> getStore() {
 		return store;
+	}
+
+	protected boolean isNotSorted() {
+		return notSorted;
+	}
+
+	public boolean isShowOffline() {
+		return showOffline;
 	}
 
 	protected abstract void onDoubleClick(RosterItem<M> item);
@@ -180,17 +241,29 @@ public abstract class BasicRosterPanel<M> extends ContentPanel {
 	public void remove(M item) {
 		RosterItem<M> m = getStore().findModel("id", item);
 		store.remove(m);
+		doFilters();
+	}
+
+	protected int rosterItemCompare(BasicRosterPanel.RosterItem<M> o1, BasicRosterPanel.RosterItem<M> o2) {
+		return 0;
+	}
+
+	public void setShowOffline(boolean showOffline) {
+		this.showOffline = showOffline;
+		doFilters();
 	}
 
 	public void update(M item) {
 		RosterItem<M> m = getStore().findModel("id", item);
 		store.update(m);
+		doFilters();
 	}
 
 	public <T> void update(M item, T data) {
 		RosterItem<M> m = getStore().findModel("id", item);
 		m.setData(data);
 		store.update(m);
+		doFilters();
 	}
 
 }

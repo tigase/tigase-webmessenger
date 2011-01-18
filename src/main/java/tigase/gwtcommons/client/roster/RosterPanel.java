@@ -3,7 +3,6 @@ package tigase.gwtcommons.client.roster;
 import java.util.Map;
 
 import tigase.gwtcommons.client.XmppService;
-import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.JaxmppCore.JaxmppEvent;
@@ -18,7 +17,23 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.RepeatingCommand;
+
 public class RosterPanel extends BasicRosterPanel<tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem> {
+
+	public static enum SortMethod {
+		jid,
+		name,
+		onlineJid,
+		onlineName,
+		unsorted
+	}
+
+	private final static String getRosterShowWeight(RosterShow rs) {
+		String s = "0000" + (200 - rs.getWeight());
+		return s.substring(s.length() - 4);
+	}
 
 	public static RosterShow getShowOfRosterItem(tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item)
 			throws XMLException {
@@ -58,6 +73,8 @@ public class RosterPanel extends BasicRosterPanel<tigase.jaxmpp.core.client.xmpp
 
 	private RosterModule rosterModule;
 
+	private SortMethod sortMethod = SortMethod.name;
+
 	public RosterPanel() {
 
 		this.rosterModule = XmppService.get().getModulesManager().getModule(RosterModule.class);
@@ -75,6 +92,15 @@ public class RosterPanel extends BasicRosterPanel<tigase.jaxmpp.core.client.xmpp
 				onRosterEvent(be);
 			}
 		};
+
+		Scheduler.get().scheduleFixedPeriod(new RepeatingCommand() {
+
+			public boolean execute() {
+				if (isNotSorted())
+					doSort();
+				return true;
+			}
+		}, 5000);
 	}
 
 	@Override
@@ -99,6 +125,10 @@ public class RosterPanel extends BasicRosterPanel<tigase.jaxmpp.core.client.xmpp
 		return getShowOfRosterItem(model.getId());
 	}
 
+	public SortMethod getSortMethod() {
+		return sortMethod;
+	}
+
 	public void init() {
 
 		rosterModule.addListener(RosterModule.ItemAdded, this.rosterListener);
@@ -119,9 +149,7 @@ public class RosterPanel extends BasicRosterPanel<tigase.jaxmpp.core.client.xmpp
 	}
 
 	protected void onDisconnect() {
-		for (RosterItem<tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem> m : getStore().getModels()) {
-			update(m.getId());
-		}
+		doFilters();
 	}
 
 	@Override
@@ -131,13 +159,7 @@ public class RosterPanel extends BasicRosterPanel<tigase.jaxmpp.core.client.xmpp
 	}
 
 	protected void onPresenceEvent(PresenceEvent be) {
-		BareJID bareJid = be.getJid().getBareJid();
-
-		for (RosterItem<tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem> m : getStore().getModels()) {
-			if (m.getId().getJid().equals(bareJid)) {
-				update(m.getId());
-			}
-		}
+		doFilters();
 	}
 
 	protected void onRosterEvent(RosterEvent be) {
@@ -148,6 +170,40 @@ public class RosterPanel extends BasicRosterPanel<tigase.jaxmpp.core.client.xmpp
 		} else if (be.getType() == RosterModule.ItemAdded) {
 			update(be.getItem());
 		}
+	}
+
+	@Override
+	protected int rosterItemCompare(
+			tigase.gwtcommons.client.roster.BasicRosterPanel.RosterItem<tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem> o1,
+			tigase.gwtcommons.client.roster.BasicRosterPanel.RosterItem<tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem> o2) {
+		try {
+			if (sortMethod == SortMethod.unsorted)
+				return 0;
+			String w1 = "";
+			String w2 = "";
+
+			if (sortMethod == SortMethod.onlineName || sortMethod == SortMethod.onlineJid) {
+				w1 += getRosterShowWeight(getShowOf(o1));
+				w2 += getRosterShowWeight(getShowOf(o2));
+			}
+
+			if (sortMethod == SortMethod.name || sortMethod == SortMethod.onlineName) {
+				w1 += ":" + o1.getId().getName().toLowerCase();
+				w2 += ":" + o2.getId().getName().toLowerCase();
+			} else if (sortMethod == SortMethod.jid || sortMethod == SortMethod.onlineJid) {
+				w1 += ":" + o1.getId().getJid();
+				w2 += ":" + o2.getId().getJid();
+			}
+
+			return w1.compareTo(w2);
+		} catch (Exception e) {
+			return 0;
+		}
+	}
+
+	public void setSortMethod(SortMethod sortMethod) {
+		this.sortMethod = sortMethod;
+		doSort();
 	}
 
 }
