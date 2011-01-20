@@ -1,9 +1,11 @@
 package tigase.mucclient.client;
 
+import tigase.gwtcommons.client.CustomPresenceStatusDialog;
 import tigase.gwtcommons.client.LoginDialog;
 import tigase.gwtcommons.client.XmppService;
 import tigase.gwtcommons.client.muc.MucPanel;
 import tigase.jaxmpp.core.client.Connector;
+import tigase.jaxmpp.core.client.Connector.State;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.JaxmppCore.JaxmppEvent;
@@ -21,8 +23,11 @@ import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule;
 import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule.SaslEvent;
+import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
 
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
+import com.extjs.gxt.ui.client.event.BaseEvent;
+import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.MenuEvent;
 import com.extjs.gxt.ui.client.event.MessageBoxEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
@@ -37,6 +42,7 @@ import com.extjs.gxt.ui.client.widget.layout.BorderLayoutData;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.menu.Menu;
 import com.extjs.gxt.ui.client.widget.menu.MenuItem;
+import com.extjs.gxt.ui.client.widget.menu.SeparatorMenuItem;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 
 public class MucViewport extends Viewport {
@@ -106,20 +112,7 @@ public class MucViewport extends Viewport {
 					}
 				});
 
-		Menu statusMenu = new Menu();
-		statusMenu.add(new MenuItem("Logout", new SelectionListener<MenuEvent>() {
-
-			@Override
-			public void componentSelected(MenuEvent ce) {
-				try {
-					XmppService.get().disconnect();
-				} catch (JaxmppException e) {
-					e.printStackTrace();
-				}
-			}
-		}));
-		Button statusButton = new Button("Status");
-		statusButton.setMenu(statusMenu);
+		Button statusButton = createStatusButton();
 		menuBar.add(statusButton);
 
 		status.setText("Disconnected");
@@ -209,4 +202,121 @@ public class MucViewport extends Viewport {
 		LoginDialog loginDialog = new LoginDialog();
 		loginDialog.show();
 	}
+
+	private Button createStatusButton() {
+
+		MenuItem onlineMI = new MenuItem("Online", new SelectionListener<MenuEvent>() {
+
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				setStatus(Show.online);
+			}
+		});
+		MenuItem customMI = new MenuItem("Custom status...", new SelectionListener<MenuEvent>() {
+
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				CustomPresenceStatusDialog dialog = new CustomPresenceStatusDialog(selectedShow, presenceStatus) {
+
+					@Override
+					public void onSubmit(Show show, String status) {
+						setStatus(show, status);
+					}
+				};
+				dialog.show();
+			}
+		});
+
+		MenuItem chatMI = new MenuItem("Free for chat", new SelectionListener<MenuEvent>() {
+
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				setStatus(Show.chat);
+
+			}
+		});
+		MenuItem awayMI = new MenuItem("Away", new SelectionListener<MenuEvent>() {
+
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				setStatus(Show.away);
+
+			}
+		});
+		MenuItem xaMI = new MenuItem("eXtended Away", new SelectionListener<MenuEvent>() {
+
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				setStatus(Show.xa);
+			}
+		});
+		MenuItem dndMI = new MenuItem("Do Not Disturb", new SelectionListener<MenuEvent>() {
+
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				setStatus(Show.dnd);
+			}
+		});
+
+		final MenuItem logoutMI = new MenuItem("Logout", new SelectionListener<MenuEvent>() {
+
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				try {
+					XmppService.get().disconnect();
+				} catch (JaxmppException e) {
+					e.printStackTrace();
+				}
+			}
+		});
+
+		Menu statusMenu = new Menu();
+		statusMenu.addListener(Events.BeforeShow, new com.extjs.gxt.ui.client.event.Listener<BaseEvent>() {
+
+			public void handleEvent(BaseEvent be) {
+				logoutMI.setEnabled(!(XmppService.get().getConnector() == null || XmppService.get().getConnector().getState() == State.disconnected));
+			}
+		});
+		statusMenu.add(onlineMI);
+		statusMenu.add(customMI);
+		statusMenu.add(new SeparatorMenuItem());
+		statusMenu.add(chatMI);
+		statusMenu.add(awayMI);
+		statusMenu.add(xaMI);
+		statusMenu.add(dndMI);
+		statusMenu.add(new SeparatorMenuItem());
+		statusMenu.add(logoutMI);
+		Button statusButton = new Button("Status");
+		statusButton.setMenu(statusMenu);
+		return statusButton;
+	}
+
+	protected void setStatus(Show show) {
+		setStatus(show, null);
+	}
+
+	protected void onBeforeInitialPresence(PresenceEvent be) {
+		be.setShow(this.selectedShow);
+		be.setStatus(this.presenceStatus);
+	}
+
+	private Show selectedShow = null;
+
+	private String presenceStatus = null;
+
+	protected void setStatus(final Show show, final String status) {
+		this.selectedShow = show;
+		this.presenceStatus = status;
+		if (XmppService.get().getConnector() == null || XmppService.get().getConnector().getState() == State.disconnected) {
+			LoginDialog l = new LoginDialog();
+			l.show();
+		} else {
+			try {
+				XmppService.get().getModulesManager().getModule(PresenceModule.class).setPresence(show, status, null);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 }
