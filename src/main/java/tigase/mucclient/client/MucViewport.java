@@ -31,6 +31,7 @@ import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.MenuEvent;
 import com.extjs.gxt.ui.client.event.MessageBoxEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
+import com.extjs.gxt.ui.client.util.IconHelper;
 import com.extjs.gxt.ui.client.util.Margins;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.MessageBox;
@@ -54,6 +55,10 @@ public class MucViewport extends Viewport {
 	private final ToolBar menuBar = new ToolBar();
 
 	private final MucPanel mucPanel = new MucPanel();
+
+	private String presenceStatus = null;
+
+	private Show selectedShow = null;
 
 	private final Status status = new Status();
 
@@ -176,42 +181,16 @@ public class MucViewport extends Viewport {
 		showLogin();
 	}
 
-	protected void onMucEvent(MucEvent be) throws XMLException {
-		if (be.getRoom() != mucPanel.getRoom())
-			return;
-		if (be.getType() == MucModule.MessageReceived)
-			mucPanel.process(be.getMessage());
-		else {
-			mucPanel.process(be);
-		}
-	}
-
-	protected void showErrorAndLogin(String message) {
-		if (errorMessageBox != null)
-			return;
-		errorMessageBox = MessageBox.alert("Error", message, new com.extjs.gxt.ui.client.event.Listener<MessageBoxEvent>() {
-
-			public void handleEvent(MessageBoxEvent be) {
-				errorMessageBox = null;
-				showLogin();
-			}
-		});
-	}
-
-	protected void showLogin() {
-		LoginDialog loginDialog = new LoginDialog();
-		loginDialog.show();
-	}
-
 	private Button createStatusButton() {
 
-		MenuItem onlineMI = new MenuItem("Online", new SelectionListener<MenuEvent>() {
+		MenuItem onlineMI = new MenuItem("Online", IconHelper.create("presences/user-online.png"),
+				new SelectionListener<MenuEvent>() {
 
-			@Override
-			public void componentSelected(MenuEvent ce) {
-				setStatus(Show.online);
-			}
-		});
+					@Override
+					public void componentSelected(MenuEvent ce) {
+						setStatus(Show.online);
+					}
+				});
 		MenuItem customMI = new MenuItem("Custom status...", new SelectionListener<MenuEvent>() {
 
 			@Override
@@ -227,48 +206,53 @@ public class MucViewport extends Viewport {
 			}
 		});
 
-		MenuItem chatMI = new MenuItem("Free for chat", new SelectionListener<MenuEvent>() {
+		MenuItem chatMI = new MenuItem("Free for chat", IconHelper.create("presences/user-chat.png"),
+				new SelectionListener<MenuEvent>() {
 
-			@Override
-			public void componentSelected(MenuEvent ce) {
-				setStatus(Show.chat);
+					@Override
+					public void componentSelected(MenuEvent ce) {
+						setStatus(Show.chat);
 
-			}
-		});
-		MenuItem awayMI = new MenuItem("Away", new SelectionListener<MenuEvent>() {
+					}
+				});
+		MenuItem awayMI = new MenuItem("Away", IconHelper.create("presences/user-away.png"),
+				new SelectionListener<MenuEvent>() {
 
-			@Override
-			public void componentSelected(MenuEvent ce) {
-				setStatus(Show.away);
+					@Override
+					public void componentSelected(MenuEvent ce) {
+						setStatus(Show.away);
 
-			}
-		});
-		MenuItem xaMI = new MenuItem("eXtended Away", new SelectionListener<MenuEvent>() {
+					}
+				});
+		MenuItem xaMI = new MenuItem("eXtended Away", IconHelper.create("presences/user-xa.png"),
+				new SelectionListener<MenuEvent>() {
 
-			@Override
-			public void componentSelected(MenuEvent ce) {
-				setStatus(Show.xa);
-			}
-		});
-		MenuItem dndMI = new MenuItem("Do Not Disturb", new SelectionListener<MenuEvent>() {
+					@Override
+					public void componentSelected(MenuEvent ce) {
+						setStatus(Show.xa);
+					}
+				});
+		MenuItem dndMI = new MenuItem("Do Not Disturb", IconHelper.create("presences/user-dnd.png"),
+				new SelectionListener<MenuEvent>() {
 
-			@Override
-			public void componentSelected(MenuEvent ce) {
-				setStatus(Show.dnd);
-			}
-		});
+					@Override
+					public void componentSelected(MenuEvent ce) {
+						setStatus(Show.dnd);
+					}
+				});
 
-		final MenuItem logoutMI = new MenuItem("Logout", new SelectionListener<MenuEvent>() {
+		final MenuItem logoutMI = new MenuItem("Logout", IconHelper.create("presences/user-offline.png"),
+				new SelectionListener<MenuEvent>() {
 
-			@Override
-			public void componentSelected(MenuEvent ce) {
-				try {
-					XmppService.get().disconnect();
-				} catch (JaxmppException e) {
-					e.printStackTrace();
-				}
-			}
-		});
+					@Override
+					public void componentSelected(MenuEvent ce) {
+						try {
+							XmppService.get().disconnect();
+						} catch (JaxmppException e) {
+							e.printStackTrace();
+						}
+					}
+				});
 
 		Menu statusMenu = new Menu();
 		statusMenu.addListener(Events.BeforeShow, new com.extjs.gxt.ui.client.event.Listener<BaseEvent>() {
@@ -291,18 +275,24 @@ public class MucViewport extends Viewport {
 		return statusButton;
 	}
 
-	protected void setStatus(Show show) {
-		setStatus(show, null);
-	}
-
 	protected void onBeforeInitialPresence(PresenceEvent be) {
 		be.setShow(this.selectedShow);
 		be.setStatus(this.presenceStatus);
 	}
 
-	private Show selectedShow = null;
+	protected void onMucEvent(MucEvent be) throws XMLException {
+		if (be.getRoom() != mucPanel.getRoom())
+			return;
+		if (be.getType() == MucModule.MessageReceived)
+			mucPanel.process(be.getMessage());
+		else {
+			mucPanel.process(be);
+		}
+	}
 
-	private String presenceStatus = null;
+	protected void setStatus(Show show) {
+		setStatus(show, null);
+	}
 
 	protected void setStatus(final Show show, final String status) {
 		this.selectedShow = show;
@@ -317,6 +307,23 @@ public class MucViewport extends Viewport {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	protected void showErrorAndLogin(String message) {
+		if (errorMessageBox != null)
+			return;
+		errorMessageBox = MessageBox.alert("Error", message, new com.extjs.gxt.ui.client.event.Listener<MessageBoxEvent>() {
+
+			public void handleEvent(MessageBoxEvent be) {
+				errorMessageBox = null;
+				showLogin();
+			}
+		});
+	}
+
+	protected void showLogin() {
+		LoginDialog loginDialog = new LoginDialog();
+		loginDialog.show();
 	}
 
 }

@@ -26,6 +26,7 @@ import com.extjs.gxt.ui.client.event.BaseEvent;
 import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.MenuEvent;
 import com.extjs.gxt.ui.client.event.SelectionListener;
+import com.extjs.gxt.ui.client.util.IconHelper;
 import com.extjs.gxt.ui.client.util.Margins;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Status;
@@ -51,7 +52,11 @@ public class MainViewport extends Viewport {
 
 	private final MucManagerModule mucManager;
 
+	private String presenceStatus = null;
+
 	private final RosterPanel rosterPanel = new RosterPanel();
+
+	private Show selectedShow = null;
 
 	private final Status status = new Status();
 
@@ -240,13 +245,14 @@ public class MainViewport extends Viewport {
 
 	private Button createStatusButton() {
 
-		MenuItem onlineMI = new MenuItem("Online", new SelectionListener<MenuEvent>() {
+		MenuItem onlineMI = new MenuItem("Online", IconHelper.create("presences/user-online.png"),
+				new SelectionListener<MenuEvent>() {
 
-			@Override
-			public void componentSelected(MenuEvent ce) {
-				setStatus(Show.online);
-			}
-		});
+					@Override
+					public void componentSelected(MenuEvent ce) {
+						setStatus(Show.online);
+					}
+				});
 		MenuItem customMI = new MenuItem("Custom status...", new SelectionListener<MenuEvent>() {
 
 			@Override
@@ -262,48 +268,53 @@ public class MainViewport extends Viewport {
 			}
 		});
 
-		MenuItem chatMI = new MenuItem("Free for chat", new SelectionListener<MenuEvent>() {
+		MenuItem chatMI = new MenuItem("Free for chat", IconHelper.create("presences/user-chat.png"),
+				new SelectionListener<MenuEvent>() {
 
-			@Override
-			public void componentSelected(MenuEvent ce) {
-				setStatus(Show.chat);
+					@Override
+					public void componentSelected(MenuEvent ce) {
+						setStatus(Show.chat);
 
-			}
-		});
-		MenuItem awayMI = new MenuItem("Away", new SelectionListener<MenuEvent>() {
+					}
+				});
+		MenuItem awayMI = new MenuItem("Away", IconHelper.create("presences/user-away.png"),
+				new SelectionListener<MenuEvent>() {
 
-			@Override
-			public void componentSelected(MenuEvent ce) {
-				setStatus(Show.away);
+					@Override
+					public void componentSelected(MenuEvent ce) {
+						setStatus(Show.away);
 
-			}
-		});
-		MenuItem xaMI = new MenuItem("eXtended Away", new SelectionListener<MenuEvent>() {
+					}
+				});
+		MenuItem xaMI = new MenuItem("eXtended Away", IconHelper.create("presences/user-xa.png"),
+				new SelectionListener<MenuEvent>() {
 
-			@Override
-			public void componentSelected(MenuEvent ce) {
-				setStatus(Show.xa);
-			}
-		});
-		MenuItem dndMI = new MenuItem("Do Not Disturb", new SelectionListener<MenuEvent>() {
+					@Override
+					public void componentSelected(MenuEvent ce) {
+						setStatus(Show.xa);
+					}
+				});
+		MenuItem dndMI = new MenuItem("Do Not Disturb", IconHelper.create("presences/user-dnd.png"),
+				new SelectionListener<MenuEvent>() {
 
-			@Override
-			public void componentSelected(MenuEvent ce) {
-				setStatus(Show.dnd);
-			}
-		});
+					@Override
+					public void componentSelected(MenuEvent ce) {
+						setStatus(Show.dnd);
+					}
+				});
 
-		final MenuItem logoutMI = new MenuItem("Logout", new SelectionListener<MenuEvent>() {
+		final MenuItem logoutMI = new MenuItem("Logout", IconHelper.create("presences/user-offline.png"),
+				new SelectionListener<MenuEvent>() {
 
-			@Override
-			public void componentSelected(MenuEvent ce) {
-				try {
-					XmppService.get().disconnect();
-				} catch (JaxmppException e) {
-					e.printStackTrace();
-				}
-			}
-		});
+					@Override
+					public void componentSelected(MenuEvent ce) {
+						try {
+							XmppService.get().disconnect();
+						} catch (JaxmppException e) {
+							e.printStackTrace();
+						}
+					}
+				});
 
 		Menu statusMenu = new Menu();
 		statusMenu.addListener(Events.BeforeShow, new com.extjs.gxt.ui.client.event.Listener<BaseEvent>() {
@@ -326,18 +337,14 @@ public class MainViewport extends Viewport {
 		return statusButton;
 	}
 
-	protected void setStatus(Show show) {
-		setStatus(show, null);
-	}
-
 	protected void onBeforeInitialPresence(PresenceEvent be) {
 		be.setShow(this.selectedShow);
 		be.setStatus(this.presenceStatus);
 	}
 
-	private Show selectedShow = null;
-
-	private String presenceStatus = null;
+	protected void setStatus(Show show) {
+		setStatus(show, null);
+	}
 
 	protected void setStatus(final Show show, final String status) {
 		this.selectedShow = show;

@@ -24,6 +24,7 @@ import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 
 public class ChatTab extends Tab {
 
@@ -134,6 +135,8 @@ public class ChatTab extends Tab {
 		text.clear();
 		messagePanel.addMineMessage("me", v);
 		try {
+			if (v != null)
+				v = SafeHtmlUtils.fromString(v).asString();
 			ChatTab.this.chat.sendMessage(v);
 		} catch (Exception e) {
 			messagePanel.addErrorMessage(e.getMessage());

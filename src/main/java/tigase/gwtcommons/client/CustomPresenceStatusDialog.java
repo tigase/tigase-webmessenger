@@ -13,36 +13,25 @@ import com.extjs.gxt.ui.client.widget.form.TextField;
 
 public abstract class CustomPresenceStatusDialog extends Dialog {
 
-	public abstract void onSubmit(Show show, String status);
-
-	private final FormPanel form = new FormPanel();
-
-	private final TextField<String> status = new TextField<String>();
-
 	public static class SimpleComboBox extends BaseModelData {
 
 		private static final long serialVersionUID = 1L;
 
-		private Show show;
-
 		private String label;
+
+		private Show show;
 
 		public SimpleComboBox(Show show, String label) {
 			setShow(show);
 			setLabel(label);
 		}
 
-		public Show getShow() {
-			return show;
-		}
-
-		public void setShow(Show show) {
-			set("show", show);
-			this.show = show;
-		}
-
 		public String getLabel() {
 			return label;
+		}
+
+		public Show getShow() {
+			return show;
 		}
 
 		public void setLabel(String label) {
@@ -50,9 +39,18 @@ public abstract class CustomPresenceStatusDialog extends Dialog {
 			this.label = label;
 		}
 
+		public void setShow(Show show) {
+			set("show", show);
+			this.show = show;
+		}
+
 	}
 
+	private final FormPanel form = new FormPanel();
+
 	private final ComboBox<SimpleComboBox> shows = new ComboBox<SimpleComboBox>();
+
+	private final TextField<String> status = new TextField<String>();
 
 	public CustomPresenceStatusDialog(Show currentShow, String currentPresence) {
 		setHeading("Custom status");
@@ -105,5 +103,7 @@ public abstract class CustomPresenceStatusDialog extends Dialog {
 			hide();
 		}
 	}
+
+	public abstract void onSubmit(Show show, String status);
 
 }

@@ -29,6 +29,7 @@ import com.extjs.gxt.ui.client.widget.layout.FitLayout;
 import com.extjs.gxt.ui.client.widget.toolbar.FillToolItem;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 
 public class MucPanel extends ContentPanel {
 
@@ -227,6 +228,8 @@ public class MucPanel extends ContentPanel {
 		String v = text.getValue();
 		text.clear();
 		try {
+			if (v != null)
+				v = SafeHtmlUtils.fromString(v).asString();
 			MucPanel.this.room.sendMessage(v);
 		} catch (Exception e) {
 			messagePanel.addErrorMessage(e.getMessage());

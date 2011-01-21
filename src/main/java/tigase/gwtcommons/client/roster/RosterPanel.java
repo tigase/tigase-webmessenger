@@ -1,8 +1,7 @@
 package tigase.gwtcommons.client.roster;
 
-import java.util.Map;
-
 import tigase.gwtcommons.client.XmppService;
+import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.JaxmppCore.JaxmppEvent;
@@ -19,6 +18,7 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 
 public class RosterPanel extends BasicRosterPanel<tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem> {
 
@@ -41,27 +41,23 @@ public class RosterPanel extends BasicRosterPanel<tigase.jaxmpp.core.client.xmpp
 			return RosterShow.requested;
 		if (item.getSubscription() == Subscription.none || item.getSubscription() == Subscription.to)
 			return RosterShow.offline_nonauth;
-		Map<String, Presence> x = XmppService.get().getModulesManager().getModule(PresenceModule.class).getPresence().getPresences(
+		Presence p = XmppService.get().getModulesManager().getModule(PresenceModule.class).getPresence().getBestPresence(
 				item.getJid());
 		RosterShow r = RosterShow.offline;
-		if (x != null)
-			for (Presence p : x.values()) {
-				RosterShow tmp = RosterShow.notinroster;
-				if (p.getType() == StanzaType.unavailable)
-					tmp = RosterShow.offline;
-				else if (p.getShow() == Show.online)
-					tmp = RosterShow.online;
-				else if (p.getShow() == Show.away)
-					tmp = RosterShow.away;
-				else if (p.getShow() == Show.chat)
-					tmp = RosterShow.chat;
-				else if (p.getShow() == Show.dnd)
-					tmp = RosterShow.dnd;
-				else if (p.getShow() == Show.xa)
-					tmp = RosterShow.xa;
-
-				r = r.getWeight() > tmp.getWeight() ? r : tmp;
-			}
+		if (p != null) {
+			if (p.getType() == StanzaType.unavailable)
+				r = RosterShow.offline;
+			else if (p.getShow() == Show.online)
+				r = RosterShow.online;
+			else if (p.getShow() == Show.away)
+				r = RosterShow.away;
+			else if (p.getShow() == Show.chat)
+				r = RosterShow.chat;
+			else if (p.getShow() == Show.dnd)
+				r = RosterShow.dnd;
+			else if (p.getShow() == Show.xa)
+				r = RosterShow.xa;
+		}
 		return r;
 	}
 
@@ -116,6 +112,25 @@ public class RosterPanel extends BasicRosterPanel<tigase.jaxmpp.core.client.xmpp
 			x = model.getId().getJid().toString();
 
 		return x;
+	}
+
+	@Override
+	protected String getQuickTip(
+			tigase.gwtcommons.client.roster.BasicRosterPanel.RosterShow show,
+			tigase.gwtcommons.client.roster.BasicRosterPanel.RosterItem<tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem> model) {
+		BareJID jid = model.getId().getJid();
+		String r = jid.toString() + "<br/>";
+		r += "Status: <b>" + show.name() + "</b>";
+
+		try {
+			Presence p = XmppService.get().getModulesManager().getModule(PresenceModule.class).getPresence().getBestPresence(
+					jid);
+			if (p != null && p.getStatus() != null) {
+				r += "<br/>" + SafeHtmlUtils.fromString(p.getStatus()).asString();
+			}
+		} catch (XMLException e) {
+		}
+		return r;
 	}
 
 	@Override

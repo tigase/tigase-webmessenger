@@ -22,6 +22,7 @@ import com.extjs.gxt.ui.client.widget.grid.ColumnModel;
 import com.extjs.gxt.ui.client.widget.grid.Grid;
 import com.extjs.gxt.ui.client.widget.grid.GridCellRenderer;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
+import com.extjs.gxt.ui.client.widget.tips.QuickTip;
 import com.google.gwt.core.client.GWT;
 
 public abstract class BasicRosterPanel<M> extends ContentPanel {
@@ -137,9 +138,18 @@ public abstract class BasicRosterPanel<M> extends ContentPanel {
 						r = getShowOf(model);
 					else
 						r = RosterShow.offline;
-					return "<img src='" + (x == null ? "/" : x) + "presences/user-" + r.name() + ".png'/>";
+
+					String tip = getQuickTip(r, model);
+
+					String res = "";
+					if (tip != null)
+						res += "<span qtip='" + tip + "'>";
+					res += "<img src='" + (x == null ? "/" : x) + "presences/user-" + r.name() + ".png'/>";
+					if (tip != null)
+						res += "</span>";
+					return res;
 				} catch (XMLException e) {
-					return "<img src='" + (x == null ? "/" : x) + "presences/user-error.png'/>";
+					return "<span qtip='Error'><img src='" + (x == null ? "/" : x) + "presences/user-error.png'/></span>";
 				}
 			}
 		});
@@ -151,7 +161,21 @@ public abstract class BasicRosterPanel<M> extends ContentPanel {
 			public Object render(RosterItem<M> model, String property, ColumnData config, int rowIndex, int colIndex,
 					ListStore<RosterItem<M>> store, Grid<RosterItem<M>> grid) {
 				try {
-					return getItemName(model);
+					RosterShow r;
+					if (XmppService.get().isConnected())
+						r = getShowOf(model);
+					else
+						r = RosterShow.offline;
+
+					String tip = getQuickTip(r, model);
+
+					String res = "";
+					if (tip != null)
+						res += "<span qtip='" + tip + "'>";
+					res += getItemName(model);
+					if (tip != null)
+						res += "</span>";
+					return res;
 				} catch (XMLException e) {
 					return "???";
 				}
@@ -165,6 +189,8 @@ public abstract class BasicRosterPanel<M> extends ContentPanel {
 		grid.setColumnLines(false);
 		grid.setHideHeaders(true);
 		grid.setStripeRows(true);
+
+		new QuickTip(grid);
 
 		grid.addListener(Events.RowDoubleClick,
 				new com.extjs.gxt.ui.client.event.Listener<GridEvent<BasicRosterPanel.RosterItem<M>>>() {
@@ -221,6 +247,8 @@ public abstract class BasicRosterPanel<M> extends ContentPanel {
 	}
 
 	protected abstract String getItemName(RosterItem<M> model) throws XMLException;
+
+	protected abstract String getQuickTip(RosterShow r, RosterItem<M> model);
 
 	protected abstract RosterShow getShowOf(RosterItem<M> model) throws XMLException;
 
