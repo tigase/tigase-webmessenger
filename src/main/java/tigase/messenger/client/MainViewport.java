@@ -107,9 +107,9 @@ public class MainViewport extends Viewport {
 			public void componentSelected(MenuEvent ce) {
 				JoinRoomDialog d = new JoinRoomDialog() {
 					@Override
-					protected void onSubmit(String roomName, String server, String nickname) {
+					protected void onSubmit(String roomName, String server, String nickname, String password) {
 						try {
-							mucManager.join(roomName, server, nickname);
+							mucManager.join(roomName, server, nickname, password);
 						} catch (Exception e) {
 							e.printStackTrace();
 						}

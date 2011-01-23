@@ -163,9 +163,9 @@ public class MucPanel extends ContentPanel {
 				messagePanel.addAppMessage(d, "*" + nick + " has set the topic to: " + message.getSubject());
 			}
 			if (message.getBody() != null) {
-				if (nick == null)
+				if (nick == null || nick.length() == 0)
 					messagePanel.addAppMessage(d, message.getBody());
-				if (nick != null && nick.equals(room.getNickname()))
+				else if (nick != null && nick.equals(room.getNickname()))
 					messagePanel.addMineMessage(d, nick, message.getBody());
 				else
 					messagePanel.addHisMessage(nick.hashCode() % 5, d, nick, message.getBody());

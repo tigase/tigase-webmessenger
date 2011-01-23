@@ -17,6 +17,8 @@ public class JoinRoomDialog extends Dialog {
 
 	private final TextField<String> nickname = new TextField<String>();
 
+	private final TextField<String> password = new TextField<String>();
+
 	private final TextField<String> roomName = new TextField<String>();
 
 	private final TextField<String> server = new TextField<String>();
@@ -47,6 +49,10 @@ public class JoinRoomDialog extends Dialog {
 			nickname.setValue((String) XmppService.get().getSessionObject().getProperty(SessionObject.NICKNAME));
 		form.add(nickname);
 
+		password.setFieldLabel("Password");
+		password.setAllowBlank(true);
+		form.add(password);
+
 		add(form);
 
 	}
@@ -54,13 +60,14 @@ public class JoinRoomDialog extends Dialog {
 	@Override
 	protected void onButtonPressed(Button button) {
 		if (button.getItemId().equals(OK) && form.isValid()) {
-			onSubmit(roomName.getValue(), server.getValue(), nickname.getValue());
+			String p = password.getValue();
+			onSubmit(roomName.getValue(), server.getValue(), nickname.getValue(), p == null || p.length() == 0 ? null : p);
 			hide();
 		} else if (button.getItemId().equals(CANCEL)) {
 			hide();
 		}
 	}
 
-	protected void onSubmit(String roomName, String server, String nickname) {
+	protected void onSubmit(String roomName, String server, String nickname, String password) {
 	}
 }

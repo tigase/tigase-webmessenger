@@ -50,8 +50,9 @@ public class MucManagerModule {
 		XmppService.get().getModulesManager().getModule(MucModule.class).addListener(listener);
 	}
 
-	public void join(String roomName, String mucServer, String nickName) throws XMLException, JaxmppException {
-		Room room = XmppService.get().getModulesManager().getModule(MucModule.class).join(roomName, mucServer, nickName);
+	public void join(String roomName, String mucServer, String nickName, String password) throws XMLException, JaxmppException {
+		Room room = XmppService.get().getModulesManager().getModule(MucModule.class).join(roomName, mucServer, nickName,
+				password);
 
 		MucTab mt = getMucTab(room);
 		if (mt == null) {
