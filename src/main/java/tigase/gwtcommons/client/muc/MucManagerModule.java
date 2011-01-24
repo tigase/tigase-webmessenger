@@ -2,6 +2,8 @@ package tigase.gwtcommons.client.muc;
 
 import tigase.gwtcommons.client.XmppService;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
+import tigase.jaxmpp.core.client.logger.Logger;
+import tigase.jaxmpp.core.client.logger.LoggerFactory;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
@@ -18,6 +20,8 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 public class MucManagerModule {
 
 	private final Listener<MucModule.MucEvent> listener;
+
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	private final TabPanel tabPanel;
 
@@ -71,8 +75,7 @@ public class MucManagerModule {
 	protected void onMucEvent(MucEvent be) {
 		if (be.getType() == MucModule.MessageReceived)
 			onMucMessageEvent(be);
-		else if (be.getType() == MucModule.OccupantComes || be.getType() == MucModule.OccupantLeaved
-				|| be.getType() == MucModule.OccupantChangedPresence) {
+		else {
 			onPresenceEvent(be);
 		}
 	}

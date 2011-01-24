@@ -30,12 +30,15 @@ import com.extjs.gxt.ui.client.widget.toolbar.FillToolItem;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
+import com.google.gwt.user.client.Element;
 
 public class MucPanel extends ContentPanel {
 
 	private final MessagePanel messagePanel = new MessagePanel();
 
 	private final OccupantsListPanel occupantsList;
+
+	private boolean occupantsListVisible = true;
 
 	private Room room;
 
@@ -54,20 +57,6 @@ public class MucPanel extends ContentPanel {
 		setLayout(new BorderLayout());
 
 		this.occupantsList = new OccupantsListPanel(room);
-
-		BorderLayoutData centerData = new BorderLayoutData(LayoutRegion.CENTER);
-		centerData.setMargins(new Margins(0));
-
-		BorderLayoutData southData = new BorderLayoutData(LayoutRegion.SOUTH, 100);
-		southData.setSplit(true);
-		southData.setCollapsible(true);
-		southData.setFloatable(true);
-		southData.setMargins(new Margins(5, 0, 0, 0));
-
-		BorderLayoutData eastData = new BorderLayoutData(LayoutRegion.EAST, 150);
-		eastData.setSplit(true);
-		eastData.setCollapsible(true);
-		eastData.setMargins(new Margins(0, 0, 0, 5));
 
 		text.setBorders(false);
 		southPanel.setBodyBorder(false);
@@ -101,10 +90,6 @@ public class MucPanel extends ContentPanel {
 		tb.add(this.sendButton);
 		southPanel.setBottomComponent(tb);
 
-		add(messagePanel, centerData);
-		add(southPanel, southData);
-		add(this.occupantsList, eastData);
-
 		setRoom($room);
 	}
 
@@ -123,6 +108,31 @@ public class MucPanel extends ContentPanel {
 				&& (x != null && x.getStatuses().contains(110) || nickname != null && nickname.equals(room.getNickname()))) {
 			setPanelEnabled(false);
 		}
+	}
+
+	@Override
+	protected void onRender(Element parent, int pos) {
+		BorderLayoutData centerData = new BorderLayoutData(LayoutRegion.CENTER);
+		centerData.setMargins(new Margins(0));
+
+		BorderLayoutData southData = new BorderLayoutData(LayoutRegion.SOUTH, 100);
+		southData.setSplit(true);
+		southData.setCollapsible(true);
+		southData.setFloatable(true);
+		southData.setMargins(new Margins(5, 0, 0, 0));
+
+		BorderLayoutData eastData = new BorderLayoutData(LayoutRegion.EAST, 150);
+		eastData.setSplit(true);
+		eastData.setCollapsible(true);
+		eastData.setMargins(new Margins(0, 0, 0, 5));
+
+		add(messagePanel, centerData);
+		add(southPanel, southData);
+
+		if (occupantsListVisible)
+			add(this.occupantsList, eastData);
+
+		super.onRender(parent, pos);
 	}
 
 	private String prepareStatus(Presence presence) throws XMLException {
@@ -234,6 +244,10 @@ public class MucPanel extends ContentPanel {
 		} catch (Exception e) {
 			messagePanel.addErrorMessage(e.getMessage());
 		}
+	}
+
+	public void setOccupantsListVisible(boolean b) {
+		this.occupantsListVisible = b;
 	}
 
 	public void setPanelEnabled(boolean b) {

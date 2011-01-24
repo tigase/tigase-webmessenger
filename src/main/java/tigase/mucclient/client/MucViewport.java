@@ -45,6 +45,7 @@ import com.extjs.gxt.ui.client.widget.menu.Menu;
 import com.extjs.gxt.ui.client.widget.menu.MenuItem;
 import com.extjs.gxt.ui.client.widget.menu.SeparatorMenuItem;
 import com.extjs.gxt.ui.client.widget.toolbar.ToolBar;
+import com.google.gwt.i18n.client.Dictionary;
 
 public class MucViewport extends Viewport {
 
@@ -54,7 +55,7 @@ public class MucViewport extends Viewport {
 
 	private final ToolBar menuBar = new ToolBar();
 
-	private final MucPanel mucPanel = new MucPanel();
+	private final MucPanel mucPanel;
 
 	private String presenceStatus = null;
 
@@ -71,6 +72,19 @@ public class MucViewport extends Viewport {
 		BorderLayoutData centerData = new BorderLayoutData(LayoutRegion.CENTER);
 		centerData.setMargins(new Margins(5, 5, 5, 5));
 
+		mucPanel = new MucPanel();
+
+		Dictionary config = Dictionary.getDictionary("Config");
+
+		boolean showOccupantsList;
+
+		try {
+			showOccupantsList = Boolean.parseBoolean(config.get("showOccupantsList"));
+		} catch (Exception e) {
+			showOccupantsList = true;
+		}
+
+		mucPanel.setOccupantsListVisible(showOccupantsList);
 		cp.add(mucPanel, centerData);
 		cp.setTopComponent(menuBar);
 
