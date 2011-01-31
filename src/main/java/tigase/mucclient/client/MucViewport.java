@@ -2,6 +2,7 @@ package tigase.mucclient.client;
 
 import tigase.gwtcommons.client.CustomPresenceStatusDialog;
 import tigase.gwtcommons.client.LoginDialog;
+import tigase.gwtcommons.client.LoginDialog.LoginType;
 import tigase.gwtcommons.client.XmppService;
 import tigase.gwtcommons.client.muc.MucPanel;
 import tigase.jaxmpp.core.client.Connector;
@@ -49,6 +50,26 @@ import com.google.gwt.i18n.client.Dictionary;
 
 public class MucViewport extends Viewport {
 
+	private static boolean getBooleanValue(Dictionary config, String name, boolean defaultValue) {
+		try {
+			String x = config.get(name);
+			return Boolean.parseBoolean(x);
+		} catch (Exception e) {
+			return defaultValue;
+		}
+
+	}
+
+	private static int getIntValue(Dictionary config, String name, int defaultValue) {
+		try {
+			String x = config.get(name);
+			return Integer.parseInt(x);
+		} catch (Exception e) {
+			return defaultValue;
+		}
+
+	}
+
 	private final ContentPanel cp = new ContentPanel(new BorderLayout());
 
 	private MessageBox errorMessageBox;
@@ -85,8 +106,9 @@ public class MucViewport extends Viewport {
 		}
 
 		mucPanel.setOccupantsListVisible(showOccupantsList);
+		mucPanel.setTextAreaSize(getIntValue(config, "textAreaSize", 122) + 28);
+
 		cp.add(mucPanel, centerData);
-		cp.setTopComponent(menuBar);
 
 		add(cp);
 
@@ -131,8 +153,10 @@ public class MucViewport extends Viewport {
 					}
 				});
 
-		Button statusButton = createStatusButton();
-		menuBar.add(statusButton);
+		if (getBooleanValue(config, "showTopMenu", true)) {
+			Button statusButton = createStatusButton();
+			menuBar.add(statusButton);
+		}
 
 		status.setText("Disconnected");
 		statusBar.setBorders(false);
@@ -191,6 +215,9 @@ public class MucViewport extends Viewport {
 				}
 			}
 		});
+
+		if (menuBar.getItemCount() != 0)
+			cp.setTopComponent(menuBar);
 
 		showLogin();
 	}
@@ -289,6 +316,17 @@ public class MucViewport extends Viewport {
 		return statusButton;
 	}
 
+	private LoginDialog.LoginType getLoginType() {
+		try {
+			String x = XmppService.config().get("loginType");
+			if (x == null)
+				return LoginType.both;
+			return LoginType.valueOf(x);
+		} catch (Exception e) {
+			return LoginType.both;
+		}
+	}
+
 	protected void onBeforeInitialPresence(PresenceEvent be) {
 		be.setShow(this.selectedShow);
 		be.setStatus(this.presenceStatus);
@@ -312,7 +350,7 @@ public class MucViewport extends Viewport {
 		this.selectedShow = show;
 		this.presenceStatus = status;
 		if (XmppService.get().getConnector() == null || XmppService.get().getConnector().getState() == State.disconnected) {
-			LoginDialog l = new LoginDialog();
+			LoginDialog l = new LoginDialog(getLoginType());
 			l.show();
 		} else {
 			try {
@@ -336,7 +374,7 @@ public class MucViewport extends Viewport {
 	}
 
 	protected void showLogin() {
-		LoginDialog loginDialog = new LoginDialog();
+		LoginDialog loginDialog = new LoginDialog(getLoginType());
 		loginDialog.show();
 	}
 

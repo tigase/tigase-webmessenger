@@ -38,6 +38,8 @@ public class MucPanel extends ContentPanel {
 
 	private final OccupantsListPanel occupantsList;
 
+	private int occupantsListSize = 150;
+
 	private boolean occupantsListVisible = true;
 
 	private Room room;
@@ -47,6 +49,8 @@ public class MucPanel extends ContentPanel {
 	private final ContentPanel southPanel = new ContentPanel(new FitLayout());
 
 	private final TextArea text = new TextArea();
+
+	private int textAreaSize = 100;
 
 	public MucPanel() {
 		this(null);
@@ -93,8 +97,16 @@ public class MucPanel extends ContentPanel {
 		setRoom($room);
 	}
 
+	public int getOccupantsListSize() {
+		return occupantsListSize;
+	}
+
 	public Room getRoom() {
 		return room;
+	}
+
+	public int getTextAreaSize() {
+		return textAreaSize;
 	}
 
 	public void onPresenceReceived(String nickname, Presence presence) throws XMLException {
@@ -115,13 +127,13 @@ public class MucPanel extends ContentPanel {
 		BorderLayoutData centerData = new BorderLayoutData(LayoutRegion.CENTER);
 		centerData.setMargins(new Margins(0));
 
-		BorderLayoutData southData = new BorderLayoutData(LayoutRegion.SOUTH, 100);
+		BorderLayoutData southData = new BorderLayoutData(LayoutRegion.SOUTH, textAreaSize);
 		southData.setSplit(true);
 		southData.setCollapsible(true);
 		southData.setFloatable(true);
 		southData.setMargins(new Margins(5, 0, 0, 0));
 
-		BorderLayoutData eastData = new BorderLayoutData(LayoutRegion.EAST, 150);
+		BorderLayoutData eastData = new BorderLayoutData(LayoutRegion.EAST, occupantsListSize);
 		eastData.setSplit(true);
 		eastData.setCollapsible(true);
 		eastData.setMargins(new Margins(0, 0, 0, 5));
@@ -246,6 +258,10 @@ public class MucPanel extends ContentPanel {
 		}
 	}
 
+	public void setOccupantsListSize(int occupantsListSize) {
+		this.occupantsListSize = occupantsListSize;
+	}
+
 	public void setOccupantsListVisible(boolean b) {
 		this.occupantsListVisible = b;
 	}
@@ -260,6 +276,10 @@ public class MucPanel extends ContentPanel {
 		if (this.room != null)
 			messagePanel.addAppMessage("Joining to room " + room.getRoomJid().toString());
 
+	}
+
+	public void setTextAreaSize(int textAreaSize) {
+		this.textAreaSize = textAreaSize;
 	}
 
 	private boolean show(XMucUserElement x, String message, int... statuses) {

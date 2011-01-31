@@ -25,6 +25,7 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
+import com.google.gwt.user.client.Element;
 
 public class ChatTab extends Tab {
 
@@ -42,20 +43,13 @@ public class ChatTab extends Tab {
 
 	private final TextArea text = new TextArea();
 
+	private int textAreaSize = 100;
+
 	public ChatTab(Chat chat) {
 		this.chat = chat;
 		setText("Chat with " + chat.getJid().getBareJid().toString());
 		setClosable(true);
 		setLayout(new BorderLayout());
-
-		BorderLayoutData centerData = new BorderLayoutData(LayoutRegion.CENTER);
-		centerData.setMargins(new Margins(0));
-
-		BorderLayoutData southData = new BorderLayoutData(LayoutRegion.SOUTH, 100);
-		southData.setSplit(true);
-		southData.setCollapsible(true);
-		southData.setFloatable(true);
-		southData.setMargins(new Margins(5, 0, 0, 0));
 
 		text.setBorders(false);
 		southPanel.setBodyBorder(false);
@@ -87,8 +81,6 @@ public class ChatTab extends Tab {
 		tb.add(this.sendButton);
 		southPanel.setBottomComponent(tb);
 
-		add(messagePanel, centerData);
-		add(southPanel, southData);
 	}
 
 	public void add(final Message message) {
@@ -106,6 +98,10 @@ public class ChatTab extends Tab {
 		return chat;
 	}
 
+	public int getTextAreaSize() {
+		return textAreaSize;
+	}
+
 	private void markUnread(boolean b) {
 		if (this.hasUnread != b && b) {
 			setText("* Chat with " + chat.getJid().getBareJid().toString());
@@ -117,6 +113,23 @@ public class ChatTab extends Tab {
 
 	public void onDeselect() {
 		this.selected = false;
+	}
+
+	@Override
+	protected void onRender(Element parent, int pos) {
+		BorderLayoutData centerData = new BorderLayoutData(LayoutRegion.CENTER);
+		centerData.setMargins(new Margins(0));
+
+		BorderLayoutData southData = new BorderLayoutData(LayoutRegion.SOUTH, textAreaSize);
+		southData.setSplit(true);
+		southData.setCollapsible(true);
+		southData.setFloatable(true);
+		southData.setMargins(new Margins(5, 0, 0, 0));
+
+		add(messagePanel, centerData);
+		add(southPanel, southData);
+
+		super.onRender(parent, pos);
 	}
 
 	public void onSelect() {
@@ -141,5 +154,9 @@ public class ChatTab extends Tab {
 		} catch (Exception e) {
 			messagePanel.addErrorMessage(e.getMessage());
 		}
+	}
+
+	public void setTextAreaSize(int textAreaSize) {
+		this.textAreaSize = textAreaSize;
 	}
 }

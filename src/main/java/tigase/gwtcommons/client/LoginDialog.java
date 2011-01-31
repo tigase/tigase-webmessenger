@@ -20,6 +20,12 @@ import com.google.gwt.event.dom.client.KeyCodes;
 
 public class LoginDialog extends Dialog {
 
+	public static enum LoginType {
+		anonymous,
+		both,
+		nonAnonymous
+	}
+
 	private final RadioGroup anonymous = new RadioGroup();
 
 	private final FormPanel form = new FormPanel();
@@ -35,10 +41,14 @@ public class LoginDialog extends Dialog {
 	private final Radio yesRadio = new Radio();
 
 	public LoginDialog() {
+		this(LoginType.both);
+	}
+
+	public LoginDialog(final LoginType type) {
 		setLayout(new FitLayout());
 		setHeading("Login");
 		setButtons(OKCANCEL);
-		setWidth(340);
+		setWidth(240);
 		setModal(true);
 
 		form.setHeaderVisible(false);
@@ -46,6 +56,9 @@ public class LoginDialog extends Dialog {
 		form.setBorders(false);
 		form.setFrame(false);
 		form.setAutoHeight(true);
+
+		form.setLabelWidth(64);
+		form.setFieldWidth(128);
 
 		yesRadio.setBoxLabel("yes");
 		noRadio.setBoxLabel("no");
@@ -59,16 +72,19 @@ public class LoginDialog extends Dialog {
 				check();
 			}
 		});
-		form.add(anonymous);
+		if (type == LoginType.both)
+			form.add(anonymous);
 
 		jid.setFieldLabel("User JID");
 		jid.setAllowBlank(false);
-		form.add(jid);
+		if (type == LoginType.both || type == LoginType.nonAnonymous)
+			form.add(jid);
 
 		password.setFieldLabel("Password");
 		password.setAllowBlank(false);
 		password.setPassword(true);
-		form.add(password);
+		if (type == LoginType.both || type == LoginType.nonAnonymous)
+			form.add(password);
 
 		nickname.setFieldLabel("Nickname");
 		form.add(nickname);
@@ -85,6 +101,14 @@ public class LoginDialog extends Dialog {
 		password.addListener(Events.KeyPress, keyListener);
 		nickname.addListener(Events.KeyPress, keyListener);
 		anonymous.addListener(Events.KeyPress, keyListener);
+
+		if (type == LoginType.anonymous) {
+			anonymous.setValue(yesRadio);
+		} else if (type == LoginType.nonAnonymous) {
+			anonymous.setValue(noRadio);
+		} else {
+			anonymous.setValue(noRadio);
+		}
 
 		add(form);
 		check();
