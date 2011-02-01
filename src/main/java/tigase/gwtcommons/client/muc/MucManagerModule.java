@@ -1,6 +1,7 @@
 package tigase.gwtcommons.client.muc;
 
 import tigase.gwtcommons.client.XmppService;
+import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.logger.Logger;
 import tigase.jaxmpp.core.client.logger.LoggerFactory;
@@ -9,15 +10,32 @@ import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule.MucEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
+import tigase.jaxmpp.core.client.xmpp.stanzas.ErrorElement;
 
 import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.TabPanelEvent;
+import com.extjs.gxt.ui.client.widget.MessageBox;
 import com.extjs.gxt.ui.client.widget.TabItem;
 import com.extjs.gxt.ui.client.widget.TabPanel;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 
 public class MucManagerModule {
+
+	public static String getErrorMessage(ErrorElement ee) throws XMLException {
+		String msg;
+		if (ee != null && ee.getCondition() == ErrorCondition.forbidden)
+			msg = "Access denied.";
+		if (ee != null && ee.getCondition() == ErrorCondition.conflict)
+			msg = "Access cannot be granted because an existing resource or session exists with the same name or address.";
+		else if (ee != null && ee.getText() != null)
+			msg = ee.getText();
+		else if (ee != null && ee.getCondition() != null)
+			msg = ee.getCondition().toString();
+		else
+			msg = "Unknown reason.";
+		return msg;
+	}
 
 	private final Listener<MucModule.MucEvent> listener;
 
@@ -97,7 +115,14 @@ public class MucManagerModule {
 	protected void onPresenceEvent(MucEvent be) {
 		MucTab ct = getMucTab(be.getRoom());
 		try {
-			ct.process(be);
+			if (be.getType() == MucModule.RoomClosed) {
+				ErrorElement ee = ErrorElement.extract(be.getPresence());
+				String msg = getErrorMessage(ee);
+				MessageBox.alert("Error", msg, null);
+
+				ct.close();
+			} else
+				ct.process(be);
 		} catch (XMLException e) {
 			e.printStackTrace();
 		}

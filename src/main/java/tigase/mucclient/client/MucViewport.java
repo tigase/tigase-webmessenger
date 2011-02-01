@@ -4,6 +4,7 @@ import tigase.gwtcommons.client.CustomPresenceStatusDialog;
 import tigase.gwtcommons.client.LoginDialog;
 import tigase.gwtcommons.client.LoginDialog.LoginType;
 import tigase.gwtcommons.client.XmppService;
+import tigase.gwtcommons.client.muc.MucManagerModule;
 import tigase.gwtcommons.client.muc.MucPanel;
 import tigase.jaxmpp.core.client.Connector;
 import tigase.jaxmpp.core.client.Connector.State;
@@ -24,6 +25,7 @@ import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule;
 import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule.SaslEvent;
+import tigase.jaxmpp.core.client.xmpp.stanzas.ErrorElement;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
 
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
@@ -335,7 +337,22 @@ public class MucViewport extends Viewport {
 	protected void onMucEvent(MucEvent be) throws XMLException {
 		if (be.getRoom() != mucPanel.getRoom())
 			return;
-		if (be.getType() == MucModule.MessageReceived)
+		if (be.getType() == MucModule.RoomClosed) {
+			try {
+				XmppService.get().disconnect();
+			} catch (JaxmppException e) {
+			}
+
+			ErrorElement ee = ErrorElement.extract(be.getPresence());
+			String msg = MucManagerModule.getErrorMessage(ee);
+			mucPanel.getMessagePanel().addErrorMessage(msg);
+			MessageBox.alert("Error", msg, new com.extjs.gxt.ui.client.event.Listener<MessageBoxEvent>() {
+
+				public void handleEvent(MessageBoxEvent be) {
+					showLogin();
+				}
+			});
+		} else if (be.getType() == MucModule.MessageReceived)
 			mucPanel.process(be.getMessage());
 		else {
 			mucPanel.process(be);

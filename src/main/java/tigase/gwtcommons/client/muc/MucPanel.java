@@ -97,6 +97,10 @@ public class MucPanel extends ContentPanel {
 		setRoom($room);
 	}
 
+	public MessagePanel getMessagePanel() {
+		return messagePanel;
+	}
+
 	public int getOccupantsListSize() {
 		return occupantsListSize;
 	}
