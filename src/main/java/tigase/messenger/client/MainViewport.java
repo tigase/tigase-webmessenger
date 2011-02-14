@@ -3,6 +3,7 @@ package tigase.messenger.client;
 import tigase.gwtcommons.client.CustomPresenceStatusDialog;
 import tigase.gwtcommons.client.LoginDialog;
 import tigase.gwtcommons.client.StatusTab;
+import tigase.gwtcommons.client.Translations;
 import tigase.gwtcommons.client.XmlConsoleTab;
 import tigase.gwtcommons.client.XmppService;
 import tigase.gwtcommons.client.chat.ChatManagerModule;
@@ -207,32 +208,32 @@ public class MainViewport extends Viewport {
 		XmppService.get().addListener(JaxmppCore.Connected, new Listener<JaxmppEvent>() {
 
 			public void handleEvent(JaxmppEvent be) {
-				status.setText("Connected");
+				status.setText(Translations.instance.stateConnected());
 			}
 		});
 		XmppService.get().addListener(JaxmppCore.Disconnected, new Listener<JaxmppEvent>() {
 
 			public void handleEvent(JaxmppEvent be) {
-				status.setText("Disconnected");
+				status.setText(Translations.instance.stateDisconnected());
 			}
 		});
 		XmppService.get().getModulesManager().getModule(SaslModule.class).addListener(SaslModule.SaslStart,
 				new Listener<SaslModule.SaslEvent>() {
 
 					public void handleEvent(SaslEvent be) {
-						status.setText("Authenticating...");
+						status.setText(Translations.instance.stateAuthenticating());
 					}
 				});
 		XmppService.get().getModulesManager().getModule(SaslModule.class).addListener(SaslModule.SaslSuccess,
 				new Listener<SaslModule.SaslEvent>() {
 
 					public void handleEvent(SaslEvent be) {
-						status.setText("Authenticated");
+						status.setText(Translations.instance.stateAuthenticated());
 					}
 				});
 
 		add(cp);
-		status.setText("Disconnected");
+		status.setText(Translations.instance.stateDisconnected());
 
 		center.add(statusTab);
 		statusTab.init();
@@ -245,8 +246,8 @@ public class MainViewport extends Viewport {
 
 	private Button createStatusButton() {
 
-		MenuItem onlineMI = new MenuItem("Online", IconHelper.create("presences/user-online.png"),
-				new SelectionListener<MenuEvent>() {
+		MenuItem onlineMI = new MenuItem(Translations.instance.menuPresenceOnline(),
+				IconHelper.create("presences/user-online.png"), new SelectionListener<MenuEvent>() {
 
 					@Override
 					public void componentSelected(MenuEvent ce) {
@@ -268,7 +269,7 @@ public class MainViewport extends Viewport {
 			}
 		});
 
-		MenuItem chatMI = new MenuItem("Free for chat", IconHelper.create("presences/user-chat.png"),
+		MenuItem chatMI = new MenuItem(Translations.instance.menuPresenceChat(), IconHelper.create("presences/user-chat.png"),
 				new SelectionListener<MenuEvent>() {
 
 					@Override
@@ -277,7 +278,7 @@ public class MainViewport extends Viewport {
 
 					}
 				});
-		MenuItem awayMI = new MenuItem("Away", IconHelper.create("presences/user-away.png"),
+		MenuItem awayMI = new MenuItem(Translations.instance.menuPresenceAway(), IconHelper.create("presences/user-away.png"),
 				new SelectionListener<MenuEvent>() {
 
 					@Override
@@ -286,7 +287,7 @@ public class MainViewport extends Viewport {
 
 					}
 				});
-		MenuItem xaMI = new MenuItem("eXtended Away", IconHelper.create("presences/user-xa.png"),
+		MenuItem xaMI = new MenuItem(Translations.instance.menuPresenceXA(), IconHelper.create("presences/user-xa.png"),
 				new SelectionListener<MenuEvent>() {
 
 					@Override
@@ -294,7 +295,7 @@ public class MainViewport extends Viewport {
 						setStatus(Show.xa);
 					}
 				});
-		MenuItem dndMI = new MenuItem("Do Not Disturb", IconHelper.create("presences/user-dnd.png"),
+		MenuItem dndMI = new MenuItem(Translations.instance.menuPresenceDND(), IconHelper.create("presences/user-dnd.png"),
 				new SelectionListener<MenuEvent>() {
 
 					@Override
@@ -303,8 +304,8 @@ public class MainViewport extends Viewport {
 					}
 				});
 
-		final MenuItem logoutMI = new MenuItem("Logout", IconHelper.create("presences/user-offline.png"),
-				new SelectionListener<MenuEvent>() {
+		final MenuItem logoutMI = new MenuItem(Translations.instance.menuPresenceLogout(),
+				IconHelper.create("presences/user-offline.png"), new SelectionListener<MenuEvent>() {
 
 					@Override
 					public void componentSelected(MenuEvent ce) {

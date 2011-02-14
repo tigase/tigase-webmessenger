@@ -3,6 +3,7 @@ package tigase.mucclient.client;
 import tigase.gwtcommons.client.CustomPresenceStatusDialog;
 import tigase.gwtcommons.client.LoginDialog;
 import tigase.gwtcommons.client.LoginDialog.LoginType;
+import tigase.gwtcommons.client.Translations;
 import tigase.gwtcommons.client.XmppService;
 import tigase.gwtcommons.client.muc.MucManagerModule;
 import tigase.gwtcommons.client.muc.MucPanel;
@@ -147,6 +148,23 @@ public class MucViewport extends Viewport {
 					}
 				});
 
+		XmppService.get().getModulesManager().getModule(MucModule.class).addListener(MucModule.YouJoined,
+				new Listener<MucEvent>() {
+
+					public void handleEvent(MucEvent be) {
+						mucPanel.getMessagePanel().addAppMessage(
+								Translations.instance.mucWelcome(be.getRoom().getRoomJid().toString()));
+						String t = null;
+						for (String nick : be.getRoom().getPresences().keySet()) {
+							if (t == null)
+								t = nick;
+							else
+								t += ", " + nick;
+						}
+						mucPanel.getMessagePanel().addAppMessage(Translations.instance.mucAlreadyHere(t));
+					}
+				});
+
 		XmppService.get().getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.BeforeInitialPresence,
 				new Listener<PresenceEvent>() {
 
@@ -160,7 +178,7 @@ public class MucViewport extends Viewport {
 			menuBar.add(statusButton);
 		}
 
-		status.setText("Disconnected");
+		status.setText(Translations.instance.stateDisconnected());
 		statusBar.setBorders(false);
 		statusBar.add(status);
 		cp.setBottomComponent(statusBar);
@@ -168,13 +186,13 @@ public class MucViewport extends Viewport {
 		XmppService.get().addListener(JaxmppCore.Connected, new Listener<JaxmppEvent>() {
 
 			public void handleEvent(JaxmppEvent be) {
-				status.setText("Connected");
+				status.setText(Translations.instance.stateConnected());
 			}
 		});
 		XmppService.get().addListener(JaxmppCore.Disconnected, new Listener<JaxmppEvent>() {
 
 			public void handleEvent(JaxmppEvent be) {
-				status.setText("Disconnected");
+				status.setText(Translations.instance.stateDisconnected());
 				mucPanel.setPanelEnabled(false);
 			}
 		});
@@ -182,28 +200,28 @@ public class MucViewport extends Viewport {
 				new Listener<SaslModule.SaslEvent>() {
 
 					public void handleEvent(SaslEvent be) {
-						status.setText("Authenticating...");
+						status.setText(Translations.instance.stateAuthenticating());
 					}
 				});
 		XmppService.get().getModulesManager().getModule(SaslModule.class).addListener(SaslModule.SaslSuccess,
 				new Listener<SaslModule.SaslEvent>() {
 
 					public void handleEvent(SaslEvent be) {
-						status.setText("Authenticated");
+						status.setText(Translations.instance.stateAuthenticated());
 					}
 				});
 		XmppService.get().getModulesManager().getModule(SaslModule.class).addListener(SaslModule.SaslFailed,
 				new Listener<SaslModule.SaslEvent>() {
 
 					public void handleEvent(SaslEvent be) {
-						showErrorAndLogin("Bad credentials");
+						showErrorAndLogin(Translations.instance.errorBadCredentials());
 					}
 				});
 		XmppService.get().getConnector().addListener(Connector.Error, new Listener<BoshConnectorEvent>() {
 
 			public void handleEvent(BoshConnectorEvent be) {
 				try {
-					String m = "Connector error";
+					String m = Translations.instance.errorConnectionError();
 
 					if (be.getErrorElement() != null && be.getErrorElement().getText() != null) {
 						m = be.getErrorElement().getText();
@@ -226,15 +244,15 @@ public class MucViewport extends Viewport {
 
 	private Button createStatusButton() {
 
-		MenuItem onlineMI = new MenuItem("Online", IconHelper.create("presences/user-online.png"),
-				new SelectionListener<MenuEvent>() {
+		MenuItem onlineMI = new MenuItem(Translations.instance.menuPresenceOnline(),
+				IconHelper.create("presences/user-online.png"), new SelectionListener<MenuEvent>() {
 
 					@Override
 					public void componentSelected(MenuEvent ce) {
 						setStatus(Show.online);
 					}
 				});
-		MenuItem customMI = new MenuItem("Custom status...", new SelectionListener<MenuEvent>() {
+		MenuItem customMI = new MenuItem(Translations.instance.menuPresenceCustom(), new SelectionListener<MenuEvent>() {
 
 			@Override
 			public void componentSelected(MenuEvent ce) {
@@ -249,7 +267,7 @@ public class MucViewport extends Viewport {
 			}
 		});
 
-		MenuItem chatMI = new MenuItem("Free for chat", IconHelper.create("presences/user-chat.png"),
+		MenuItem chatMI = new MenuItem(Translations.instance.menuPresenceChat(), IconHelper.create("presences/user-chat.png"),
 				new SelectionListener<MenuEvent>() {
 
 					@Override
@@ -258,7 +276,7 @@ public class MucViewport extends Viewport {
 
 					}
 				});
-		MenuItem awayMI = new MenuItem("Away", IconHelper.create("presences/user-away.png"),
+		MenuItem awayMI = new MenuItem(Translations.instance.menuPresenceAway(), IconHelper.create("presences/user-away.png"),
 				new SelectionListener<MenuEvent>() {
 
 					@Override
@@ -267,7 +285,7 @@ public class MucViewport extends Viewport {
 
 					}
 				});
-		MenuItem xaMI = new MenuItem("eXtended Away", IconHelper.create("presences/user-xa.png"),
+		MenuItem xaMI = new MenuItem(Translations.instance.menuPresenceXA(), IconHelper.create("presences/user-xa.png"),
 				new SelectionListener<MenuEvent>() {
 
 					@Override
@@ -275,7 +293,7 @@ public class MucViewport extends Viewport {
 						setStatus(Show.xa);
 					}
 				});
-		MenuItem dndMI = new MenuItem("Do Not Disturb", IconHelper.create("presences/user-dnd.png"),
+		MenuItem dndMI = new MenuItem(Translations.instance.menuPresenceDND(), IconHelper.create("presences/user-dnd.png"),
 				new SelectionListener<MenuEvent>() {
 
 					@Override
@@ -284,8 +302,8 @@ public class MucViewport extends Viewport {
 					}
 				});
 
-		final MenuItem logoutMI = new MenuItem("Logout", IconHelper.create("presences/user-offline.png"),
-				new SelectionListener<MenuEvent>() {
+		final MenuItem logoutMI = new MenuItem(Translations.instance.menuPresenceLogout(),
+				IconHelper.create("presences/user-offline.png"), new SelectionListener<MenuEvent>() {
 
 					@Override
 					public void componentSelected(MenuEvent ce) {
@@ -313,7 +331,7 @@ public class MucViewport extends Viewport {
 		statusMenu.add(dndMI);
 		statusMenu.add(new SeparatorMenuItem());
 		statusMenu.add(logoutMI);
-		Button statusButton = new Button("Status");
+		Button statusButton = new Button(Translations.instance.menuPresence());
 		statusButton.setMenu(statusMenu);
 		return statusButton;
 	}
@@ -346,7 +364,7 @@ public class MucViewport extends Viewport {
 			ErrorElement ee = ErrorElement.extract(be.getPresence());
 			String msg = MucManagerModule.getErrorMessage(ee);
 			mucPanel.getMessagePanel().addErrorMessage(msg);
-			MessageBox.alert("Error", msg, new com.extjs.gxt.ui.client.event.Listener<MessageBoxEvent>() {
+			MessageBox.alert(Translations.instance.error(), msg, new com.extjs.gxt.ui.client.event.Listener<MessageBoxEvent>() {
 
 				public void handleEvent(MessageBoxEvent be) {
 					showLogin();
@@ -381,13 +399,14 @@ public class MucViewport extends Viewport {
 	protected void showErrorAndLogin(String message) {
 		if (errorMessageBox != null)
 			return;
-		errorMessageBox = MessageBox.alert("Error", message, new com.extjs.gxt.ui.client.event.Listener<MessageBoxEvent>() {
+		errorMessageBox = MessageBox.alert(Translations.instance.error(), message,
+				new com.extjs.gxt.ui.client.event.Listener<MessageBoxEvent>() {
 
-			public void handleEvent(MessageBoxEvent be) {
-				errorMessageBox = null;
-				showLogin();
-			}
-		});
+					public void handleEvent(MessageBoxEvent be) {
+						errorMessageBox = null;
+						showLogin();
+					}
+				});
 	}
 
 	protected void showLogin() {

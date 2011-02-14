@@ -1,5 +1,6 @@
 package tigase.gwtcommons.client.muc;
 
+import tigase.gwtcommons.client.Translations;
 import tigase.gwtcommons.client.XmppService;
 import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
@@ -25,15 +26,16 @@ public class MucManagerModule {
 	public static String getErrorMessage(ErrorElement ee) throws XMLException {
 		String msg;
 		if (ee != null && ee.getCondition() == ErrorCondition.forbidden)
-			msg = "Access denied.";
+			msg = Translations.instance.mucErrorAccessDenied();
 		if (ee != null && ee.getCondition() == ErrorCondition.conflict)
-			msg = "Access cannot be granted because an existing resource or session exists with the same name or address.";
+			msg = Translations.instance.mucErrorConflict();
 		else if (ee != null && ee.getText() != null)
 			msg = ee.getText();
 		else if (ee != null && ee.getCondition() != null)
 			msg = ee.getCondition().toString();
 		else
-			msg = "Unknown reason.";
+			msg = Translations.instance.mucErrorUnknown();
+		// "Unknown reason.";
 		return msg;
 	}
 
@@ -118,7 +120,7 @@ public class MucManagerModule {
 			if (be.getType() == MucModule.RoomClosed) {
 				ErrorElement ee = ErrorElement.extract(be.getPresence());
 				String msg = getErrorMessage(ee);
-				MessageBox.alert("Error", msg, null);
+				MessageBox.alert(Translations.instance.error(), msg, null);
 
 				ct.close();
 			} else

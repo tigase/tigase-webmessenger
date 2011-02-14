@@ -46,7 +46,7 @@ public class LoginDialog extends Dialog {
 
 	public LoginDialog(final LoginType type) {
 		setLayout(new FitLayout());
-		setHeading("Login");
+		setHeading(Translations.instance.clientLoginDialogTitle());
 		setButtons(OKCANCEL);
 		setWidth(240);
 		setModal(true);
@@ -60,9 +60,9 @@ public class LoginDialog extends Dialog {
 		form.setLabelWidth(64);
 		form.setFieldWidth(128);
 
-		yesRadio.setBoxLabel("yes");
-		noRadio.setBoxLabel("no");
-		anonymous.setFieldLabel("Anonymous");
+		yesRadio.setBoxLabel(Translations.instance.clientLoginAnonymousYes());
+		noRadio.setBoxLabel(Translations.instance.clientLoginAnonymousNo());
+		anonymous.setFieldLabel(Translations.instance.clientLoginAnonymous());
 		anonymous.add(yesRadio);
 		anonymous.add(noRadio);
 		anonymous.setValue(noRadio);
@@ -75,18 +75,18 @@ public class LoginDialog extends Dialog {
 		if (type == LoginType.both)
 			form.add(anonymous);
 
-		jid.setFieldLabel("User JID");
+		jid.setFieldLabel(Translations.instance.clientLoginJID());
 		jid.setAllowBlank(false);
 		if (type == LoginType.both || type == LoginType.nonAnonymous)
 			form.add(jid);
 
-		password.setFieldLabel("Password");
+		password.setFieldLabel(Translations.instance.password());
 		password.setAllowBlank(false);
 		password.setPassword(true);
 		if (type == LoginType.both || type == LoginType.nonAnonymous)
 			form.add(password);
 
-		nickname.setFieldLabel("Nickname");
+		nickname.setFieldLabel(Translations.instance.nickname());
 		form.add(nickname);
 
 		Listener<FieldEvent> keyListener = new Listener<FieldEvent>() {
@@ -155,7 +155,7 @@ public class LoginDialog extends Dialog {
 				XmppService.get().getProperties().setUserProperty(SessionObject.SERVER_NAME,
 						JID.jidInstance(userJID).getDomain());
 
-			XmppService.get().getProperties().setUserProperty(AbstractBoshConnector.BOSH_SERVICE_URL, "/bosh");
+			XmppService.get().getProperties().setUserProperty(AbstractBoshConnector.BOSH_SERVICE_URL_KEY, "/bosh");
 
 			XmppService.get().getProperties().setUserProperty(SessionObject.USER_JID,
 					!anonymous ? JID.jidInstance(userJID) : null);
@@ -169,7 +169,7 @@ public class LoginDialog extends Dialog {
 
 			hide();
 		} catch (Throwable e) {
-			MessageBox.alert("Error", e.getMessage(), null);
+			MessageBox.alert(Translations.instance.error(), e.getMessage(), null);
 		}
 
 	}

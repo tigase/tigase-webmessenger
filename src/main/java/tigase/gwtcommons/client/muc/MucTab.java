@@ -1,6 +1,7 @@
 package tigase.gwtcommons.client.muc;
 
 import tigase.gwtcommons.client.Tab;
+import tigase.gwtcommons.client.Translations;
 import tigase.gwtcommons.client.XmppService;
 import tigase.jaxmpp.core.client.AsyncCallback;
 import tigase.jaxmpp.core.client.JID;
@@ -59,14 +60,14 @@ public class MucTab extends Tab {
 		XmppService.get().send(iq, new AsyncCallback() {
 
 			public void onError(Stanza responseStanza, ErrorCondition error) throws XMLException {
-				MessageBox.alert("Error", "" + error, null);
+				MessageBox.alert(Translations.instance.error(), "" + error, null);
 			}
 
 			public void onSuccess(Stanza responseStanza) throws XMLException {
 			}
 
 			public void onTimeout() throws XMLException {
-				MessageBox.alert("Error", "Timeout", null);
+				MessageBox.alert(Translations.instance.error(), Translations.instance.errorTimeout(), null);
 			}
 		});
 	}

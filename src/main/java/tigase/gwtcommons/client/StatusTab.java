@@ -25,7 +25,7 @@ public class StatusTab extends TabItem {
 	private final MessagePanel vp = new MessagePanel();
 
 	public StatusTab() {
-		setText("Status");
+		setText(Translations.instance.clientStatusTabTitle());
 		setClosable(false);
 		setLayout(new FitLayout());
 		add(vp);
@@ -49,23 +49,23 @@ public class StatusTab extends TabItem {
 
 			public void handleEvent(ConnectorEvent be) {
 				if (XmppService.get().getConnector().getState() == State.connecting) {
-					vp.addAppMessage("Connecting...");
+					vp.addAppMessage(Translations.instance.stateConnecting());
 				} else if (XmppService.get().getConnector().getState() == State.disconnecting) {
-					vp.addAppMessage("Disconnecting...");
+					vp.addAppMessage(Translations.instance.stateDisconnecting());
 				}
 			}
 		});
 		XmppService.get().addListener(JaxmppCore.Connected, new Listener<JaxmppEvent>() {
 
 			public void handleEvent(JaxmppEvent be) {
-				vp.addAppMessage("Connected");
+				vp.addAppMessage(Translations.instance.stateConnected());
 			}
 		});
 		XmppService.get().getModulesManager().getModule(ResourceBinderModule.class).addListener(
 				ResourceBinderModule.ResourceBindSuccess, new Listener<ResourceBinderModule.ResourceBindEvent>() {
 
 					public void handleEvent(ResourceBindEvent be) {
-						vp.addAppMessage("Logged in as " + be.getJid().toString());
+						vp.addAppMessage(Translations.instance.clientMessageLoggedInAs(be.getJid().toString()));
 					}
 				});
 		XmppService.get().addListener(JaxmppCore.Disconnected, new Listener<JaxmppEvent>() {
@@ -74,35 +74,35 @@ public class StatusTab extends TabItem {
 				if (be.getCaught() != null) {
 					vp.addErrorMessage("Error: " + be.getCaught().getMessage());
 				}
-				vp.addAppMessage("Disconnected");
+				vp.addAppMessage(Translations.instance.stateDisconnected());
 			}
 		});
 		XmppService.get().getModulesManager().getModule(SaslModule.class).addListener(SaslModule.SaslStart,
 				new Listener<SaslModule.SaslEvent>() {
 
 					public void handleEvent(SaslEvent be) {
-						vp.addAppMessage("Authenticating...");
+						vp.addAppMessage(Translations.instance.stateAuthenticating());
 					}
 				});
 		XmppService.get().getModulesManager().getModule(SaslModule.class).addListener(SaslModule.SaslSuccess,
 				new Listener<SaslModule.SaslEvent>() {
 
 					public void handleEvent(SaslEvent be) {
-						vp.addAppMessage("Authenticated");
+						vp.addAppMessage(Translations.instance.stateAuthenticated());
 					}
 				});
 		XmppService.get().getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.ContactAvailable,
 				new Listener<PresenceEvent>() {
 
 					public void handleEvent(PresenceEvent be) {
-						vp.addAppMessage(be.getJid() + " is available");
+						vp.addAppMessage(Translations.instance.clientMessageIsAvailable(be.getJid().toString()));
 					}
 				});
 		XmppService.get().getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.ContactUnavailable,
 				new Listener<PresenceEvent>() {
 
 					public void handleEvent(PresenceEvent be) {
-						vp.addAppMessage(be.getJid() + " is unavailable");
+						vp.addAppMessage(Translations.instance.clientMessageIsUnavailable(be.getJid().toString()));
 					}
 				});
 		XmppService.get().getModulesManager().getModule(PresenceModule.class).addListener(
@@ -112,7 +112,8 @@ public class StatusTab extends TabItem {
 						RosterItem item = XmppService.get().getSessionObject().getRoster().get(be.getJid().getBareJid());
 						if (item != null)
 							try {
-								vp.addAppMessage(be.getJid() + " is now " + RosterPanel.getShowOfRosterItem(item));
+								vp.addAppMessage(Translations.instance.clientMessageIsNow(be.getJid().toString(),
+										RosterPanel.getShowOfRosterItem(item).toString()));
 							} catch (XMLException e) {
 								e.printStackTrace();
 							}

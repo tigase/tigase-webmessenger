@@ -53,7 +53,7 @@ public abstract class CustomPresenceStatusDialog extends Dialog {
 	private final TextField<String> status = new TextField<String>();
 
 	public CustomPresenceStatusDialog(Show currentShow, String currentPresence) {
-		setHeading("Custom status");
+		setHeading(Translations.instance.clientStatusCustomDialogTitle());
 		// setLayout(new FitLayout());
 		setButtons(Dialog.OKCANCEL);
 		setAutoHeight(true);
@@ -68,15 +68,15 @@ public abstract class CustomPresenceStatusDialog extends Dialog {
 
 		shows.setStore(new ListStore<SimpleComboBox>());
 		shows.setTriggerAction(TriggerAction.ALL);
-		shows.setFieldLabel("Status");
+		shows.setFieldLabel(Translations.instance.clientStatusCustomDialogStatus());
 		shows.setDisplayField("label");
 		shows.setEditable(false);
 		shows.setAllowBlank(false);
-		shows.getStore().add(new SimpleComboBox(Show.online, "Online"));
-		shows.getStore().add(new SimpleComboBox(Show.chat, "Free for chat"));
-		shows.getStore().add(new SimpleComboBox(Show.away, "Away"));
-		shows.getStore().add(new SimpleComboBox(Show.xa, "Extended Away"));
-		shows.getStore().add(new SimpleComboBox(Show.dnd, "Do Not Disturb"));
+		shows.getStore().add(new SimpleComboBox(Show.online, Translations.instance.xmppPresenceOnline()));
+		shows.getStore().add(new SimpleComboBox(Show.chat, Translations.instance.xmppPresenceChat()));
+		shows.getStore().add(new SimpleComboBox(Show.away, Translations.instance.xmppPresenceAway()));
+		shows.getStore().add(new SimpleComboBox(Show.xa, Translations.instance.xmppPresenceXA()));
+		shows.getStore().add(new SimpleComboBox(Show.dnd, Translations.instance.xmppPresenceDND()));
 		Show cs = currentShow == null ? Show.online : currentShow;
 
 		for (SimpleComboBox x : shows.getStore().getModels()) {
@@ -86,7 +86,7 @@ public abstract class CustomPresenceStatusDialog extends Dialog {
 
 		form.add(shows);
 
-		status.setFieldLabel("Text");
+		status.setFieldLabel(Translations.instance.clientStatusCustomDialogText());
 		status.setValue(currentPresence);
 		form.add(status);
 

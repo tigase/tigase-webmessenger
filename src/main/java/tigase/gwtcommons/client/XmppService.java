@@ -30,7 +30,7 @@ public class XmppService {
 		this.config = Dictionary.getDictionary("Config");
 		this.jaxmpp = new Jaxmpp(new DefaultLoggerSpi());
 
-		this.jaxmpp.getProperties().setUserProperty(AbstractBoshConnector.BOSH_SERVICE_URL, this.config.get("httpBase"));
+		this.jaxmpp.getProperties().setUserProperty(AbstractBoshConnector.BOSH_SERVICE_URL_KEY, this.config.get("httpBase"));
 	}
 
 }

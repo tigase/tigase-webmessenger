@@ -73,7 +73,7 @@ public class XmlConsoleTab extends TabItem {
 				}
 			}
 		});
-		this.sendButton = new Button("Send", new SelectionListener<ButtonEvent>() {
+		this.sendButton = new Button(Translations.instance.sendButton(), new SelectionListener<ButtonEvent>() {
 
 			@Override
 			public void componentSelected(ButtonEvent ce) {

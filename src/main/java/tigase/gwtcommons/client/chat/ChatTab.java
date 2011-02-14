@@ -2,6 +2,7 @@ package tigase.gwtcommons.client.chat;
 
 import tigase.gwtcommons.client.MessagePanel;
 import tigase.gwtcommons.client.Tab;
+import tigase.gwtcommons.client.Translations;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Message;
@@ -47,7 +48,7 @@ public class ChatTab extends Tab {
 
 	public ChatTab(Chat chat) {
 		this.chat = chat;
-		setText("Chat with " + chat.getJid().getBareJid().toString());
+		setText(Translations.instance.chatWithTabName(chat.getJid().getBareJid().toString()));
 		setClosable(true);
 		setLayout(new BorderLayout());
 
@@ -68,7 +69,7 @@ public class ChatTab extends Tab {
 				}
 			}
 		});
-		this.sendButton = new Button("Send", new SelectionListener<ButtonEvent>() {
+		this.sendButton = new Button(Translations.instance.sendButton(), new SelectionListener<ButtonEvent>() {
 
 			@Override
 			public void componentSelected(ButtonEvent ce) {
@@ -104,9 +105,9 @@ public class ChatTab extends Tab {
 
 	private void markUnread(boolean b) {
 		if (this.hasUnread != b && b) {
-			setText("* Chat with " + chat.getJid().getBareJid().toString());
+			setText("* " + Translations.instance.chatWithTabName(chat.getJid().getBareJid().toString()));
 		} else if (this.hasUnread != b && !b) {
-			setText("Chat with " + chat.getJid().getBareJid().toString());
+			setText(Translations.instance.chatWithTabName(chat.getJid().getBareJid().toString()));
 		}
 		this.hasUnread = b;
 	}
@@ -146,7 +147,7 @@ public class ChatTab extends Tab {
 	private void sendMessage() {
 		String v = text.getValue();
 		text.clear();
-		messagePanel.addMineMessage("me", v);
+		messagePanel.addMineMessage(Translations.instance.me(), v);
 		try {
 			if (v != null)
 				v = SafeHtmlUtils.fromString(v).asString();

@@ -108,7 +108,7 @@ public abstract class BasicRosterPanel<M> extends ContentPanel {
 	private final ListStore<RosterItem<M>> store = new ListStore<RosterItem<M>>();
 
 	public BasicRosterPanel() {
-		setHeading("Roster");
+		setHeaderVisible(false);
 		setLayout(new FitLayout());
 
 		store.setStoreSorter(new StoreSorter<BasicRosterPanel.RosterItem<M>>(null) {

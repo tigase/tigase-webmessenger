@@ -1,5 +1,6 @@
 package tigase.gwtcommons.client.muc;
 
+import tigase.gwtcommons.client.Translations;
 import tigase.gwtcommons.client.XmppService;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
@@ -30,17 +31,17 @@ public class JoinRoomDialog extends Dialog {
 		form.setHeaderVisible(false);
 		form.setAutoHeight(true);
 
-		roomName.setFieldLabel("Room name");
+		roomName.setFieldLabel(Translations.instance.mucRoomName());
 		roomName.setAllowBlank(false);
 		roomName.setValue("tigase");
 		form.add(roomName);
 
-		server.setFieldLabel("Server");
+		server.setFieldLabel(Translations.instance.mucServer());
 		server.setAllowBlank(false);
 		server.setValue("muc.tigase.org");
 		form.add(server);
 
-		nickname.setFieldLabel("Nickname");
+		nickname.setFieldLabel(Translations.instance.nickname());
 		nickname.setAllowBlank(false);
 		if (XmppService.get().getSessionObject().getProperty(SessionObject.NICKNAME) == null
 				|| ((String) XmppService.get().getSessionObject().getProperty(SessionObject.NICKNAME)).length() == 0) {
@@ -49,7 +50,7 @@ public class JoinRoomDialog extends Dialog {
 			nickname.setValue((String) XmppService.get().getSessionObject().getProperty(SessionObject.NICKNAME));
 		form.add(nickname);
 
-		password.setFieldLabel("Password");
+		password.setFieldLabel(Translations.instance.password());
 		password.setAllowBlank(true);
 		form.add(password);
 
