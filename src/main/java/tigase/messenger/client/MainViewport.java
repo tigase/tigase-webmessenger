@@ -9,8 +9,10 @@ import tigase.gwtcommons.client.XmppService;
 import tigase.gwtcommons.client.chat.ChatManagerModule;
 import tigase.gwtcommons.client.muc.JoinRoomDialog;
 import tigase.gwtcommons.client.muc.MucManagerModule;
+import tigase.gwtcommons.client.roster.ContactEditDialog;
 import tigase.gwtcommons.client.roster.RosterPanel;
 import tigase.gwtcommons.client.roster.RosterPanel.SortMethod;
+import tigase.gwtcommons.client.roster.SubscriptionRequestDialog;
 import tigase.jaxmpp.core.client.Connector.State;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.JaxmppCore.JaxmppEvent;
@@ -18,6 +20,7 @@ import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
 import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule;
 import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule.SaslEvent;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
@@ -102,6 +105,24 @@ public class MainViewport extends Viewport {
 		tb.add(statusButton);
 
 		Menu actionMenu = new Menu();
+		actionMenu.add(new MenuItem(Translations.instance.clientMenuActionAddContact(), new SelectionListener<MenuEvent>() {
+
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				ContactEditDialog dialog = new ContactEditDialog(null);
+				dialog.show();
+			}
+		}));
+		final MenuItem editContactMI = new MenuItem("Edit contact", new SelectionListener<MenuEvent>() {
+
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				RosterItem ri = rosterPanel.getSelectedData();
+				ContactEditDialog dialog = new ContactEditDialog(ri);
+				dialog.show();
+			}
+		});
+		actionMenu.add(editContactMI);
 		actionMenu.add(new MenuItem("Join room", new SelectionListener<MenuEvent>() {
 
 			@Override
@@ -119,6 +140,14 @@ public class MainViewport extends Viewport {
 				d.show();
 			}
 		}));
+
+		actionMenu.addListener(Events.Show, new com.extjs.gxt.ui.client.event.Listener<MenuEvent>() {
+
+			public void handleEvent(MenuEvent be) {
+				RosterItem ri = rosterPanel.getSelectedData();
+				editContactMI.setEnabled(ri != null);
+			}
+		});
 
 		final CheckMenuItem sortUnsortedMenuItem = new CheckMenuItem("Unsorted");
 		sortUnsortedMenuItem.addSelectionListener(new SelectionListener<MenuEvent>() {
@@ -229,6 +258,14 @@ public class MainViewport extends Viewport {
 
 					public void handleEvent(SaslEvent be) {
 						status.setText(Translations.instance.stateAuthenticated());
+					}
+				});
+		XmppService.get().getModulesManager().getModule(PresenceModule.class).addListener(PresenceModule.SubscribeRequest,
+				new Listener<PresenceModule.PresenceEvent>() {
+
+					public void handleEvent(PresenceEvent be) {
+						SubscriptionRequestDialog dialog = new SubscriptionRequestDialog(be.getPresence());
+						dialog.show();
 					}
 				});
 

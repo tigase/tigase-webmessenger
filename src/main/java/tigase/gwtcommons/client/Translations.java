@@ -10,6 +10,18 @@ public interface Translations extends Messages {
 	@Key("client.chat.chatWith")
 	String chatWithTabName(String roomName);
 
+	@Key("client.dialog.contact.title")
+	String clientContactEditDialog();
+
+	@Key("client.dialog.contact.groups")
+	String clientContactEditDialogGroups();
+
+	@Key("client.dialog.contact.jid")
+	String clientContactEditDialogJid();
+
+	@Key("client.dialog.contact.name")
+	String clientContactEditDialogName();
+
 	@Key("client.login.dialog.anonymous")
 	String clientLoginAnonymous();
 
@@ -24,6 +36,9 @@ public interface Translations extends Messages {
 
 	@Key("client.login.dialog.jid")
 	String clientLoginJID();
+
+	@Key("client.menu.action.addContact")
+	String clientMenuActionAddContact();
 
 	@Key("client.message.isAvailable")
 	String clientMessageIsAvailable(String string);

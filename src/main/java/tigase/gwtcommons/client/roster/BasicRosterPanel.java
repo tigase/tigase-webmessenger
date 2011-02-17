@@ -250,6 +250,11 @@ public abstract class BasicRosterPanel<M> extends ContentPanel {
 
 	protected abstract String getQuickTip(RosterShow r, RosterItem<M> model);
 
+	public M getSelectedData() {
+		RosterItem<M> sm = grid.getSelectionModel().getSelectedItem();
+		return sm != null ? sm.getId() : null;
+	}
+
 	protected abstract RosterShow getShowOf(RosterItem<M> model) throws XMLException;
 
 	private ListStore<RosterItem<M>> getStore() {

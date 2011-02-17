@@ -1,5 +1,6 @@
 package tigase.gwtcommons.client.roster;
 
+import tigase.gwtcommons.client.Translations;
 import tigase.gwtcommons.client.XmppService;
 import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
@@ -16,6 +17,12 @@ import tigase.jaxmpp.core.client.xmpp.stanzas.Presence;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
 import tigase.jaxmpp.core.client.xmpp.stanzas.StanzaType;
 
+import com.extjs.gxt.ui.client.event.Events;
+import com.extjs.gxt.ui.client.event.MenuEvent;
+import com.extjs.gxt.ui.client.event.SelectionListener;
+import com.extjs.gxt.ui.client.widget.MessageBox;
+import com.extjs.gxt.ui.client.widget.menu.Menu;
+import com.extjs.gxt.ui.client.widget.menu.MenuItem;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
@@ -97,6 +104,84 @@ public class RosterPanel extends BasicRosterPanel<tigase.jaxmpp.core.client.xmpp
 				return true;
 			}
 		}, 5000);
+
+		final Menu contextMenu = new Menu();
+
+		final MenuItem editContactMI = new MenuItem("Edit contact", new SelectionListener<MenuEvent>() {
+
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				RosterItem<tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem> it = grid.getSelectionModel().getSelectedItem();
+				if (it != null)
+					(new ContactEditDialog(it.getId())).show();
+			}
+		});
+		contextMenu.add(editContactMI);
+
+		final Menu authMenu = new Menu();
+		final MenuItem resendAuthMI = new MenuItem("Resend Authorization To", new SelectionListener<MenuEvent>() {
+
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem ri = getSelectedData();
+				if (ri != null)
+					try {
+						XmppService.get().getModulesManager().getModule(PresenceModule.class).subscribed(
+								JID.jidInstance(ri.getJid()));
+					} catch (Exception e) {
+						MessageBox.alert(Translations.instance.error(), "Can't send stanza", null);
+					}
+			}
+		});
+		final MenuItem rerequestAuthMI = new MenuItem("Rerequest Authorization From", new SelectionListener<MenuEvent>() {
+
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem ri = getSelectedData();
+				if (ri != null)
+					try {
+						XmppService.get().getModulesManager().getModule(PresenceModule.class).subscribe(
+								JID.jidInstance(ri.getJid()));
+					} catch (Exception e) {
+						MessageBox.alert(Translations.instance.error(), "Can't send stanza", null);
+					}
+
+			}
+		});
+		final MenuItem removeAuthMI = new MenuItem("Remove Authorization From", new SelectionListener<MenuEvent>() {
+
+			@Override
+			public void componentSelected(MenuEvent ce) {
+				// send: unsubscribed
+				tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem ri = getSelectedData();
+				if (ri != null)
+					try {
+						XmppService.get().getModulesManager().getModule(PresenceModule.class).unsubscribed(
+								JID.jidInstance(ri.getJid()));
+					} catch (Exception e) {
+						MessageBox.alert(Translations.instance.error(), "Can't send stanza", null);
+					}
+
+			}
+		});
+		authMenu.add(resendAuthMI);
+		authMenu.add(rerequestAuthMI);
+		authMenu.add(removeAuthMI);
+		final MenuItem authorizationMI = new MenuItem("Authorization");
+		authorizationMI.setSubMenu(authMenu);
+		contextMenu.add(authorizationMI);
+
+		grid.setContextMenu(contextMenu);
+
+		contextMenu.addListener(Events.Show, new com.extjs.gxt.ui.client.event.Listener<MenuEvent>() {
+
+			public void handleEvent(MenuEvent be) {
+				tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem ri = getSelectedData();
+				editContactMI.setEnabled(ri != null);
+				authorizationMI.setEnabled(ri != null);
+			}
+		});
+
 	}
 
 	@Override
