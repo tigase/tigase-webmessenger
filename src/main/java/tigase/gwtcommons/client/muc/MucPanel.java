@@ -217,7 +217,7 @@ public class MucPanel extends ContentPanel {
 
 	public void process(MucEvent event) throws XMLException {
 		final XMucUserElement x = XMucUserElement.extract(event.getPresence());
-		if (event.getType() == MucModule.OccupantComes) {
+		if (x != null && event.getType() == MucModule.OccupantComes) {
 			if (x.getRole() != null)
 				messagePanel.addAppMessage(Translations.instance.mucMessageXJoinAs(event.getNickname(), x.getRole().name()));
 			else
@@ -228,7 +228,7 @@ public class MucPanel extends ContentPanel {
 			show(x, Translations.instance.mucMessageX110210(), 110, 210);
 			occupantsList.add(event.getOccupant(), event.getPresence());
 			onPresenceReceived(event.getNickname(), event.getPresence());
-		} else if (event.getType() == MucModule.OccupantLeaved) {
+		} else if (x != null && event.getType() == MucModule.OccupantLeaved) {
 			occupantsList.remove(event.getOccupant());
 			onPresenceReceived(event.getNickname(), event.getPresence());
 			if (show(x, Translations.instance.mucMessageX301(event.getNickname()), 301))

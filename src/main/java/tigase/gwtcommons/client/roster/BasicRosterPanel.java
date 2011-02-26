@@ -294,8 +294,10 @@ public abstract class BasicRosterPanel<M> extends ContentPanel {
 
 	public <T> void update(M item, T data) {
 		RosterItem<M> m = getStore().findModel("id", item);
-		m.setData(data);
-		store.update(m);
+		if (m != null) {
+			m.setData(data);
+			store.update(m);
+		}
 		doFilters();
 	}
 

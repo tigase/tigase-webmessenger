@@ -96,8 +96,10 @@ public class MainViewport extends Viewport {
 		cp.add(rosterPanel, westData);
 		cp.add(center, centerData);
 
-		LoginDialog l = new LoginDialog();
-		l.show();
+		if (!XmppService.get().isConnected()) {
+			LoginDialog l = new LoginDialog();
+			l.show();
+		}
 
 		ToolBar tb = new ToolBar();
 
@@ -270,7 +272,10 @@ public class MainViewport extends Viewport {
 				});
 
 		add(cp);
-		status.setText(Translations.instance.stateDisconnected());
+		if (XmppService.get().isConnected())
+			status.setText(Translations.instance.stateConnected());
+		else
+			status.setText(Translations.instance.stateDisconnected());
 
 		center.add(statusTab);
 		statusTab.init();

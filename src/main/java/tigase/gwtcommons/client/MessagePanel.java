@@ -3,6 +3,7 @@ package tigase.gwtcommons.client;
 import java.util.Date;
 
 import com.extjs.gxt.ui.client.Style.Scroll;
+import com.extjs.gxt.ui.client.widget.Component;
 import com.extjs.gxt.ui.client.widget.ContentPanel;
 import com.extjs.gxt.ui.client.widget.Html;
 import com.extjs.gxt.ui.client.widget.VerticalPanel;
@@ -46,7 +47,7 @@ public class MessagePanel extends ContentPanel {
 	public void addAppMessage(Date date, String message) {
 		String msg = buildSafeHtml(message);
 
-		String t = "<div class='line appMessage'>";
+		String t = "<div  class='line appMessage ts" + date.getTime() + "'>";
 		t += "<span class='timestamp'>[" + timeFormat.format(date) + "]</span>&nbsp;";
 		t += "<span class='msg'>" + msg + "</span>";
 		t += "</div>";
@@ -61,7 +62,7 @@ public class MessagePanel extends ContentPanel {
 	public void addErrorMessage(Date date, String message) {
 		String msg = buildSafeHtml(message);
 
-		String t = "<div class='line errorMessage'>";
+		String t = "<div class='line errorMessage ts" + date.getTime() + "'>";
 		t += "<span class='timestamp'>[" + timeFormat.format(date) + "]</span>&nbsp;";
 		t += "<span class='msg'>" + msg + "</span>";
 		t += "</div>";
@@ -83,12 +84,12 @@ public class MessagePanel extends ContentPanel {
 		String t;
 		if (msg.startsWith("/me ")) {
 			msg = msg.substring(4);
-			t = "<div class='line hisMessage a" + number + "'>";
+			t = "<div class='line hisMessage a" + number + " ts" + date.getTime() + "'>";
 			t += "<span class='timestamp'>[" + timeFormat.format(date) + "]</span>&nbsp;";
 			t += "<span class='nick'>*" + nickname + "&nbsp;" + msg + "</span>";
 			t += "</div>";
 		} else {
-			t = "<div class='line hisMessage a" + number + "'>";
+			t = "<div class='line hisMessage a" + " ts" + date.getTime() + "'>";
 			t += "<span class='timestamp'>[" + timeFormat.format(date) + "]</span>&nbsp;";
 			t += "<span class='nick'>" + nickname + nicknameSeparator + "&nbsp;</span>";
 			t += "<span class='msg'>" + msg + "</span>";
@@ -109,16 +110,11 @@ public class MessagePanel extends ContentPanel {
 		String fd = dateFormat.format(date);
 		if (this.lastMessageTimestamp == null || !this.lastMessageTimestamp.equals(fd)) {
 			Html h = new Html("<div class='line newDay'>*** " + fd + "</div>");
-			vp.add(h);
+			// insertLine(dateFormat.parse(fd), h);
 		}
 		Html h = new Html(line);
-		vp.add(h);
+		insertLine(date, h);
 
-		vp.layout();
-		if (isRendered()) {
-			int w1 = vp.getHeight();
-			setVScrollPosition(w1);
-		}
 		this.lastMessageTimestamp = fd;
 	}
 
@@ -130,12 +126,12 @@ public class MessagePanel extends ContentPanel {
 		String t;
 		if (msg.startsWith("/me ")) {
 			msg = msg.substring(4);
-			t = "<div class='line mineMessage'>";
+			t = "<div class='line mineMessage ts" + date.getTime() + "'>";
 			t += "<span class='timestamp'>[" + timeFormat.format(date) + "]</span>&nbsp;";
 			t += "<span class='nick'>*" + nickname + "&nbsp;" + msg + "</span>";
 			t += "</div>";
 		} else {
-			t = "<div class='line mineMessage'>";
+			t = "<div class='line mineMessage ts" + date.getTime() + "'>";
 			t += "<span class='timestamp'>[" + timeFormat.format(date) + "]</span>&nbsp;";
 			t += "<span class='nick'>" + nickname + nicknameSeparator + "&nbsp;</span>";
 			t += "<span class='msg'>" + msg + "</span>";
@@ -157,6 +153,45 @@ public class MessagePanel extends ContentPanel {
 
 	public String getNicknameSeparator() {
 		return nicknameSeparator;
+	}
+
+	private void insertLine(Date date, Html h) {
+		h.setData("TIMESTAMP", date);
+
+		boolean added = false;
+		Component lastItem = vp.getItemCount() > 0 ? vp.getItem(vp.getItemCount() - 1) : null;
+		lastItem = lastItem == null || lastItem.getData("TIMESTAMP") == null ? null : lastItem;
+
+		if (lastItem != null && ((Date) lastItem.getData("TIMESTAMP")).getTime() <= date.getTime()) {
+			added = true;
+			vp.add(h);
+		} else if (vp.getItemCount() == 0) {
+			added = true;
+			vp.add(h);
+		} else
+			for (int i = vp.getItemCount() - 1; i >= 0; i--) {
+				Component item = vp.getItem(i);
+				Date d = item.getData("TIMESTAMP");
+				if (d != null && d.getTime() <= date.getTime()) {
+					added = true;
+					vp.insert(h, i + 1);
+					break;
+				} else if (i == 0) {
+					added = true;
+					vp.insert(h, 0);
+					break;
+				}
+			}
+
+		if (!added)
+			vp.add(h);
+
+		vp.layout();
+		if (isRendered()) {
+			int w1 = vp.getHeight();
+			setVScrollPosition(w1);
+		}
+
 	}
 
 	public void setNicknameSeparator(String nicknameSeparator) {

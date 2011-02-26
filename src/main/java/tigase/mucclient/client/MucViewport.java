@@ -28,9 +28,11 @@ import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule;
 import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule.SaslEvent;
 import tigase.jaxmpp.core.client.xmpp.stanzas.ErrorElement;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
+import tigase.jaxmpp.gwt.client.Jaxmpp;
 
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
 import com.extjs.gxt.ui.client.event.BaseEvent;
+import com.extjs.gxt.ui.client.event.ButtonEvent;
 import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.MenuEvent;
 import com.extjs.gxt.ui.client.event.MessageBoxEvent;
@@ -89,7 +91,7 @@ public class MucViewport extends Viewport {
 
 	private final ToolBar statusBar = new ToolBar();
 
-	public MucViewport() {
+	public MucViewport(ChatRestoreModule chatRestorer) {
 		setLayout(new FitLayout());
 		cp.setHeaderVisible(false);
 
@@ -97,6 +99,7 @@ public class MucViewport extends Viewport {
 		centerData.setMargins(new Margins(5, 5, 5, 5));
 
 		mucPanel = new MucPanel();
+		chatRestorer.setMucPanel(mucPanel);
 
 		Dictionary config = Dictionary.getDictionary("Config");
 
@@ -126,6 +129,19 @@ public class MucViewport extends Viewport {
 			}
 		});
 
+		XmppService.get().addListener(Jaxmpp.BeforeSessionResoting, new Listener<JaxmppCore.JaxmppEvent>() {
+
+			public void handleEvent(JaxmppEvent be) {
+				String nickname = XmppService.get().getProperties().getUserProperty(SessionObject.NICKNAME);
+
+				String r = XmppService.config().get("mucRoomJid");
+				JID roomJID = JID.jidInstance(r);
+				Room room = new Room(XmppService.get().getWriter(), roomJID.getBareJid(), nickname);
+				XmppService.get().getModulesManager().getModule(MucModule.class).register(room);
+				mucPanel.setRoom(room);
+				XmppService.get().getModulesManager().getModule(MucModule.class).enable(room);
+			}
+		});
 		XmppService.get().getModulesManager().getModule(ResourceBinderModule.class).addListener(
 				ResourceBinderModule.ResourceBindSuccess, new Listener<ResourceBinderModule.ResourceBindEvent>() {
 
@@ -161,7 +177,8 @@ public class MucViewport extends Viewport {
 							else
 								t += ", " + nick;
 						}
-						mucPanel.getMessagePanel().addAppMessage(Translations.instance.mucAlreadyHere(t));
+						if (t != null)
+							mucPanel.getMessagePanel().addAppMessage(Translations.instance.mucAlreadyHere(t));
 					}
 				});
 
@@ -178,7 +195,23 @@ public class MucViewport extends Viewport {
 			menuBar.add(statusButton);
 		}
 
-		status.setText(Translations.instance.stateDisconnected());
+		if (XmppService.get().isConnected())
+			status.setText(Translations.instance.stateConnected());
+		else
+			status.setText(Translations.instance.stateDisconnected());
+
+		statusBar.add(new Button(Translations.instance.menuPresenceLogout(), new SelectionListener<ButtonEvent>() {
+
+			@Override
+			public void componentSelected(ButtonEvent ce) {
+				try {
+					XmppService.get().disconnect();
+				} catch (JaxmppException e) {
+					e.printStackTrace();
+				}
+			}
+		}));
+
 		statusBar.setBorders(false);
 		statusBar.add(status);
 		cp.setBottomComponent(statusBar);
@@ -194,6 +227,7 @@ public class MucViewport extends Viewport {
 			public void handleEvent(JaxmppEvent be) {
 				status.setText(Translations.instance.stateDisconnected());
 				mucPanel.setPanelEnabled(false);
+				showLogin();
 			}
 		});
 		XmppService.get().getModulesManager().getModule(SaslModule.class).addListener(SaslModule.SaslStart,
@@ -238,8 +272,10 @@ public class MucViewport extends Viewport {
 
 		if (menuBar.getItemCount() != 0)
 			cp.setTopComponent(menuBar);
+		if (XmppService.get().getSessionObject().getProperty(Connector.CONNECTOR_STAGE_KEY) != Connector.State.connected) {
+			showLogin();
+		}
 
-		showLogin();
 	}
 
 	private Button createStatusButton() {
