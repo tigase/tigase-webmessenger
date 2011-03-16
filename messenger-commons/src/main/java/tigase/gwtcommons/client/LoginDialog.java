@@ -149,13 +149,26 @@ public class LoginDialog extends Dialog {
 
 	protected void onSubmit(boolean anonymous, String userJID, String password, String nickname) {
 		try {
-			if (anonymous)
-				XmppService.get().getProperties().setUserProperty(SessionObject.SERVER_NAME, "tigase.org");
-			else
+			if (anonymous) {
+				String a;
+				try {
+					a = XmppService.config().get("anonymousHost");
+				} catch (Exception e) {
+					a = "tigase.org";
+				}
+				XmppService.get().getProperties().setUserProperty(SessionObject.SERVER_NAME, a);
+			} else
 				XmppService.get().getProperties().setUserProperty(SessionObject.SERVER_NAME,
 						JID.jidInstance(userJID).getDomain());
 
-			XmppService.get().getProperties().setUserProperty(AbstractBoshConnector.BOSH_SERVICE_URL_KEY, "/bosh");
+			String httpBase;
+			try {
+				httpBase = XmppService.config().get("httpBase");
+			} catch (Exception e) {
+				httpBase = "/bosh";
+			}
+
+			XmppService.get().getProperties().setUserProperty(AbstractBoshConnector.BOSH_SERVICE_URL_KEY, httpBase);
 
 			XmppService.get().getProperties().setUserProperty(SessionObject.USER_JID,
 					!anonymous ? JID.jidInstance(userJID) : null);

@@ -216,6 +216,10 @@ public abstract class BasicRosterPanel<M> extends ContentPanel {
 		doFilters();
 	}
 
+	public void clear() {
+		this.store.removeAll();
+	}
+
 	protected void doFilters() {
 		store.applyFilters("");
 		notSorted = true;
@@ -244,6 +248,10 @@ public abstract class BasicRosterPanel<M> extends ContentPanel {
 				result = showOffline;
 			}
 		return result;
+	}
+
+	public Grid<RosterItem<M>> getGrid() {
+		return this.grid;
 	}
 
 	protected abstract String getItemName(RosterItem<M> model) throws XMLException;

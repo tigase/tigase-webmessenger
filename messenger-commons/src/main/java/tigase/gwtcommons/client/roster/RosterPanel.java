@@ -10,6 +10,7 @@ import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceStore;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem.Subscription;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterModule.RosterEvent;
@@ -40,6 +41,37 @@ public class RosterPanel extends BasicRosterPanel<tigase.jaxmpp.core.client.xmpp
 	private final static String getRosterShowWeight(RosterShow rs) {
 		String s = "0000" + (200 - rs.getWeight());
 		return s.substring(s.length() - 4);
+	}
+
+	public static RosterShow getShowOf(JID jid) throws XMLException {
+		tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item = XmppService.get().getRoster().get(jid.getBareJid());
+		if (item == null)
+			return RosterShow.notinroster;
+		if (item.isAsk())
+			return RosterShow.requested;
+		if (item.getSubscription() == Subscription.none || item.getSubscription() == Subscription.to)
+			return RosterShow.offline_nonauth;
+		PresenceStore presenceStore = XmppService.get().getModulesManager().getModule(PresenceModule.class).getPresence();
+		Presence p = presenceStore.getPresence(jid);
+		if (p == null) {
+			p = presenceStore.getBestPresence(item.getJid());
+		}
+		RosterShow r = RosterShow.offline;
+		if (p != null) {
+			if (p.getType() == StanzaType.unavailable)
+				r = RosterShow.offline;
+			else if (p.getShow() == Show.online)
+				r = RosterShow.online;
+			else if (p.getShow() == Show.away)
+				r = RosterShow.away;
+			else if (p.getShow() == Show.chat)
+				r = RosterShow.chat;
+			else if (p.getShow() == Show.dnd)
+				r = RosterShow.dnd;
+			else if (p.getShow() == Show.xa)
+				r = RosterShow.xa;
+		}
+		return r;
 	}
 
 	public static RosterShow getShowOfRosterItem(tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem item)
