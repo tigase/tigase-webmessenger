@@ -16,6 +16,7 @@ public class MessagePanel extends ContentPanel {
 		body = body == null ? body : body.replaceAll("([^>/\";]|^)(www\\.[^ ]+)",
 				"$1<a href=\"http://$2\" target=\"_blank\">$2</a>");
 		body = body == null ? body : body.replaceAll("([^\">;]|^)(http://[^ ]+)", "$1<a href=\"$2\" target=\"_blank\">$2</a>");
+		body = body == null ? body : body.replaceAll("([^\">;]|^)(https://[^ ]+)", "$1<a href=\"$2\" target=\"_blank\">$2</a>");
 		return body;
 	}
 
