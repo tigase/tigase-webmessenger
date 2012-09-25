@@ -1,5 +1,6 @@
 package tigase.gwtcommons.client;
 
+import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.SessionObject;
 import tigase.jaxmpp.core.client.connector.AbstractBoshConnector;
@@ -170,8 +171,8 @@ public class LoginDialog extends Dialog {
 
 			XmppService.get().getProperties().setUserProperty(AbstractBoshConnector.BOSH_SERVICE_URL_KEY, httpBase);
 
-			XmppService.get().getProperties().setUserProperty(SessionObject.USER_JID,
-					!anonymous ? JID.jidInstance(userJID) : null);
+			XmppService.get().getProperties().setUserProperty(SessionObject.USER_BARE_JID,
+					!anonymous ? BareJID.bareJIDInstance(userJID) : null);
 			XmppService.get().getProperties().setUserProperty(SessionObject.PASSWORD, !anonymous ? password : null);
 
 			XmppService.get().getProperties().setUserProperty(SessionObject.PASSWORD, !anonymous ? password : null);

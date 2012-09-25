@@ -4,8 +4,6 @@ import tigase.gwtcommons.client.Translations;
 import tigase.gwtcommons.client.XmppService;
 import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
-import tigase.jaxmpp.core.client.logger.Logger;
-import tigase.jaxmpp.core.client.logger.LoggerFactory;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
@@ -40,8 +38,6 @@ public class MucManagerModule {
 	}
 
 	private final Listener<MucModule.MucEvent> listener;
-
-	private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 	private final TabPanel tabPanel;
 
@@ -93,7 +89,7 @@ public class MucManagerModule {
 	}
 
 	protected void onMucEvent(MucEvent be) {
-		if (be.getType() == MucModule.MessageReceived)
+		if (be.getType() == MucModule.MucMessageReceived)
 			onMucMessageEvent(be);
 		else {
 			onPresenceEvent(be);

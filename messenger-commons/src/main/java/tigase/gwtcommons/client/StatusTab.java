@@ -11,11 +11,11 @@ import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule.ResourceBindEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
+import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule.AuthEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
-import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule;
-import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule.SaslEvent;
 
 import com.extjs.gxt.ui.client.widget.TabItem;
 import com.extjs.gxt.ui.client.widget.layout.FitLayout;
@@ -77,17 +77,17 @@ public class StatusTab extends TabItem {
 				vp.addAppMessage(Translations.instance.stateDisconnected());
 			}
 		});
-		XmppService.get().getModulesManager().getModule(SaslModule.class).addListener(SaslModule.SaslStart,
-				new Listener<SaslModule.SaslEvent>() {
+		XmppService.get().getModulesManager().getModule(AuthModule.class).addListener(AuthModule.AuthStart,
+				new Listener<AuthModule.AuthEvent>() {
 
-					public void handleEvent(SaslEvent be) {
+					public void handleEvent(AuthEvent be) {
 						vp.addAppMessage(Translations.instance.stateAuthenticating());
 					}
 				});
-		XmppService.get().getModulesManager().getModule(SaslModule.class).addListener(SaslModule.SaslSuccess,
-				new Listener<SaslModule.SaslEvent>() {
+		XmppService.get().getModulesManager().getModule(AuthModule.class).addListener(AuthModule.AuthSuccess,
+				new Listener<AuthModule.AuthEvent>() {
 
-					public void handleEvent(SaslEvent be) {
+					public void handleEvent(AuthEvent be) {
 						vp.addAppMessage(Translations.instance.stateAuthenticated());
 					}
 				});

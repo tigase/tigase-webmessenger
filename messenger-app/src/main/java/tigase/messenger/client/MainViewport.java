@@ -18,11 +18,11 @@ import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.JaxmppCore.JaxmppEvent;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
+import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
+import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule.AuthEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem;
-import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule;
-import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule.SaslEvent;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
 
 import com.extjs.gxt.ui.client.Style.LayoutRegion;
@@ -248,17 +248,17 @@ public class MainViewport extends Viewport {
 				status.setText(Translations.instance.stateDisconnected());
 			}
 		});
-		XmppService.get().getModulesManager().getModule(SaslModule.class).addListener(SaslModule.SaslStart,
-				new Listener<SaslModule.SaslEvent>() {
+		XmppService.get().getModulesManager().getModule(AuthModule.class).addListener(AuthModule.AuthStart,
+				new Listener<AuthModule.AuthEvent>() {
 
-					public void handleEvent(SaslEvent be) {
+					public void handleEvent(AuthEvent be) {
 						status.setText(Translations.instance.stateAuthenticating());
 					}
 				});
-		XmppService.get().getModulesManager().getModule(SaslModule.class).addListener(SaslModule.SaslSuccess,
-				new Listener<SaslModule.SaslEvent>() {
+		XmppService.get().getModulesManager().getModule(AuthModule.class).addListener(AuthModule.AuthSuccess,
+				new Listener<AuthModule.AuthEvent>() {
 
-					public void handleEvent(SaslEvent be) {
+					public void handleEvent(AuthEvent be) {
 						status.setText(Translations.instance.stateAuthenticated());
 					}
 				});

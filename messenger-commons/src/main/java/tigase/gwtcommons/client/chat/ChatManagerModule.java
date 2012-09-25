@@ -1,10 +1,11 @@
 package tigase.gwtcommons.client.chat;
 
 import tigase.gwtcommons.client.XmppService;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
-import tigase.jaxmpp.core.client.xmpp.modules.MessageModule;
-import tigase.jaxmpp.core.client.xmpp.modules.MessageModule.MessageEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.chat.Chat;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule;
+import tigase.jaxmpp.core.client.xmpp.modules.chat.MessageModule.MessageEvent;
 
 import com.extjs.gxt.ui.client.event.Events;
 import com.extjs.gxt.ui.client.event.TabPanelEvent;
@@ -78,7 +79,11 @@ public class ChatManagerModule {
 	}
 
 	protected void onChatTabClose(final ChatTab item) {
-		XmppService.get().getModulesManager().getModule(MessageModule.class).getChatManager().close(item.getChat());
+		try {
+			XmppService.get().getModulesManager().getModule(MessageModule.class).getChatManager().close(item.getChat());
+		} catch (JaxmppException e) {
+			e.printStackTrace();
+		}
 	}
 
 	protected void onMessageReceived(MessageEvent be) {

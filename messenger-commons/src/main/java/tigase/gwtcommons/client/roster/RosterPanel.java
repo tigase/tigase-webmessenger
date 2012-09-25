@@ -6,6 +6,7 @@ import tigase.jaxmpp.core.client.BareJID;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.JaxmppCore;
 import tigase.jaxmpp.core.client.JaxmppCore.JaxmppEvent;
+import tigase.jaxmpp.core.client.exceptions.JaxmppException;
 import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
@@ -287,7 +288,12 @@ public class RosterPanel extends BasicRosterPanel<tigase.jaxmpp.core.client.xmpp
 	@Override
 	protected void onDoubleClick(
 			tigase.gwtcommons.client.roster.BasicRosterPanel.RosterItem<tigase.jaxmpp.core.client.xmpp.modules.roster.RosterItem> item) {
-		XmppService.get().createChat(JID.jidInstance(item.getId().getJid()));
+		JID jid = JID.jidInstance(item.getId().getJid());
+		try {
+			XmppService.get().createChat(jid);
+		} catch (JaxmppException e) {
+			e.printStackTrace();
+		}
 	}
 
 	protected void onPresenceEvent(PresenceEvent be) {

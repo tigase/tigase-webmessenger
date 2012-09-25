@@ -7,8 +7,6 @@ import tigase.jaxmpp.core.client.AsyncCallback;
 import tigase.jaxmpp.core.client.JID;
 import tigase.jaxmpp.core.client.XMPPException.ErrorCondition;
 import tigase.jaxmpp.core.client.exceptions.JaxmppException;
-import tigase.jaxmpp.core.client.logger.Logger;
-import tigase.jaxmpp.core.client.logger.LoggerFactory;
 import tigase.jaxmpp.core.client.xml.DefaultElement;
 import tigase.jaxmpp.core.client.xml.Element;
 import tigase.jaxmpp.core.client.xml.XMLException;
@@ -26,15 +24,12 @@ import com.google.gwt.core.client.GWT;
 
 public class MucTab extends Tab {
 
-	private final Logger log = LoggerFactory.getLogger(this.getClass());
-
 	private final MucPanel mucPanel;
 
 	private Room room;
 
 	public MucTab(Room room) {
 		this.room = room;
-		log.fine("MucmTab " + room.getRoomJid() + " is created");
 		setText("MUC room ");
 		setClosable(true);
 		setLayout(new FitLayout());

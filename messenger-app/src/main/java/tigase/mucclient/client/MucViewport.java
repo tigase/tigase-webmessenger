@@ -19,13 +19,13 @@ import tigase.jaxmpp.core.client.observer.Listener;
 import tigase.jaxmpp.core.client.xml.XMLException;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule;
 import tigase.jaxmpp.core.client.xmpp.modules.ResourceBinderModule.ResourceBindEvent;
+import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule;
+import tigase.jaxmpp.core.client.xmpp.modules.auth.AuthModule.AuthEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.MucModule.MucEvent;
 import tigase.jaxmpp.core.client.xmpp.modules.muc.Room;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule;
 import tigase.jaxmpp.core.client.xmpp.modules.presence.PresenceModule.PresenceEvent;
-import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule;
-import tigase.jaxmpp.core.client.xmpp.modules.sasl.SaslModule.SaslEvent;
 import tigase.jaxmpp.core.client.xmpp.stanzas.ErrorElement;
 import tigase.jaxmpp.core.client.xmpp.stanzas.Presence.Show;
 import tigase.jaxmpp.gwt.client.Jaxmpp;
@@ -136,10 +136,15 @@ public class MucViewport extends Viewport {
 
 				String r = XmppService.config().get("mucRoomJid");
 				JID roomJID = JID.jidInstance(r);
-				Room room = new Room(XmppService.get().getWriter(), roomJID.getBareJid(), nickname);
-				XmppService.get().getModulesManager().getModule(MucModule.class).register(room);
-				mucPanel.setRoom(room);
-				XmppService.get().getModulesManager().getModule(MucModule.class).enable(room);
+				try {
+					Room room = XmppService.get().getModulesManager().getModule(MucModule.class).join(roomJID.getLocalpart(),
+							roomJID.getDomain(), nickname);
+					mucPanel.setRoom(room);
+					XmppService.get().getModulesManager().getModule(MucModule.class).enable(room);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
 			}
 		});
 		XmppService.get().getModulesManager().getModule(ResourceBinderModule.class).addListener(
@@ -230,24 +235,24 @@ public class MucViewport extends Viewport {
 				showLogin();
 			}
 		});
-		XmppService.get().getModulesManager().getModule(SaslModule.class).addListener(SaslModule.SaslStart,
-				new Listener<SaslModule.SaslEvent>() {
+		XmppService.get().getModulesManager().getModule(AuthModule.class).addListener(AuthModule.AuthStart,
+				new Listener<AuthModule.AuthEvent>() {
 
-					public void handleEvent(SaslEvent be) {
+					public void handleEvent(AuthEvent be) {
 						status.setText(Translations.instance.stateAuthenticating());
 					}
 				});
-		XmppService.get().getModulesManager().getModule(SaslModule.class).addListener(SaslModule.SaslSuccess,
-				new Listener<SaslModule.SaslEvent>() {
+		XmppService.get().getModulesManager().getModule(AuthModule.class).addListener(AuthModule.AuthSuccess,
+				new Listener<AuthModule.AuthEvent>() {
 
-					public void handleEvent(SaslEvent be) {
+					public void handleEvent(AuthEvent be) {
 						status.setText(Translations.instance.stateAuthenticated());
 					}
 				});
-		XmppService.get().getModulesManager().getModule(SaslModule.class).addListener(SaslModule.SaslFailed,
-				new Listener<SaslModule.SaslEvent>() {
+		XmppService.get().getModulesManager().getModule(AuthModule.class).addListener(AuthModule.AuthFailed,
+				new Listener<AuthModule.AuthEvent>() {
 
-					public void handleEvent(SaslEvent be) {
+					public void handleEvent(AuthEvent be) {
 						showErrorAndLogin(Translations.instance.errorBadCredentials());
 					}
 				});
@@ -406,7 +411,7 @@ public class MucViewport extends Viewport {
 					showLogin();
 				}
 			});
-		} else if (be.getType() == MucModule.MessageReceived)
+		} else if (be.getType() == MucModule.MucMessageReceived)
 			mucPanel.process(be.getMessage());
 		else {
 			mucPanel.process(be);

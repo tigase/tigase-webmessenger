@@ -1,7 +1,6 @@
 package tigase.gwtcommons.client;
 
 import tigase.jaxmpp.core.client.connector.AbstractBoshConnector;
-import tigase.jaxmpp.gwt.client.DefaultLoggerSpi;
 import tigase.jaxmpp.gwt.client.Jaxmpp;
 
 import com.google.gwt.i18n.client.Dictionary;
@@ -28,7 +27,7 @@ public class XmppService {
 
 	public XmppService() {
 		this.config = Dictionary.getDictionary("Config");
-		this.jaxmpp = new Jaxmpp(new DefaultLoggerSpi());
+		this.jaxmpp = new Jaxmpp();
 
 		this.jaxmpp.getProperties().setUserProperty(AbstractBoshConnector.BOSH_SERVICE_URL_KEY, this.config.get("httpBase"));
 	}
